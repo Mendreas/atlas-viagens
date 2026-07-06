@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas de Viagens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<style>
+:root{
+  --ink:#0d1e29; --panel:#142a38; --panel2:#0f2431; --line:#24404f;
+  --paper:#ecdfc3; --muted:#8aa3ad;
+  --gold:#d9a441; --teal:#45b0a4; --land:#2c4757; --coral:#cf6b57;
+  --radius:12px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{background:var(--ink); color:var(--paper); font-family:'Source Sans 3',sans-serif; min-height:100%;}
+button{font-family:inherit;}
+
+/* ---------- Header ---------- */
+header{padding:22px 24px 14px; display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; justify-content:space-between; border-bottom:1px solid var(--line);}
+.brand h1{font-family:'Fraunces',serif; font-weight:700; font-size:1.9rem; letter-spacing:.5px; color:var(--paper);}
+.brand h1 span{color:var(--gold);}
+.brand p{color:var(--muted); font-size:.85rem; margin-top:2px;}
+.hdr-actions{display:flex; gap:8px;}
+.btn{background:var(--panel); color:var(--paper); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:.85rem; font-weight:600; cursor:pointer; transition:border-color .15s, background .15s;}
+.btn:hover{border-color:var(--gold);}
+.btn.gold{background:var(--gold); color:#1d1607; border-color:var(--gold);}
+.btn.gold:hover{filter:brightness(1.08);}
+.btn.danger{color:var(--coral);}
+.btn:focus-visible, .tab:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+/* ---------- Stats strip ---------- */
+.stats{display:flex; flex-wrap:wrap; gap:10px; padding:14px 24px;}
+.stat{background:var(--panel); border:1px dashed var(--line); border-radius:var(--radius); padding:10px 18px; min-width:130px;}
+.stat b{font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:1.35rem; color:var(--gold); display:block;}
+.stat.teal b{color:var(--teal);}
+.stat small{color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-size:.68rem;}
+
+/* ---------- Tabs ---------- */
+nav{display:flex; gap:4px; padding:0 24px; border-bottom:1px solid var(--line);}
+.tab{background:none; border:none; border-bottom:3px solid transparent; color:var(--muted); padding:10px 18px; font-size:.95rem; font-weight:600; cursor:pointer;}
+.tab.active{color:var(--paper); border-bottom-color:var(--gold);}
+section.page{display:none; padding:20px 24px 60px; max-width:1200px; margin:0 auto;}
+section.page.active{display:block;}
+
+/* ---------- Mapa ---------- */
+#mapWrap{position:relative; background:var(--panel2); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+#mapa svg{display:block; width:100%; height:auto; cursor:grab;}
+.country{stroke:var(--ink); stroke-width:.4; transition:filter .1s;}
+.country:hover{filter:brightness(1.35); cursor:pointer;}
+.legend{position:absolute; left:12px; bottom:12px; background:rgba(13,30,41,.88); border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:.8rem; display:flex; flex-direction:column; gap:6px;}
+.legend span{display:flex; align-items:center; gap:8px;}
+.dot{width:14px; height:14px; border-radius:3px; display:inline-block;}
+#tooltip{position:fixed; pointer-events:none; background:var(--paper); color:#1d1607; font-weight:600; font-size:.8rem; padding:4px 10px; border-radius:6px; opacity:0; z-index:50; transform:translate(-50%,-140%);}
+.map-hint{color:var(--muted); font-size:.8rem; margin-top:8px;}
+#zoomCtrls{position:absolute; right:12px; top:12px; display:flex; flex-direction:column; gap:6px;}
+#zoomCtrls .btn{padding:4px 11px; font-size:1rem;}
+
+/* ---------- Formulários ---------- */
+label{display:block; font-size:.75rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:0 0 4px;}
+input, select, textarea{width:100%; background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--paper); padding:9px 12px; font-size:.92rem; font-family:inherit;}
+input:focus, select:focus, textarea:focus{outline:none; border-color:var(--gold);}
+textarea{resize:vertical; min-height:80px;}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px;}
+.grid{display:grid; gap:14px;}
+.grid.c2{grid-template-columns:1fr 1fr;}
+.grid.c3{grid-template-columns:1fr 1fr 1fr;}
+
+/* ---------- Diário ---------- */
+#tripList{margin-top:20px; display:grid; gap:12px;}
+.trip{background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:var(--radius); padding:14px 18px;}
+.trip.futura{border-left-color:var(--teal);}
+.trip h3{font-family:'Fraunces',serif; font-size:1.15rem;}
+.trip .meta{font-family:ui-monospace,Menlo,monospace; color:var(--muted); font-size:.78rem; margin:4px 0 8px;}
+.trip .flag{font-size:1.3rem; margin-right:6px;}
+.trip p{font-size:.9rem; white-space:pre-wrap;}
+.trip .locais{color:var(--gold); font-size:.85rem; margin-bottom:6px;}
+.trip-actions{margin-top:10px; display:flex; gap:8px;}
+.trip-actions .btn{padding:4px 12px; font-size:.78rem;}
+.empty{color:var(--muted); text-align:center; padding:30px; border:1px dashed var(--line); border-radius:var(--radius); margin-top:20px;}
+
+/* ---------- Países ---------- */
+.pais-head{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;}
+.pais-head > div{flex:1; min-width:220px;}
+.status-btns{display:flex; gap:8px; flex-wrap:wrap;}
+.status-btns .btn.sel-visitado{background:var(--gold); color:#1d1607; border-color:var(--gold);}
+.status-btns .btn.sel-planeado{background:var(--teal); color:#062621; border-color:var(--teal);}
+.status-btns .btn.sel-nao{background:var(--land); border-color:var(--land);}
+.progress{height:10px; background:var(--panel2); border:1px solid var(--line); border-radius:99px; overflow:hidden; margin:6px 0 2px;}
+.progress i{display:block; height:100%; background:var(--gold); border-radius:99px; transition:width .3s;}
+.prog-label{font-size:.78rem; color:var(--muted); font-family:ui-monospace,Menlo,monospace;}
+.regiao{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); margin-top:14px; overflow:hidden;}
+.regiao > h3{font-family:'Fraunces',serif; font-size:1.05rem; padding:12px 18px; background:var(--panel2); display:flex; justify-content:space-between; align-items:center; gap:10px;}
+.regiao > h3 small{font-family:ui-monospace,Menlo,monospace; font-size:.72rem; color:var(--muted); font-weight:400;}
+.vistas{padding:8px 18px 14px; display:grid; gap:6px;}
+.vista{display:flex; align-items:center; gap:10px; font-size:.92rem; padding:5px 8px; border-radius:6px;}
+.vista:hover{background:var(--panel2);}
+.vista input{width:18px; height:18px; accent-color:var(--gold); flex:none; cursor:pointer;}
+.vista.done span{color:var(--muted); text-decoration:line-through; text-decoration-color:var(--gold);}
+.vista .del{margin-left:auto; background:none; border:none; color:var(--muted); cursor:pointer; font-size:.9rem; visibility:hidden;}
+.vista:hover .del{visibility:visible;}
+.add-inline{display:flex; gap:8px; margin-top:4px;}
+.add-inline input{flex:1;}
+.pais-toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
+h2.sec{font-family:'Fraunces',serif; font-size:1.3rem; margin:22px 0 10px; color:var(--paper);}
+h2.sec span{color:var(--gold);}
+
+/* ---------- Modal / toast ---------- */
+#overlay{position:fixed; inset:0; background:rgba(5,12,17,.7); display:none; align-items:center; justify-content:center; z-index:100; padding:16px;}
+#overlay.open{display:flex;}
+#modal{background:var(--panel); border:1px solid var(--gold); border-radius:var(--radius); padding:26px; max-width:380px; width:100%; text-align:center;}
+#modal h2{font-family:'Fraunces',serif; font-size:1.5rem; margin-bottom:4px;}
+#modal .flag{font-size:2.2rem;}
+#modal .status-btns{justify-content:center; margin:16px 0;}
+#toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--gold); color:#1d1607; font-weight:700; padding:10px 22px; border-radius:99px; transition:transform .25s; z-index:200; font-size:.9rem;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+
+@media (max-width:720px){
+  header{padding:16px;}
+  .stats, nav, section.page{padding-left:14px; padding-right:14px;}
+  .grid.c2, .grid.c3{grid-template-columns:1fr;}
+  .stat{flex:1; min-width:100px; padding:8px 12px;}
+  .brand h1{font-size:1.5rem;}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Atlas de <span>Viagens</span></h1>
+    <p>O teu registo pessoal do mundo — visitado, planeado e por descobrir</p>
+  </div>
+  <div class="hdr-actions">
+    <button class="btn" id="btnExport">⬇ Exportar</button>
+    <button class="btn" id="btnImport">⬆ Importar</button>
+    <input type="file" id="fileImport" accept=".json" style="display:none">
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat"><b id="stVisitados">0</b><small>Países visitados</small></div>
+  <div class="stat teal"><b id="stPlaneados">0</b><small>Planeados</small></div>
+  <div class="stat"><b id="stPct">0%</b><small>Do mundo</small></div>
+  <div class="stat teal"><b id="stViagens">0</b><small>Viagens no diário</small></div>
+</div>
+
+<nav>
+  <button class="tab active" data-tab="mapa">🗺 Mapa</button>
+  <button class="tab" data-tab="diario">📔 Diário</button>
+  <button class="tab" data-tab="paises">📍 Países</button>
+</nav>
+
+<!-- ============ MAPA ============ -->
+<section class="page active" id="page-mapa">
+  <div id="mapWrap">
+    <div id="mapa"></div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--gold)"></i> Visitado</span>
+      <span><i class="dot" style="background:var(--teal)"></i> Planeado</span>
+      <span><i class="dot" style="background:var(--land)"></i> Por visitar</span>
+    </div>
+    <div id="zoomCtrls">
+      <button class="btn" id="zIn">+</button>
+      <button class="btn" id="zOut">−</button>
+      <button class="btn" id="zReset">⌂</button>
+    </div>
+  </div>
+  <p class="map-hint">Clica num país para marcar o estado ou abrir a ficha. Usa a roda do rato ou os dedos para fazer zoom. Micro-estados (Malta, Andorra, Singapura…) não aparecem no mapa — usa a aba <b>Países</b>.</p>
+</section>
+
+<!-- ============ DIÁRIO ============ -->
+<section class="page" id="page-diario">
+  <div class="card">
+    <h2 class="sec" style="margin-top:0">Nova <span>viagem</span></h2>
+    <div class="grid c3">
+      <div><label>País</label><select id="tPais"></select></div>
+      <div><label>Data de início</label><input type="date" id="tIni"></div>
+      <div><label>Data de fim</label><input type="date" id="tFim"></div>
+    </div>
+    <div class="grid c2" style="margin-top:14px">
+      <div><label>Título</label><input type="text" id="tTitulo" placeholder="Ex.: Lua de mel na Toscânia"></div>
+      <div><label>Locais visitados</label><input type="text" id="tLocais" placeholder="Ex.: Florença, Siena, Pisa"></div>
+    </div>
+    <div style="margin-top:14px"><label>Notas / diário</label><textarea id="tNotas" placeholder="O que viste, comeste, sentiste…"></textarea></div>
+    <div style="margin-top:14px; display:flex; gap:8px">
+      <button class="btn gold" id="btnSaveTrip">Guardar viagem</button>
+      <button class="btn" id="btnCancelEdit" style="display:none">Cancelar edição</button>
+    </div>
+  </div>
+  <div id="tripList"></div>
+</section>
+
+<!-- ============ PAÍSES ============ -->
+<section class="page" id="page-paises">
+  <div class="card">
+    <div class="pais-head">
+      <div><label>País</label><select id="pSel"></select></div>
+      <div>
+        <label>Estado</label>
+        <div class="status-btns" id="pStatus">
+          <button class="btn" data-st="visitado">Visitado</button>
+          <button class="btn" data-st="planeado">Planeado</button>
+          <button class="btn" data-st="nao">Por visitar</button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <div class="progress"><i id="pProg" style="width:0%"></i></div>
+      <div class="prog-label" id="pProgLbl">—</div>
+    </div>
+  </div>
+  <div id="pRegioes"></div>
+  <div class="pais-toolbar">
+    <input type="text" id="novaRegiao" placeholder="Nova região (ex.: Norte)" style="max-width:260px">
+    <button class="btn" id="btnAddRegiao">+ Adicionar região</button>
+  </div>
+</section>
+
+<!-- Modal país (mapa) -->
+<div id="overlay">
+  <div id="modal">
+    <div class="flag" id="mFlag"></div>
+    <h2 id="mNome"></h2>
+    <div class="status-btns" id="mStatus">
+      <button class="btn" data-st="visitado">Visitado</button>
+      <button class="btn" data-st="planeado">Planeado</button>
+      <button class="btn" data-st="nao">Por visitar</button>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:center">
+      <button class="btn gold" id="mFicha">Abrir ficha do país</button>
+      <button class="btn" id="mFechar">Fechar</button>
+    </div>
+  </div>
+</div>
+<div id="tooltip"></div>
+<div id="toast"></div>
+<script>
+/* ============ GUIA PRÉ-CARREGADO (regiões + o que ver) ============ */
+const GUIA = {
+"PT":{r:[
+ {n:"Norte",v:["Porto: Ribeira, caves de vinho do Porto e Livraria Lello","Guimarães e Braga (Bom Jesus)","Douro Vinhateiro (Pinhão, Peso da Régua)","Parque Nacional Peneda-Gerês"]},
+ {n:"Centro",v:["Coimbra: Universidade e Biblioteca Joanina","Aveiro e Costa Nova","Serra da Estrela","Aldeias históricas (Monsanto, Piódão)"]},
+ {n:"Lisboa e Vale do Tejo",v:["Belém: Torre e Mosteiro dos Jerónimos","Alfama e Castelo de S. Jorge","Sintra: Pena e Quinta da Regaleira","Cascais e Cabo da Roca","Óbidos e Tomar (Convento de Cristo)"]},
+ {n:"Alentejo",v:["Évora: Templo de Diana e Capela dos Ossos","Monsaraz e o Alqueva","Comporta e costa alentejana","Marvão e Castelo de Vide"]},
+ {n:"Algarve",v:["Lagos: Ponta da Piedade","Benagil e praias de Carvoeiro","Sagres e Cabo de S. Vicente","Ria Formosa (Faro, Tavira)"]},
+ {n:"Madeira",v:["Funchal: mercado e teleférico do Monte","Levadas (25 Fontes, Caldeirão Verde)","Pico do Areeiro – Pico Ruivo","Porto Santo: praia dourada"]},
+ {n:"Açores",v:["S. Miguel: Sete Cidades e Furnas","Pico: subida à montanha e vinhas","Faial: Horta e Capelinhos","Terceira: Angra do Heroísmo"]}]},
+"ES":{r:[
+ {n:"Madrid e Centro",v:["Museu do Prado e Reina Sofía","Palácio Real e Plaza Mayor","Toledo","Segóvia: aqueduto e Alcázar"]},
+ {n:"Catalunha",v:["Barcelona: Sagrada Família e Park Güell","Bairro Gótico e La Rambla","Montserrat","Costa Brava (Cadaqués)"]},
+ {n:"Andaluzia",v:["Granada: Alhambra","Sevilha: catedral, Alcázar e Plaza de España","Córdova: Mesquita-Catedral","Ronda e aldeias brancas"]},
+ {n:"Norte",v:["Bilbau: Guggenheim","San Sebastián e pintxos","Santiago de Compostela","Picos da Europa"]},
+ {n:"Ilhas",v:["Maiorca: Serra de Tramuntana","Tenerife: Teide","Lanzarote: Timanfaya","Ibiza e Formentera"]}]},
+"FR":{r:[
+ {n:"Paris e Île-de-France",v:["Torre Eiffel e Champs-Élysées","Louvre e Musée d'Orsay","Montmartre e Sacré-Cœur","Versalhes"]},
+ {n:"Norte e Normandia",v:["Mont Saint-Michel","Praias do Dia D e Étretat","Estrasburgo (Alsácia)","Reims e caves de champanhe"]},
+ {n:"Vale do Loire",v:["Château de Chambord","Chenonceau","Amboise","Vinhas de Vouvray"]},
+ {n:"Sul",v:["Nice e Côte d'Azur","Provença: campos de lavanda e Avignon","Carcassonne","Bordéus e Saint-Émilion"]},
+ {n:"Alpes",v:["Chamonix e Monte Branco","Annecy","Grenoble","Gargantas do Verdon"]}]},
+"IT":{r:[
+ {n:"Norte",v:["Veneza: Praça de S. Marcos e canais","Milão: Duomo e Última Ceia","Lagos (Como, Garda)","Dolomitas","Cinque Terre"]},
+ {n:"Centro",v:["Roma: Coliseu, Fórum e Vaticano","Florença: Duomo e Uffizi","Toscânia: Siena, San Gimignano, Val d'Orcia","Pisa e Lucca"]},
+ {n:"Sul",v:["Nápoles e Pompeia","Costa Amalfitana (Positano, Ravello)","Matera","Puglia: Alberobello"]},
+ {n:"Ilhas",v:["Sicília: Taormina, Etna e Palermo","Sardenha: Costa Smeralda","Capri: Gruta Azul","Ilhas Eólias"]}]},
+"GB":{r:[
+ {n:"Londres",v:["Big Ben, Westminster e London Eye","British Museum e Torre de Londres","Buckingham Palace","Camden e Notting Hill"]},
+ {n:"Inglaterra (fora de Londres)",v:["Stonehenge e Bath","Oxford e Cambridge","Cotswolds","Lake District","York"]},
+ {n:"Escócia",v:["Edimburgo: castelo e Royal Mile","Highlands e Loch Ness","Ilha de Skye","Glasgow"]},
+ {n:"País de Gales e Irlanda do Norte",v:["Snowdonia","Cardiff","Calçada dos Gigantes","Belfast: Titanic Quarter"]}]},
+"IE":{r:[
+ {n:"Dublin e Este",v:["Trinity College e Book of Kells","Temple Bar e Guinness Storehouse","Howth","Glendalough (Wicklow)"]},
+ {n:"Sul",v:["Cork e Cobh","Anel de Kerry","Península de Dingle","Rock of Cashel"]},
+ {n:"Oeste",v:["Falésias de Moher","Galway","Connemara","Ilhas Aran"]}]},
+"DE":{r:[
+ {n:"Berlim e Este",v:["Portão de Brandeburgo e Reichstag","East Side Gallery (Muro)","Ilha dos Museus","Dresden e Potsdam"]},
+ {n:"Baviera",v:["Munique: Marienplatz e Oktoberfest","Castelo de Neuschwanstein","Rota Romântica (Rothenburg)","Alpes: Zugspitze e Garmisch"]},
+ {n:"Oeste",v:["Colónia: catedral","Vale do Reno (castelos)","Heidelberg","Floresta Negra"]},
+ {n:"Norte",v:["Hamburgo: porto e Elbphilharmonie","Lübeck","Bremen"]}]},
+"NL":{r:[
+ {n:"Amesterdão",v:["Canais e Casa de Anne Frank","Rijksmuseum e Van Gogh Museum","Jordaan e mercados","Vondelpark"]},
+ {n:"Resto do país",v:["Moinhos de Kinderdijk e Zaanse Schans","Keukenhof (tulipas, primavera)","Roterdão: arquitetura moderna","Haia e Delft","Giethoorn"]}]},
+"BE":{r:[
+ {n:"Bruxelas",v:["Grand-Place","Atomium","Manneken Pis e chocolate","Museus reais"]},
+ {n:"Flandres",v:["Bruges: canais e Markt","Gante: castelo e Graslei","Antuérpia: catedral e estação","Leuven"]},
+ {n:"Valónia",v:["Dinant","Grutas de Han","Waterloo"]}]},
+"CH":{r:[
+ {n:"Alpes Berneses",v:["Interlaken e Lauterbrunnen","Jungfraujoch – Top of Europe","Grindelwald","Comboio panorâmico"]},
+ {n:"Cidades",v:["Lucerna: Kapellbrücke e Monte Pilatus","Zurique: cidade velha e lago","Berna: Zytglogge","Genebra: Jet d'Eau"]},
+ {n:"Sul",v:["Zermatt e Matterhorn","Glacier Express","Lugano e Ticino","Montreux e Château de Chillon"]}]},
+"AT":{r:[
+ {n:"Viena",v:["Palácio de Schönbrunn","Ópera e Hofburg","Catedral de Santo Estêvão","Cafés históricos e Prater"]},
+ {n:"Salzburgo e Lagos",v:["Cidade velha e fortaleza Hohensalzburg","Hallstatt","Salzkammergut","Minas de sal"]},
+ {n:"Tirol e Alpes",v:["Innsbruck","Grossglockner (estrada alpina)","Zillertal","Esqui em St. Anton/Kitzbühel"]}]},
+"GR":{r:[
+ {n:"Atenas e Ática",v:["Acrópole e Parténon","Plaka e Monastiraki","Museu da Acrópole","Cabo Sunion (Templo de Poseidon)"]},
+ {n:"Continente",v:["Meteora: mosteiros","Delfos","Peloponeso: Nafplio e Epidauro","Tessalónica"]},
+ {n:"Cíclades",v:["Santorini: Oia e caldeira","Mykonos","Naxos e Paros","Milos"]},
+ {n:"Outras ilhas",v:["Creta: Knossos e Balos","Rodes: cidade medieval","Corfu","Zakynthos: Navagio"]}]},
+"HR":{r:[
+ {n:"Dalmácia",v:["Dubrovnik: muralhas da cidade velha","Split: Palácio de Diocleciano","Hvar e ilhas","Zadar: órgão do mar"]},
+ {n:"Interior e Norte",v:["Lagos de Plitvice","Zagreb","Ístria: Rovinj e Pula","Krka: quedas de água"]}]},
+"PL":{r:[
+ {n:"Sul",v:["Cracóvia: Rynek e castelo Wawel","Auschwitz-Birkenau","Minas de sal de Wieliczka","Zakopane (Tatras)"]},
+ {n:"Centro e Norte",v:["Varsóvia: cidade velha reconstruída","Gdansk","Wroclaw","Torun"]}]},
+"CZ":{r:[
+ {n:"Praga",v:["Ponte Carlos e cidade velha","Castelo de Praga e S. Vito","Relógio astronómico","Bairro judeu"]},
+ {n:"Resto do país",v:["Cesky Krumlov","Kutná Hora: ossário","Karlovy Vary","Brno e Morávia"]}]},
+"HU":{r:[
+ {n:"Budapeste",v:["Parlamento e margem do Danúbio","Bastião dos Pescadores e castelo de Buda","Termas Széchenyi","Ruin bars e mercado central"]},
+ {n:"Resto do país",v:["Lago Balaton","Eger","Curva do Danúbio (Szentendre)","Pécs"]}]},
+"NO":{r:[
+ {n:"Fiordes",v:["Geirangerfjord","Nærøyfjord e Flåm (comboio)","Preikestolen (Púlpito)","Trolltunga"]},
+ {n:"Cidades",v:["Bergen: Bryggen","Oslo: ópera e museus","Ålesund","Trondheim"]},
+ {n:"Norte",v:["Ilhas Lofoten","Tromsø: auroras boreais","Cabo Norte","Sol da meia-noite"]}]},
+"SE":{r:[
+ {n:"Estocolmo",v:["Gamla Stan","Museu Vasa","Arquipélago","Skansen e Djurgården"]},
+ {n:"Resto do país",v:["Gotemburgo","Malmö e ponte de Øresund","Kiruna: hotel de gelo e auroras","Gotland: Visby"]}]},
+"DK":{r:[
+ {n:"Copenhaga",v:["Nyhavn","Pequena Sereia","Tivoli","Christiania e Rosenborg"]},
+ {n:"Resto do país",v:["Roskilde: navios vikings","Odense (H.C. Andersen)","Aarhus: ARoS","Skagen"]}]},
+"IS":{r:[
+ {n:"Círculo Dourado e Sul",v:["Thingvellir, Geysir e Gullfoss","Cascatas Seljalandsfoss e Skógafoss","Praia negra de Reynisfjara","Lagoa glaciar Jökulsárlón"]},
+ {n:"Reiquiavique e Oeste",v:["Hallgrímskirkja","Lagoa Azul","Península de Snæfellsnes","Auroras boreais (inverno)"]},
+ {n:"Norte",v:["Mývatn","Cascata Dettifoss","Akureyri","Observação de baleias (Húsavík)"]}]},
+"TR":{r:[
+ {n:"Istambul",v:["Santa Sofia e Mesquita Azul","Palácio Topkapi","Grande Bazar e Cisterna","Bósforo"]},
+ {n:"Anatólia",v:["Capadócia: balões e Göreme","Pamukkale","Ancara","Konya"]},
+ {n:"Costas",v:["Éfeso","Antália e costa turquesa","Bodrum","Fethiye: Ölüdeniz"]}]},
+"MA":{r:[
+ {n:"Cidades imperiais",v:["Marraquexe: Jemaa el-Fna e souks","Fez: medina","Rabat","Meknès e Volubilis"]},
+ {n:"Norte",v:["Chefchaouen: cidade azul","Tânger","Tetuão"]},
+ {n:"Sul e deserto",v:["Deserto do Saara (Merzouga)","Ait Ben Haddou","Gargantas do Todra","Essaouira e Agadir"]}]},
+"EG":{r:[
+ {n:"Cairo e Gizé",v:["Pirâmides e Esfinge","Museu Egípcio / GEM","Cairo islâmico e Khan el-Khalili","Sakkara e Mênfis"]},
+ {n:"Vale do Nilo",v:["Luxor: Karnak e Vale dos Reis","Assuão e templo de Philae","Abu Simbel","Cruzeiro no Nilo"]},
+ {n:"Mar Vermelho e Sinai",v:["Sharm el-Sheikh / Hurghada: mergulho","Monte Sinai e Sta. Catarina","Dahab"]}]},
+"ZA":{r:[
+ {n:"Cidade do Cabo",v:["Table Mountain","Cabo da Boa Esperança","Robben Island","V&A Waterfront e Boulders (pinguins)"]},
+ {n:"Rota Jardim",v:["Knysna","Hermanus (baleias)","Oudtshoorn","Tsitsikamma"]},
+ {n:"Nordeste",v:["Kruger: safari Big Five","Blyde River Canyon","Joanesburgo e Soweto","Pretória"]}]},
+"US":{r:[
+ {n:"Nordeste",v:["Nova Iorque: Times Square, Central Park, Estátua da Liberdade","Washington DC: monumentos e Smithsonian","Boston","Cataratas do Niágara"]},
+ {n:"Oeste",v:["São Francisco: Golden Gate","Los Angeles e Hollywood","Las Vegas","Yosemite"]},
+ {n:"Parques e Sudoeste",v:["Grand Canyon","Monument Valley e Antelope Canyon","Yellowstone","Zion e Bryce"]},
+ {n:"Sul e outros",v:["Miami e Florida Keys","Nova Orleães","Havai","Chicago"]}]},
+"CA":{r:[
+ {n:"Este",v:["Toronto: CN Tower","Cataratas do Niágara","Montreal e Quebec City","Ottawa"]},
+ {n:"Oeste",v:["Vancouver","Montanhas Rochosas: Banff e Lake Louise","Jasper","Whistler"]},
+ {n:"Norte e Atlântico",v:["Auroras (Yellowknife)","Nova Escócia: Cabot Trail","Terra Nova"]}]},
+"MX":{r:[
+ {n:"Centro",v:["Cidade do México: Zócalo e Frida Kahlo","Teotihuacán","Guanajuato e San Miguel de Allende","Puebla"]},
+ {n:"Iucatão",v:["Chichén Itzá","Tulum e cenotes","Mérida e Uxmal","Cancún / Riviera Maya"]},
+ {n:"Sul e Pacífico",v:["Oaxaca","Chiapas: San Cristóbal e Palenque","Puerto Vallarta","Los Cabos"]}]},
+"BR":{r:[
+ {n:"Sudeste",v:["Rio: Cristo Redentor e Pão de Açúcar","Copacabana e Ipanema","São Paulo","Paraty e Ilha Grande"]},
+ {n:"Nordeste",v:["Salvador: Pelourinho","Lençóis Maranhenses","Fernando de Noronha","Jericoacoara e Porto de Galinhas"]},
+ {n:"Sul e Centro-Oeste",v:["Cataratas do Iguaçu","Pantanal","Bonito","Florianópolis"]},
+ {n:"Norte",v:["Amazónia (Manaus)","Encontro das águas","Belém do Pará"]}]},
+"AR":{r:[
+ {n:"Buenos Aires",v:["La Boca e Caminito","Recoleta e San Telmo","Tango e parrillas","Tigre e delta"]},
+ {n:"Patagónia",v:["Glaciar Perito Moreno","El Chaltén: Fitz Roy","Ushuaia: fim do mundo","Península Valdés (baleias)"]},
+ {n:"Norte e Cuyo",v:["Cataratas do Iguazú","Salta e Jujuy (Quebrada)","Mendoza: vinhas e Aconcágua","Bariloche e região dos lagos"]}]},
+"PE":{r:[
+ {n:"Cusco e Vale Sagrado",v:["Machu Picchu","Cusco: Plaza de Armas e Sacsayhuamán","Vale Sagrado: Pisac e Ollantaytambo","Montanha de 7 cores"]},
+ {n:"Sul",v:["Lago Titicaca (Uros)","Arequipa e Canyon do Colca","Linhas de Nazca","Huacachina (oásis)"]},
+ {n:"Lima e Norte",v:["Lima: Miraflores e gastronomia","Centro histórico","Trujillo: Chan Chan","Amazónia: Iquitos"]}]},
+"JP":{r:[
+ {n:"Tóquio e região",v:["Shibuya e Shinjuku","Templo Senso-ji (Asakusa)","Monte Fuji / Hakone","Nikko e Kamakura"]},
+ {n:"Kansai",v:["Quioto: Fushimi Inari e Kinkaku-ji","Nara: templos e veados","Osaka: Dotonbori","Himeji: castelo"]},
+ {n:"Outras regiões",v:["Hiroshima e Miyajima","Alpes japoneses: Takayama e Shirakawa-go","Hokkaido: Sapporo","Okinawa"]}]},
+"CN":{r:[
+ {n:"Pequim e Norte",v:["Grande Muralha (Mutianyu)","Cidade Proibida e Praça Tiananmen","Templo do Céu","Palácio de Verão"]},
+ {n:"Centro e Este",v:["Xangai: Bund e Pudong","Xi'an: Guerreiros de Terracota","Suzhou e Hangzhou","Huangshan"]},
+ {n:"Sul e Oeste",v:["Guilin e rio Li","Zhangjiajie (montanhas de Avatar)","Chengdu: pandas","Hong Kong e Macau"]}]},
+"TH":{r:[
+ {n:"Banguecoque e Centro",v:["Grande Palácio e Wat Pho","Wat Arun","Mercados flutuantes","Ayutthaya"]},
+ {n:"Norte",v:["Chiang Mai: templos e mercado noturno","Chiang Rai: Templo Branco","Pai","Santuários de elefantes (éticos)"]},
+ {n:"Ilhas e Sul",v:["Phuket e Phi Phi","Krabi: Railay Beach","Koh Samui e Koh Tao","Khao Sok"]}]},
+"VN":{r:[
+ {n:"Norte",v:["Hanói: cidade velha e lago Hoan Kiem","Baía de Halong","Sapa: socalcos de arroz","Ninh Binh"]},
+ {n:"Centro",v:["Hoi An: cidade das lanternas","Hue: cidade imperial","Da Nang e Golden Bridge","Phong Nha: grutas"]},
+ {n:"Sul",v:["Ho Chi Minh: túneis de Cu Chi","Delta do Mekong","Phu Quoc","Mui Ne: dunas"]}]},
+"ID":{r:[
+ {n:"Bali",v:["Templos: Uluwatu e Tanah Lot","Ubud: arrozais e Monkey Forest","Nusa Penida","Vulcão Batur (nascer do sol)"]},
+ {n:"Java",v:["Borobudur e Prambanan","Vulcão Bromo","Ijen: fogo azul","Yogyakarta"]},
+ {n:"Outras ilhas",v:["Komodo: dragões e Pink Beach","Ilhas Gili","Raja Ampat (mergulho)","Sumatra: orangotangos"]}]},
+"IN":{r:[
+ {n:"Triângulo Dourado",v:["Taj Mahal (Agra)","Deli: Red Fort e Qutub Minar","Jaipur: Amber Fort e Hawa Mahal","Fatehpur Sikri"]},
+ {n:"Rajastão e Norte",v:["Udaipur: lagos e palácios","Jodhpur e Jaisalmer","Varanasi: Ganges","Amritsar: Templo Dourado","Himalaias: Rishikesh"]},
+ {n:"Sul",v:["Kerala: backwaters","Goa: praias","Hampi","Madurai: templos"]}]},
+"AE":{r:[
+ {n:"Dubai",v:["Burj Khalifa e Dubai Mall","Palm Jumeirah","Deserto: safari e dunas","Dubai Marina e souks antigos"]},
+ {n:"Abu Dhabi e outros",v:["Mesquita Sheikh Zayed","Louvre Abu Dhabi","Ferrari World","Sharjah e Fujairah"]}]},
+"AU":{r:[
+ {n:"Costa Este",v:["Sydney: Opera House e Harbour Bridge","Grande Barreira de Coral (Cairns)","Byron Bay e Gold Coast","Whitsundays: Whitehaven Beach"]},
+ {n:"Sul",v:["Melbourne: laneways","Great Ocean Road: 12 Apóstolos","Kangaroo Island","Tasmânia"]},
+ {n:"Centro e Oeste",v:["Uluru","Kings Canyon","Perth e Rottnest (quokkas)","Ningaloo Reef"]}]},
+"NZ":{r:[
+ {n:"Ilha Norte",v:["Auckland","Rotorua: geotermia e cultura maori","Hobbiton","Tongariro Crossing"]},
+ {n:"Ilha Sul",v:["Queenstown: aventura","Milford Sound","Glaciares Franz Josef/Fox","Lago Tekapo e Mt. Cook","Kaikoura (baleias)"]}]}
+};
+/* Mapeamento ISO numérico → alpha-2 (para nomes PT via Intl.DisplayNames) */
+const N2A = {"533":"AW","4":"AF","24":"AO","660":"AI","248":"AX","8":"AL","20":"AD","784":"AE","32":"AR","51":"AM","16":"AS","10":"AQ","260":"TF","28":"AG","36":"AU","40":"AT","31":"AZ","108":"BI","56":"BE","204":"BJ","535":"BQ","854":"BF","50":"BD","100":"BG","48":"BH","44":"BS","70":"BA","652":"BL","112":"BY","84":"BZ","60":"BM","68":"BO","76":"BR","52":"BB","96":"BN","64":"BT","74":"BV","72":"BW","140":"CF","124":"CA","166":"CC","756":"CH","152":"CL","156":"CN","384":"CI","120":"CM","180":"CD","178":"CG","184":"CK","170":"CO","174":"KM","132":"CV","188":"CR","192":"CU","531":"CW","162":"CX","136":"KY","196":"CY","203":"CZ","276":"DE","262":"DJ","212":"DM","208":"DK","214":"DO","12":"DZ","218":"EC","818":"EG","232":"ER","732":"EH","724":"ES","233":"EE","231":"ET","246":"FI","242":"FJ","238":"FK","250":"FR","234":"FO","583":"FM","266":"GA","826":"GB","268":"GE","831":"GG","288":"GH","292":"GI","324":"GN","312":"GP","270":"GM","624":"GW","226":"GQ","300":"GR","308":"GD","304":"GL","320":"GT","254":"GF","316":"GU","328":"GY","344":"HK","334":"HM","340":"HN","191":"HR","332":"HT","348":"HU","360":"ID","833":"IM","356":"IN","86":"IO","372":"IE","364":"IR","368":"IQ","352":"IS","376":"IL","380":"IT","388":"JM","832":"JE","400":"JO","392":"JP","398":"KZ","404":"KE","417":"KG","116":"KH","296":"KI","659":"KN","410":"KR","414":"KW","418":"LA","422":"LB","430":"LR","434":"LY","662":"LC","438":"LI","144":"LK","426":"LS","440":"LT","442":"LU","428":"LV","446":"MO","663":"MF","504":"MA","492":"MC","498":"MD","450":"MG","462":"MV","484":"MX","584":"MH","807":"MK","466":"ML","470":"MT","104":"MM","499":"ME","496":"MN","580":"MP","508":"MZ","478":"MR","500":"MS","474":"MQ","480":"MU","454":"MW","458":"MY","175":"YT","516":"NA","540":"NC","562":"NE","574":"NF","566":"NG","558":"NI","570":"NU","528":"NL","578":"NO","524":"NP","520":"NR","554":"NZ","512":"OM","586":"PK","591":"PA","612":"PN","604":"PE","608":"PH","585":"PW","598":"PG","616":"PL","630":"PR","408":"KP","620":"PT","600":"PY","275":"PS","258":"PF","634":"QA","638":"RE","642":"RO","643":"RU","646":"RW","682":"SA","729":"SD","686":"SN","702":"SG","239":"GS","654":"SH","744":"SJ","90":"SB","694":"SL","222":"SV","674":"SM","706":"SO","666":"PM","688":"RS","728":"SS","678":"ST","740":"SR","703":"SK","705":"SI","752":"SE","748":"SZ","534":"SX","690":"SC","760":"SY","796":"TC","148":"TD","768":"TG","764":"TH","762":"TJ","772":"TK","795":"TM","626":"TL","776":"TO","780":"TT","788":"TN","792":"TR","798":"TV","158":"TW","834":"TZ","800":"UG","804":"UA","581":"UM","858":"UY","840":"US","860":"UZ","336":"VA","670":"VC","862":"VE","92":"VG","850":"VI","704":"VN","548":"VU","876":"WF","882":"WS","887":"YE","710":"ZA","894":"ZM","716":"ZW"};
+
+/* ============ ESTADO ============ */
+const LS_KEY = 'atlasViagens_v1';
+const dn = new Intl.DisplayNames(['pt'], {type:'region'});
+const TOTAL_PAISES = 195; // países reconhecidos pela ONU (referência para %)
+
+let state = { countries:{}, trips:[], seen:{} };
+try { const raw = localStorage.getItem(LS_KEY); if (raw) state = Object.assign(state, JSON.parse(raw)); } catch(e){}
+
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); refreshStats(); paintMap(); }
+function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2200); }
+function nomePT(a2){ try { return dn.of(a2) || a2; } catch(e){ return a2; } }
+function bandeira(a2){ if(!/^[A-Z]{2}$/.test(a2)) return '🏳'; return String.fromCodePoint(...[...a2].map(c=>0x1F1E6 + c.charCodeAt(0) - 65)); }
+function statusDe(a2){ return (state.countries[a2] && state.countries[a2].status) || 'nao'; }
+function setStatus(a2, st){
+  if (st === 'nao') delete state.countries[a2];
+  else state.countries[a2] = { status: st };
+  save();
+}
+
+/* Lista de todos os países (alpha-2) ordenada por nome PT */
+const TODOS = Object.values(N2A)
+  .filter(a2 => { const n = nomePT(a2); return n && n !== a2; })
+  .sort((a,b)=> nomePT(a).localeCompare(nomePT(b), 'pt'));
+
+/* ============ ESTATÍSTICAS ============ */
+function refreshStats(){
+  const v = Object.values(state.countries).filter(c=>c.status==='visitado').length;
+  const p = Object.values(state.countries).filter(c=>c.status==='planeado').length;
+  document.getElementById('stVisitados').textContent = v;
+  document.getElementById('stPlaneados').textContent = p;
+  document.getElementById('stPct').textContent = Math.round(v / TOTAL_PAISES * 100) + '%';
+  document.getElementById('stViagens').textContent = state.trips.length;
+}
+
+/* ============ TABS ============ */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===name));
+  document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active', x.id==='page-'+name));
+}
+
+/* ============ MAPA ============ */
+const CORES = { visitado:'var(--gold)', planeado:'var(--teal)', nao:'var(--land)' };
+let gPaises, zoomBeh, svgMap;
+
+function desenharMapa(topo){
+  const paises = topojson.feature(topo, topo.objects.countries).features;
+  const W = 960, H = 520;
+  const proj = d3.geoNaturalEarth1().fitSize([W, H], {type:'Sphere'});
+  const path = d3.geoPath(proj);
+  svgMap = d3.select('#mapa').append('svg').attr('viewBox', `0 0 ${W} ${H}`);
+  const g = svgMap.append('g');
+  g.append('path').attr('d', path({type:'Sphere'})).attr('fill', 'var(--panel2)');
+  gPaises = g.selectAll('path.country').data(paises).join('path')
+    .attr('class','country').attr('d', path)
+    .attr('fill', d => CORES[statusDe(N2A[String(+d.id)] || '')])
+    .on('mousemove', (ev,d) => {
+      const a2 = N2A[String(+d.id)];
+      const tip = document.getElementById('tooltip');
+      tip.textContent = a2 ? nomePT(a2) : (d.properties.name || '');
+      tip.style.left = ev.clientX+'px'; tip.style.top = ev.clientY+'px'; tip.style.opacity = 1;
+    })
+    .on('mouseleave', () => document.getElementById('tooltip').style.opacity = 0)
+    .on('click', (ev,d) => { const a2 = N2A[String(+d.id)]; if (a2) abrirModal(a2); });
+  zoomBeh = d3.zoom().scaleExtent([1,10]).on('zoom', ev => g.attr('transform', ev.transform));
+  svgMap.call(zoomBeh);
+  document.getElementById('zIn').onclick = ()=> svgMap.transition().call(zoomBeh.scaleBy, 1.5);
+  document.getElementById('zOut').onclick = ()=> svgMap.transition().call(zoomBeh.scaleBy, 0.67);
+  document.getElementById('zReset').onclick = ()=> svgMap.transition().call(zoomBeh.transform, d3.zoomIdentity);
+  paintMap();
+}
+function paintMap(){
+  if (gPaises) gPaises.attr('fill', d => CORES[statusDe(N2A[String(+d.id)] || '')]);
+}
+fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+  .then(r=>r.json()).then(desenharMapa)
+  .catch(()=>{ document.getElementById('mapa').innerHTML = '<p style="padding:30px;color:var(--muted)">Sem ligação à internet — o mapa não pôde ser carregado. Os restantes separadores funcionam normalmente.</p>'; });
+
+/* ============ MODAL DO MAPA ============ */
+let modalA2 = null;
+function abrirModal(a2){
+  modalA2 = a2;
+  document.getElementById('mFlag').textContent = bandeira(a2);
+  document.getElementById('mNome').textContent = nomePT(a2);
+  marcarBtns(document.getElementById('mStatus'), statusDe(a2));
+  document.getElementById('overlay').classList.add('open');
+}
+function marcarBtns(cont, st){
+  cont.querySelectorAll('.btn').forEach(b=>{
+    b.classList.remove('sel-visitado','sel-planeado','sel-nao');
+    if (b.dataset.st === st) b.classList.add('sel-'+st);
+  });
+}
+document.getElementById('mStatus').addEventListener('click', ev=>{
+  const b = ev.target.closest('.btn'); if (!b) return;
+  setStatus(modalA2, b.dataset.st);
+  marcarBtns(document.getElementById('mStatus'), b.dataset.st);
+  toast(nomePT(modalA2) + ' → ' + b.textContent);
+});
+document.getElementById('mFechar').onclick = ()=> document.getElementById('overlay').classList.remove('open');
+document.getElementById('overlay').addEventListener('click', ev=>{ if (ev.target.id==='overlay') ev.target.classList.remove('open'); });
+document.getElementById('mFicha').onclick = ()=>{
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('pSel').value = modalA2;
+  renderPais(); showTab('paises');
+};
+
+/* ============ DIÁRIO ============ */
+const selTrip = document.getElementById('tPais');
+const selPais = document.getElementById('pSel');
+TODOS.forEach(a2=>{
+  const o1 = new Option(bandeira(a2)+' '+nomePT(a2), a2);
+  const o2 = new Option(bandeira(a2)+' '+nomePT(a2), a2);
+  selTrip.add(o1); selPais.add(o2);
+});
+selTrip.value = 'PT'; selPais.value = 'PT';
+
+let editId = null;
+document.getElementById('btnSaveTrip').onclick = ()=>{
+  const pais = selTrip.value;
+  const ini = document.getElementById('tIni').value;
+  const fim = document.getElementById('tFim').value || ini;
+  const titulo = document.getElementById('tTitulo').value.trim();
+  if (!ini){ toast('Indica pelo menos a data de início'); return; }
+  const trip = { id: editId || Date.now(), pais, ini, fim,
+    titulo: titulo || ('Viagem a ' + nomePT(pais)),
+    locais: document.getElementById('tLocais').value.trim(),
+    notas: document.getElementById('tNotas').value.trim() };
+  if (editId){ state.trips = state.trips.map(t=> t.id===editId ? trip : t); editId = null; }
+  else state.trips.push(trip);
+  /* Atualiza estado do país automaticamente */
+  const hoje = new Date().toISOString().slice(0,10);
+  if (fim <= hoje) setStatus(pais, 'visitado');
+  else if (statusDe(pais) !== 'visitado') setStatus(pais, 'planeado');
+  limparForm(); save(); renderTrips();
+  toast('Viagem guardada ✓');
+};
+function limparForm(){
+  ['tIni','tFim','tTitulo','tLocais','tNotas'].forEach(id=>document.getElementById(id).value='');
+  editId = null;
+  document.getElementById('btnCancelEdit').style.display = 'none';
+  document.getElementById('btnSaveTrip').textContent = 'Guardar viagem';
+}
+document.getElementById('btnCancelEdit').onclick = limparForm;
+
+function fmtData(d){ if(!d) return ''; const [a,m,dia] = d.split('-'); return `${dia}/${m}/${a}`; }
+function renderTrips(){
+  const list = document.getElementById('tripList');
+  if (!state.trips.length){ list.innerHTML = '<div class="empty">Ainda não há viagens no diário. Regista a primeira acima. ✈️</div>'; return; }
+  const hoje = new Date().toISOString().slice(0,10);
+  const trips = [...state.trips].sort((a,b)=> b.ini.localeCompare(a.ini));
+  list.innerHTML = trips.map(t=>`
+    <div class="trip ${t.ini > hoje ? 'futura' : ''}">
+      <h3><span class="flag">${bandeira(t.pais)}</span>${esc(t.titulo)}</h3>
+      <div class="meta">${nomePT(t.pais)} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}</div>
+      ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
+      ${t.notas ? `<p>${esc(t.notas)}</p>` : ''}
+      <div class="trip-actions">
+        <button class="btn" onclick="editarTrip(${t.id})">Editar</button>
+        <button class="btn danger" onclick="apagarTrip(${t.id})">Apagar</button>
+      </div>
+    </div>`).join('');
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+window.editarTrip = id=>{
+  const t = state.trips.find(x=>x.id===id); if(!t) return;
+  editId = id;
+  selTrip.value = t.pais;
+  document.getElementById('tIni').value = t.ini;
+  document.getElementById('tFim').value = t.fim;
+  document.getElementById('tTitulo').value = t.titulo;
+  document.getElementById('tLocais').value = t.locais;
+  document.getElementById('tNotas').value = t.notas;
+  document.getElementById('btnCancelEdit').style.display = 'inline-block';
+  document.getElementById('btnSaveTrip').textContent = 'Atualizar viagem';
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+window.apagarTrip = id=>{
+  if (!confirm('Apagar esta viagem do diário?')) return;
+  state.trips = state.trips.filter(t=>t.id!==id);
+  save(); renderTrips(); toast('Viagem apagada');
+};
+
+/* ============ PÁGINA PAÍSES ============ */
+function seenDe(a2){
+  if (!state.seen[a2]) state.seen[a2] = { checked:{}, custom:[] };
+  if (!state.seen[a2].checked) state.seen[a2].checked = {};
+  if (!state.seen[a2].custom) state.seen[a2].custom = [];
+  return state.seen[a2];
+}
+function regioesDe(a2){
+  const base = (GUIA[a2] && GUIA[a2].r) ? GUIA[a2].r.map(r=>({n:r.n, v:[...r.v], custom:false})) : [];
+  const s = seenDe(a2);
+  s.custom.forEach(cr=>{
+    const ex = base.find(b=>b.n===cr.n);
+    if (ex){ ex.v.push(...cr.v); }
+    else base.push({n:cr.n, v:[...cr.v], custom:true});
+  });
+  return base;
+}
+selPais.addEventListener('change', renderPais);
+document.getElementById('pStatus').addEventListener('click', ev=>{
+  const b = ev.target.closest('.btn'); if(!b) return;
+  setStatus(selPais.value, b.dataset.st);
+  marcarBtns(document.getElementById('pStatus'), b.dataset.st);
+  toast(nomePT(selPais.value)+' → '+b.textContent);
+});
+
+function renderPais(){
+  const a2 = selPais.value;
+  marcarBtns(document.getElementById('pStatus'), statusDe(a2));
+  const regs = regioesDe(a2);
+  const s = seenDe(a2);
+  const cont = document.getElementById('pRegioes');
+  if (!regs.length){
+    cont.innerHTML = `<div class="empty">Ainda não há guia para <b>${nomePT(a2)}</b>.<br>Adiciona as tuas próprias regiões e pontos de interesse abaixo. 🧭</div>`;
+  } else {
+    cont.innerHTML = regs.map((r,ri)=>{
+      const feitos = r.v.filter(v=>s.checked[r.n+'|'+v]).length;
+      return `<div class="regiao">
+        <h3>${esc(r.n)} <small>${feitos}/${r.v.length} vistos</small></h3>
+        <div class="vistas">
+          ${r.v.map(v=>{
+            const k = r.n+'|'+v, done = !!s.checked[k];
+            const custom = s.custom.some(cr=>cr.n===r.n && cr.v.includes(v));
+            return `<label class="vista ${done?'done':''}">
+              <input type="checkbox" ${done?'checked':''} onchange="toggleVista('${a2}','${escAttr(k)}',this.checked)">
+              <span>${esc(v)}</span>
+              ${custom?`<button class="del" title="Remover" onclick="delVista(event,'${a2}','${escAttr(r.n)}','${escAttr(v)}')">✕</button>`:''}
+            </label>`;
+          }).join('')}
+          <div class="add-inline">
+            <input type="text" placeholder="Adicionar ponto de interesse a ${esc(r.n)}…" onkeydown="if(event.key==='Enter')addVista('${a2}','${escAttr(r.n)}',this)">
+            <button class="btn" onclick="addVista('${a2}','${escAttr(r.n)}',this.previousElementSibling)">+</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  atualizarProgresso(a2);
+}
+function escAttr(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+function atualizarProgresso(a2){
+  const regs = regioesDe(a2), s = seenDe(a2);
+  let tot = 0, feitos = 0;
+  regs.forEach(r=> r.v.forEach(v=>{ tot++; if (s.checked[r.n+'|'+v]) feitos++; }));
+  const pct = tot ? Math.round(feitos/tot*100) : 0;
+  document.getElementById('pProg').style.width = pct+'%';
+  document.getElementById('pProgLbl').textContent = tot
+    ? `${feitos}/${tot} pontos de interesse vistos (${pct}%) — ${bandeira(a2)} ${nomePT(a2)}`
+    : `${bandeira(a2)} ${nomePT(a2)} — sem guia; adiciona regiões abaixo`;
+}
+window.toggleVista = (a2, k, val)=>{
+  const s = seenDe(a2);
+  if (val) s.checked[k] = true; else delete s.checked[k];
+  save(); renderPais();
+};
+window.addVista = (a2, regiao, input)=>{
+  const v = input.value.trim(); if (!v) return;
+  const s = seenDe(a2);
+  let cr = s.custom.find(c=>c.n===regiao);
+  if (!cr){ cr = {n:regiao, v:[]}; s.custom.push(cr); }
+  if (!cr.v.includes(v)) cr.v.push(v);
+  input.value = '';
+  save(); renderPais(); toast('Adicionado a '+regiao);
+};
+window.delVista = (ev, a2, regiao, v)=>{
+  ev.preventDefault();
+  const s = seenDe(a2);
+  const cr = s.custom.find(c=>c.n===regiao); if (!cr) return;
+  cr.v = cr.v.filter(x=>x!==v);
+  delete s.checked[regiao+'|'+v];
+  if (!cr.v.length && !(GUIA[a2] && GUIA[a2].r.some(r=>r.n===regiao)))
+    s.custom = s.custom.filter(c=>c!==cr);
+  save(); renderPais();
+};
+document.getElementById('btnAddRegiao').onclick = ()=>{
+  const inp = document.getElementById('novaRegiao');
+  const n = inp.value.trim(); if (!n) return;
+  const s = seenDe(selPais.value);
+  if (!s.custom.some(c=>c.n===n) && !(GUIA[selPais.value]||{r:[]}).r?.some(r=>r.n===n))
+    s.custom.push({n, v:[]});
+  inp.value = '';
+  save(); renderPais(); toast('Região adicionada');
+};
+
+/* ============ EXPORT / IMPORT ============ */
+document.getElementById('btnExport').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'atlas-viagens-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Backup exportado ✓');
+};
+document.getElementById('btnImport').onclick = ()=> document.getElementById('fileImport').click();
+document.getElementById('fileImport').addEventListener('change', ev=>{
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try {
+      const data = JSON.parse(r.result);
+      if (!data.countries && !data.trips) throw new Error();
+      state = Object.assign({countries:{}, trips:[], seen:{}}, data);
+      save(); renderTrips(); renderPais();
+      toast('Dados importados ✓');
+    } catch(e){ toast('Ficheiro inválido'); }
+    ev.target.value = '';
+  };
+  r.readAsText(f);
+});
+
+/* ============ ARRANQUE ============ */
+refreshStats(); renderTrips(); renderPais();
+</script>
+</body>
+</html>
