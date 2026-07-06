@@ -10,11 +10,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <style>
 :root{
+  --ink:#f6f3ec; --panel:#ffffff; --panel2:#e9f1f4; --line:#d9d2c2;
+  --paper:#2b2418; --muted:#8a8371;
+  --gold:#c58a2a; --teal:#2e8f85; --land:#d8d0bc; --coral:#c0563f;
+  --parcial:#e2c069;
+  --tipbg:#2b2418; --tipfg:#f6f3ec; --legbg:rgba(255,255,255,.92);
+  --radius:12px;
+}
+html[data-theme="dark"]{
   --ink:#0d1e29; --panel:#142a38; --panel2:#0f2431; --line:#24404f;
   --paper:#ecdfc3; --muted:#8aa3ad;
   --gold:#d9a441; --teal:#45b0a4; --land:#2c4757; --coral:#cf6b57;
-  --radius:12px;
+  --parcial:#8a6d2f;
+  --tipbg:#ecdfc3; --tipfg:#1d1607; --legbg:rgba(13,30,41,.88);
 }
+html[data-theme="dark"] .country:hover, html[data-theme="dark"] .region:hover{filter:brightness(1.35);}
+html[data-theme="dark"] .card{box-shadow:none;}
 *{box-sizing:border-box; margin:0; padding:0;}
 html,body{background:var(--ink); color:var(--paper); font-family:'Source Sans 3',sans-serif; min-height:100%;}
 button{font-family:inherit;}
@@ -50,11 +61,11 @@ section.page.active{display:block;}
 #mapWrap{position:relative; background:var(--panel2); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
 #mapa svg{display:block; width:100%; height:auto; cursor:grab;}
 .country{stroke:var(--ink); stroke-width:.4; transition:filter .1s;}
-.country:hover{filter:brightness(1.35); cursor:pointer;}
-.legend{position:absolute; left:12px; bottom:12px; background:rgba(13,30,41,.88); border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:.8rem; display:flex; flex-direction:column; gap:6px;}
+.country:hover{filter:brightness(0.9); cursor:pointer;}
+.legend{position:absolute; left:12px; bottom:12px; background:var(--legbg); border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:.8rem; display:flex; flex-direction:column; gap:6px;}
 .legend span{display:flex; align-items:center; gap:8px;}
 .dot{width:14px; height:14px; border-radius:3px; display:inline-block;}
-#tooltip{position:fixed; pointer-events:none; background:var(--paper); color:#1d1607; font-weight:600; font-size:.8rem; padding:4px 10px; border-radius:6px; opacity:0; z-index:50; transform:translate(-50%,-140%);}
+#tooltip{position:fixed; pointer-events:none; background:var(--tipbg); color:var(--tipfg); font-weight:600; font-size:.8rem; padding:4px 10px; border-radius:6px; opacity:0; z-index:50; transform:translate(-50%,-140%);}
 .map-hint{color:var(--muted); font-size:.8rem; margin-top:8px;}
 #zoomCtrls{position:absolute; right:12px; top:12px; display:flex; flex-direction:column; gap:6px;}
 #zoomCtrls .btn{padding:4px 11px; font-size:1rem;}
@@ -64,7 +75,7 @@ label{display:block; font-size:.75rem; text-transform:uppercase; letter-spacing:
 input, select, textarea{width:100%; background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--paper); padding:9px 12px; font-size:.92rem; font-family:inherit;}
 input:focus, select:focus, textarea:focus{outline:none; border-color:var(--gold);}
 textarea{resize:vertical; min-height:80px;}
-.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px;}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:0 1px 4px rgba(43,36,24,.06);}
 .grid{display:grid; gap:14px;}
 .grid.c2{grid-template-columns:1fr 1fr;}
 .grid.c3{grid-template-columns:1fr 1fr 1fr;}
@@ -108,8 +119,17 @@ textarea{resize:vertical; min-height:80px;}
 h2.sec{font-family:'Fraunces',serif; font-size:1.3rem; margin:22px 0 10px; color:var(--paper);}
 h2.sec span{color:var(--gold);}
 
+/* ---------- Regiões ---------- */
+#regMapa svg{display:block; width:100%; height:auto;}
+.region{stroke:var(--ink); stroke-width:.6; cursor:pointer;}
+.region:hover{filter:brightness(0.88);}
+.reg-hint{color:var(--muted); font-size:.85rem; margin-bottom:10px;}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;}
+.chip{border:1px solid var(--line); border-radius:99px; padding:4px 12px; font-size:.8rem; cursor:pointer; background:var(--panel2); color:var(--paper);}
+.chip.on{background:var(--gold); color:#1d1607; border-color:var(--gold); font-weight:700;}
+
 /* ---------- Modal / toast ---------- */
-#overlay{position:fixed; inset:0; background:rgba(5,12,17,.7); display:none; align-items:center; justify-content:center; z-index:100; padding:16px;}
+#overlay{position:fixed; inset:0; background:rgba(43,36,24,.45); display:none; align-items:center; justify-content:center; z-index:100; padding:16px;}
 #overlay.open{display:flex;}
 #modal{background:var(--panel); border:1px solid var(--gold); border-radius:var(--radius); padding:26px; max-width:380px; width:100%; text-align:center;}
 #modal h2{font-family:'Fraunces',serif; font-size:1.5rem; margin-bottom:4px;}
@@ -135,6 +155,7 @@ h2.sec span{color:var(--gold);}
     <p>O teu registo pessoal do mundo — visitado, planeado e por descobrir</p>
   </div>
   <div class="hdr-actions">
+    <button class="btn" id="btnTheme" title="Alternar tema claro/escuro">🌙</button>
     <button class="btn" id="btnExport">⬇ Exportar</button>
     <button class="btn" id="btnImport">⬆ Importar</button>
     <input type="file" id="fileImport" accept=".json" style="display:none">
@@ -145,6 +166,7 @@ h2.sec span{color:var(--gold);}
   <div class="stat"><b id="stVisitados">0</b><small>Países visitados</small></div>
   <div class="stat teal"><b id="stPlaneados">0</b><small>Planeados</small></div>
   <div class="stat"><b id="stPct">0%</b><small>Do mundo</small></div>
+  <div class="stat"><b id="stRegioes">0</b><small>Regiões visitadas</small></div>
   <div class="stat teal"><b id="stViagens">0</b><small>Viagens no diário</small></div>
 </div>
 
@@ -160,6 +182,7 @@ h2.sec span{color:var(--gold);}
     <div id="mapa"></div>
     <div class="legend">
       <span><i class="dot" style="background:var(--gold)"></i> Visitado</span>
+      <span><i class="dot" style="background:var(--parcial)"></i> Parcial (algumas regiões)</span>
       <span><i class="dot" style="background:var(--teal)"></i> Planeado</span>
       <span><i class="dot" style="background:var(--land)"></i> Por visitar</span>
     </div>
@@ -169,7 +192,7 @@ h2.sec span{color:var(--gold);}
       <button class="btn" id="zReset">⌂</button>
     </div>
   </div>
-  <p class="map-hint">Clica num país para marcar o estado ou abrir a ficha. Usa a roda do rato ou os dedos para fazer zoom. Micro-estados (Malta, Andorra, Singapura…) não aparecem no mapa — usa a aba <b>Países</b>.</p>
+  <p class="map-hint">Clica num país para marcar o estado ou abrir a ficha. Usa a roda do rato ou os dedos para fazer zoom. Territórios ultramarinos (Martinica, Guadalupe, Reunião…) fazem parte do país-mãe no mapa, mas podes marcá-los individualmente na aba <b>Países</b>.</p>
 </section>
 
 <!-- ============ DIÁRIO ============ -->
@@ -213,6 +236,15 @@ h2.sec span{color:var(--gold);}
       <div class="prog-label" id="pProgLbl">—</div>
     </div>
   </div>
+  <div class="card" style="margin-top:14px">
+    <h2 class="sec" style="margin-top:0">Regiões <span>visitadas</span></h2>
+    <p class="reg-hint">Clica nas regiões no mapa ou na lista para marcar as que já visitaste. No mapa-mundo, o país fica <b>parcial</b> se só visitaste algumas regiões e <b>visitado</b> quando as visitares todas (ou se o marcares manualmente sem regiões).</p>
+    <div id="regMapa"></div>
+    <div class="prog-label" id="regProgLbl" style="margin-top:8px">—</div>
+    <div id="regLista" class="chips"></div>
+    <div style="margin-top:12px"><button class="btn danger" id="btnLimparReg">Limpar regiões deste país</button></div>
+  </div>
+  <h2 class="sec">O que <span>ver</span></h2>
   <div id="pRegioes"></div>
   <div class="pais-toolbar">
     <input type="text" id="novaRegiao" placeholder="Nova região (ex.: Norte)" style="max-width:260px">
@@ -225,6 +257,7 @@ h2.sec span{color:var(--gold);}
   <div id="modal">
     <div class="flag" id="mFlag"></div>
     <h2 id="mNome"></h2>
+    <p class="reg-hint" id="mReg" style="margin:2px 0 0"></p>
     <div class="status-btns" id="mStatus">
       <button class="btn" data-st="visitado">Visitado</button>
       <button class="btn" data-st="planeado">Planeado</button>
@@ -411,14 +444,22 @@ const LS_KEY = 'atlasViagens_v1';
 const dn = new Intl.DisplayNames(['pt'], {type:'region'});
 const TOTAL_PAISES = 195; // países reconhecidos pela ONU (referência para %)
 
-let state = { countries:{}, trips:[], seen:{} };
+let state = { countries:{}, trips:[], seen:{}, regioes:{} };
 try { const raw = localStorage.getItem(LS_KEY); if (raw) state = Object.assign(state, JSON.parse(raw)); } catch(e){}
 
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); refreshStats(); paintMap(); }
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2200); }
 function nomePT(a2){ try { return dn.of(a2) || a2; } catch(e){ return a2; } }
 function bandeira(a2){ if(!/^[A-Z]{2}$/.test(a2)) return '🏳'; return String.fromCodePoint(...[...a2].map(c=>0x1F1E6 + c.charCodeAt(0) - 65)); }
-function statusDe(a2){ return (state.countries[a2] && state.countries[a2].status) || 'nao'; }
+function statusDe(a2){
+  const r = state.regioes && state.regioes[a2];
+  if (r && r.total > 0){
+    const n = Object.keys(r.v || {}).length;
+    if (n >= r.total) return 'visitado';
+    if (n > 0) return 'parcial';
+  }
+  return (state.countries[a2] && state.countries[a2].status) || 'nao';
+}
 function setStatus(a2, st){
   if (st === 'nao') delete state.countries[a2];
   else state.countries[a2] = { status: st };
@@ -432,8 +473,11 @@ const TODOS = Object.values(N2A)
 
 /* ============ ESTATÍSTICAS ============ */
 function refreshStats(){
-  const v = Object.values(state.countries).filter(c=>c.status==='visitado').length;
-  const p = Object.values(state.countries).filter(c=>c.status==='planeado').length;
+  const todos = new Set([...Object.keys(state.countries), ...Object.keys(state.regioes||{})]);
+  let v = 0, p = 0;
+  todos.forEach(a2=>{ const st = statusDe(a2); if (st==='visitado' || st==='parcial') v++; else if (st==='planeado') p++; });
+  const reg = Object.values(state.regioes || {}).reduce((t,r)=> t + Object.keys(r.v||{}).length, 0);
+  document.getElementById('stRegioes').textContent = reg;
   document.getElementById('stVisitados').textContent = v;
   document.getElementById('stPlaneados').textContent = p;
   document.getElementById('stPct').textContent = Math.round(v / TOTAL_PAISES * 100) + '%';
@@ -448,7 +492,7 @@ function showTab(name){
 }
 
 /* ============ MAPA ============ */
-const CORES = { visitado:'var(--gold)', planeado:'var(--teal)', nao:'var(--land)' };
+const CORES = { visitado:'var(--gold)', parcial:'var(--parcial)', planeado:'var(--teal)', nao:'var(--land)' };
 let gPaises, zoomBeh, svgMap;
 
 function desenharMapa(topo){
@@ -480,7 +524,7 @@ function desenharMapa(topo){
 function paintMap(){
   if (gPaises) gPaises.attr('fill', d => CORES[statusDe(N2A[String(+d.id)] || '')]);
 }
-fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json')
   .then(r=>r.json()).then(desenharMapa)
   .catch(()=>{ document.getElementById('mapa').innerHTML = '<p style="padding:30px;color:var(--muted)">Sem ligação à internet — o mapa não pôde ser carregado. Os restantes separadores funcionam normalmente.</p>'; });
 
@@ -490,6 +534,9 @@ function abrirModal(a2){
   modalA2 = a2;
   document.getElementById('mFlag').textContent = bandeira(a2);
   document.getElementById('mNome').textContent = nomePT(a2);
+  const rr = state.regioes && state.regioes[a2];
+  const nn = rr ? Object.keys(rr.v || {}).length : 0;
+  document.getElementById('mReg').textContent = nn ? `${nn}/${rr.total} regiões visitadas` : '';
   marcarBtns(document.getElementById('mStatus'), statusDe(a2));
   document.getElementById('overlay').classList.add('open');
 }
@@ -510,7 +557,7 @@ document.getElementById('overlay').addEventListener('click', ev=>{ if (ev.target
 document.getElementById('mFicha').onclick = ()=>{
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('pSel').value = modalA2;
-  renderPais(); showTab('paises');
+  renderPais(); carregarRegioes(modalA2); showTab('paises');
 };
 
 /* ============ DIÁRIO ============ */
@@ -606,7 +653,7 @@ function regioesDe(a2){
   });
   return base;
 }
-selPais.addEventListener('change', renderPais);
+selPais.addEventListener('change', ()=>{ renderPais(); carregarRegioes(selPais.value); });
 document.getElementById('pStatus').addEventListener('click', ev=>{
   const b = ev.target.closest('.btn'); if(!b) return;
   setStatus(selPais.value, b.dataset.st);
@@ -658,10 +705,230 @@ function atualizarProgresso(a2){
     ? `${feitos}/${tot} pontos de interesse vistos (${pct}%) — ${bandeira(a2)} ${nomePT(a2)}`
     : `${bandeira(a2)} ${nomePT(a2)} — sem guia; adiciona regiões abaixo`;
 }
+
+/* Mapeamento do nome da região no guia → palavras-chave para encontrar no geoBoundaries */
+const GUIA_TO_GEO = {
+  /* PT — distritos reais */
+  'PT:Norte':                   ['porto','braga','viana do castelo','vila real','bragança'],
+  'PT:Centro':                  ['coimbra','aveiro','viseu','guarda','castelo branco','leiria'],
+  'PT:Lisboa e Vale do Tejo':   ['lisboa','setúbal','santarém','portalegre'],
+  'PT:Alentejo':                ['beja','évora'],
+  'PT:Algarve':                 ['faro'],
+  'PT:Madeira':                 ['madeira'],
+  'PT:Açores':                  ['açores'],
+  /* ES */
+  'ES:Madrid e Centro':         ['madrid','castilla','toledo','segovia'],
+  'ES:Catalunha':               ['catalun','catalu'],
+  'ES:Andaluzia':               ['andaluc'],
+  'ES:Norte':                   ['basque','navarra','aragon','cantabria','galicia','asturias','rioja'],
+  'ES:Ilhas':                   ['balear','canaria'],
+  /* FR */
+  'FR:Paris e Île-de-France':   ['ile-de-france','île-de-france'],
+  'FR:Norte e Normandia':       ['normandie','hauts-de-france','grand est'],
+  'FR:Vale do Loire':           ['pays de la loire','centre-val'],
+  'FR:Sul':                     ['nouvelle-aquitaine','occitanie','provence'],
+  'FR:Alpes':                   ['auvergne'],
+  /* IT — macro-regiões reais: Nord-Ovest, Nord-Est, Centro, Sud, Isole */
+  'IT:Norte':                   ['nord'],
+  'IT:Centro':                  ['centro'],
+  'IT:Sul':                     ['sud'],
+  'IT:Ilhas':                   ['isole'],
+  /* GB */
+  'GB:Londres':                 ['london'],
+  'GB:Inglaterra (fora de Londres)': ['england','yorkshire','lancashire','cornwall','devon','kent'],
+  'GB:Escócia':                 ['scotland'],
+  'GB:País de Gales e Irlanda do Norte': ['wales','northern ireland'],
+  /* DE */
+  'DE:Berlim e Este':           ['berlin','sachsen','thüringen','sachsen-anhalt','brandenbur','mecklenburg'],
+  'DE:Baviera':                 ['bayern','bavaria'],
+  'DE:Oeste':                   ['nordrhein','rheinland','hessen','saarland'],
+  'DE:Norte':                   ['hamburg','schleswig','niedersachsen','bremen'],
+  /* NL */
+  'NL:Amesterdão':              ['north holland','noord-holland'],
+  'NL:Resto do país':           ['utrecht','south holland','zeeland','north brabant','gelderland','overijssel','flevoland','groningen','friesland','drenthe','limburg'],
+  /* BE */
+  'BE:Bruxelas':                ['bruxelles','brussels','brabant'],
+  'BE:Flandres':                ['flanders','antwerp','east flanders','west flanders','oost','west'],
+  'BE:Valónia':                 ['wallonia','wallonne','namur','liege','hainaut','luxembourg'],
+  /* CH */
+  'CH:Alpes Berneses':          ['bern','berne','valais','wallis','uri','schwyz','obwald','nidwald','glarus'],
+  'CH:Cidades':                 ['zürich','zurich','luzern','lucerne','geneva','geneve','basel','vaud'],
+  'CH:Sul':                     ['ticino','graubünden','grisons'],
+  /* AT */
+  'AT:Viena':                   ['wien','vienna'],
+  'AT:Salzburgo e Lagos':       ['salzburg','oberösterreich','upper austria'],
+  'AT:Tirol e Alpes':           ['tirol','tyrol','vorarlberg','kärnten','carinthia','steiermark','styria'],
+  /* NO — regiões reais: Oslo, Viken, Vestland, Vestfold og Telemark, etc. */
+  'NO:Fiordes':                 ['vestland','møre og romsdal','vestfold'],
+  'NO:Cidades':                 ['oslo','viken','rogaland','agder','innlandet'],
+  'NO:Norte':                   ['nordland','trøndelag','troms og finnmark'],
+  /* SE — regiões reais: läns (condados) */
+  'SE:Estocolmo':               ['stockholms'],
+  'SE:Resto do país':           ['västra götalands','skåne','östergötlands','hallands','jönköpings','kronobergs','blekinge','kalmar','södermanlands','örebro','västmanlands','värmlands','dalarnas','gävleborgs','jämtlands','västernorrlands','västerbottens','norrbottens','gotlands','uppsala'],
+  /* DK */
+  'DK:Copenhaga':               ['capital','region hovedstaden','sjaelland','zealand'],
+  'DK:Resto do país':           ['southern denmark','syddanmark','central denmark','midtjylland','north denmark','nordjylland'],
+  /* IS — regiões reais */
+  'IS:Círculo Dourado e Sul':   ['southern region','southern peninsula'],
+  'IS:Reiquiavique e Oeste':    ['capital region','western region','westfjords'],
+  'IS:Norte':                   ['northeastern region','northwestern region','eastern region'],
+  /* TR — 81 províncias; mapeamento por grupos */
+  'TR:Istambul':                ['istanbul'],
+  'TR:Anatólia':                ['ankara','konya','kayseri','nevşehir','aksaray','niğde','karaman','sivas','yozgat','çorum','amasya','tokat','ordu','samsun'],
+  'TR:Costas':                  ['antalya','muğla','aydın','izmir','manisa','çanakkale','bursa','tekirdağ','kocaeli','sakarya','trabzon','rize','artvin','hatay','mersin','adana'],
+  /* GR — regiões reais */
+  'GR:Atenas e Ática':          ['attica'],
+  'GR:Continente':              ['thessalia','epirus','macedonia','peloponisos'],
+  'GR:Cíclades':                ['egean'],
+  'GR:Outras ilhas':            ['crete','ionian'],
+  /* HR — comarcas reais */
+  'HR:Dalmácia':                ['split','dubrovnik','zadar','šibenik'],
+  'HR:Interior e Norte':        ['zagreb','istria','karlovac','krapina','varaždin','koprivnica','bjelovar','virovitica','požega','brod','vukovar','osijek'],
+  /* PL — voivodatos */
+  'PL:Sul':                     ['lesser poland','subcarpathian'],
+  'PL:Centro e Norte':          ['masovian voivodeship','!west pomeranian','pomeranian voivodeship','lower silesian voivodeship','kuyavian-pomeranian voivodeship'],
+  /* CZ */
+  'CZ:Praga':                   ['praha','prague'],
+  'CZ:Resto do país':           ['středočeský','jihočeský','plzeňský','karlovarský','ústecký','liberecký','královéhradecký','pardubický','vysočina','jihomoravský','olomoucký','moravskoslezský','zlínský'],
+  /* HU */
+  'HU:Budapeste':               ['pest','budapest'],
+  'HU:Resto do país':           ['győr','vas','zala','veszprém','baranya','somogy','tolna','bács','fejér','komárom','jász','szabolcs','hajdú','borsod','heves','nógrád','békés','csongrád'],
+  /* US */
+  'US:Nordeste':                ['new york','massachusetts','pennsylvania','new jersey','connecticut','maine','new hampshire','vermont','rhode island','maryland','delaware','district of columbia'],
+  'US:Oeste':                   ['california','oregon','nevada','arizona','washington'],
+  'US:Parques e Sudoeste':      ['utah','colorado','wyoming','montana','idaho','new mexico'],
+  'US:Sul e outros':            ['florida','georgia','alabama','mississippi','louisiana','south carolina','north carolina','tennessee','arkansas','hawaii','texas','oklahoma','kansas','missouri','iowa','minnesota','wisconsin','michigan','illinois','indiana','ohio','virginia','west virginia','kentucky','alaska','nebraska','north dakota','south dakota'],
+  /* CA */
+  'CA:Este':                    ['ontario','quebec'],
+  'CA:Oeste':                   ['british columbia','alberta'],
+  'CA:Norte e Atlântico':       ['nova scotia','new brunswick','prince edward','newfoundland','yukon','northwest territories','nunavut','manitoba','saskatchewan'],
+  /* MX */
+  'MX:Centro':                  ['ciudad de mexico','mexico city','state of mexico','guanajuato','san luis','puebla','hidalgo','tlaxcala','morelos','queretaro'],
+  'MX:Iucatão':                 ['yucatan','campeche','quintana roo','tabasco'],
+  'MX:Sul e Pacífico':          ['oaxaca','chiapas','guerrero','jalisco','colima','michoacan','nayarit','sinaloa','sonora','baja'],
+  /* BR — estados sem acento */
+  'BR:Sudeste':                 ['sao paulo','minas gerais','jeneiro','espirito'],
+  'BR:Nordeste':                ['bahia','pernambuco','ceara','maranhao','paraiba','rio granda do norte','alagoas','sergipe','piaui'],
+  'BR:Sul e Centro-Oeste':      ['parana','santa catarina','rio grande do sul','mato grosso','goias','distrito federal'],
+  'BR:Norte':                   ['amazonas','para','acre','rondonia','roraima','amapa','tocantins'],
+  /* AR */
+  'AR:Buenos Aires':            ['buenos aires'],
+  'AR:Patagónia':               ['santa cruz','chubut','neuquen','río negro','tierra del fuego'],
+  'AR:Norte e Cuyo':            ['misiones','corrientes','entre rios','chaco','formosa','salta','jujuy','tucuman','santiago del estero','catamarca','la rioja','mendoza','san juan','san luis','la pampa','córdoba'],
+  /* PE */
+  'PE:Cusco e Vale Sagrado':    ['cusco'],
+  'PE:Sul':                     ['puno','arequipa','ica','moquegua','tacna','ayacucho','apurimac','huancavelica'],
+  'PE:Lima e Norte':            ['lima','callao','piura','lambayeque','cajamarca','la libertad','ancash','huanuco','ucayali','loreto','amazonas','san martin','madre de dios','junin','pasco','tumbes'],
+  /* ZA */
+  'ZA:Cidade do Cabo':          ['western cape'],
+  'ZA:Rota Jardim':             ['eastern cape'],
+  'ZA:Nordeste':                ['gauteng','limpopo','mpumalanga','kwazulu','north west','free state','nothern cape'],
+  /* MA */
+  'MA:Cidades imperiais':       ['rabat','fez','marrakech','meknes'],
+  'MA:Norte':                   ['tangier','oriental'],
+  'MA:Sul e deserto':           ['souss','draa','guelmim','laayoune','dakhla'],
+  /* EG — governadorias */
+  'EG:Cairo e Gizé':            ['cairo','giza','qalyubia'],
+  'EG:Vale do Nilo':            ['luxor','aswan','qena','sohag','asyut','minya','beni suef','faiyum'],
+  'EG:Mar Vermelho e Sinai':    ['red sea','south sinai','north sinai'],
+  /* AE */
+  'AE:Dubai':                   ['dubai'],
+  'AE:Abu Dhabi e outros':      ['abu dhabi','sharjah','ajman','umm al','ras al','fujairah'],
+  /* IN */
+  'IN:Triângulo Dourado':       ['delhi','uttar pradesh','rajasthan'],
+  'IN:Rajastão e Norte':        ['punjab','jammu','himachal','uttarakhand','haryana','madhya pradesh','bihar','jharkhand','west bengal','sikkim','assam','meghalaya','tripura','manipur','nagaland','arunachal','mizoram'],
+  'IN:Sul':                     ['kerala','goa','karnataka','andhra','telangana','tamil','maharash','odisha','chhattisgarh','gujarat'],
+  /* TH */
+  'TH:Banguecoque e Centro':    ['bangkok','pathum','nonthaburi','samut','nakhon pathom','ayutthaya','ang thong','chai nat','singburi','lopburi','saraburi','nakhon nayok','prachinburi','chachoengsao','chonburi'],
+  'TH:Norte':                   ['chiang mai','chiang rai','lampang','lamphun','nan','phrae','mae hong son','phayao','phichit','phitsanulok','kamphaeng','sukhothai','tak','uttaradit','phetchabun'],
+  'TH:Ilhas e Sul':             ['phuket','krabi','surat','nakhon si','trang','satun','songkhla','pattani','yala','narathiwat','ranong','chumphon'],
+  /* VN */
+  'VN:Norte':                   ['ha noi','hanoi','bac','quang ninh','hai phong','hai duong','hung yen','thai binh','nam dinh','ninh binh','ha nam','vinh phuc','bac ninh','thai nguyen','tuyen quang','cao bang','lang son','lao cai','yen bai','phu tho','hoa binh','son la','dien bien','lai chau','ha giang'],
+  'VN:Centro':                  ['da nang','hue','quang tri','quang binh','ha tinh','nghe an','thanh hoa','quang nam','quang ngai','binh dinh','phu yen','khanh hoa','ninh thuan','binh thuan','kon tum','gia lai','dak lak','dak nong','lam dong'],
+  'VN:Sul':                     ['ho chi minh','binh phuoc','tay ninh','binh duong','dong nai','ba ria','long an','dong thap','an giang','tien giang','vinh long','ben tre','kien giang','can tho','hau giang','soc trang','tra vinh','ca mau','bac lieu'],
+  /* ID */
+  'ID:Bali':                    ['bali'],
+  'ID:Java':                    ['java','jakarta','jawa','yogyakarta'],
+  'ID:Outras ilhas':            ['kalimantan','sulawesi','sumatra','papua','maluku','nusa tenggara'],
+  /* JP — prefeituras */
+  'JP:Tóquio e região':         ['tokyo','kanagawa','saitama','chiba','ibaraki','tochigi','gunma','yamanashi','shizuoka'],
+  'JP:Kansai':                  ['osaka','kyoto','hyogo','nara','shiga','mie','wakayama'],
+  'JP:Outras regiões':          ['hiroshima','hokkaido','okinawa','aichi','niigata','miyagi','fukushima','aomori','iwate','akita','yamagata','fukui','toyama','ishikawa','nagano','gifu','okayama','tottori','shimane','yamaguchi','ehime','kochi','tokushima','kagawa','fukuoka','saga','nagasaki','kumamoto','oita','miyazaki','kagoshima'],
+  /* CN */
+  'CN:Pequim e Norte':          ['beijing','tianjin','hebei','shanxi','inner mongolia','liaoning','jilin','heilongjiang','shandong'],
+  'CN:Centro e Este':           ['shanghai','jiangsu','zhejiang','anhui','fujian','jiangxi','henan','hubei','hunan','chongqing','sichuan','shaanxi','gansu','qinghai'],
+  'CN:Sul e Oeste':             ['guangdong','guangxi','hainan','guizhou','yunnan','tibet','xinjiang','ningxia'],
+  /* AU */
+  'AU:Costa Este':              ['new south wales','queensland'],
+  'AU:Sul':                     ['victoria','south australia','tasmania','australian capital'],
+  'AU:Centro e Oeste':          ['western australia','northern territory'],
+  /* NZ */
+  'NZ:Ilha Norte':              ['northland','auckland','waikato','bay of plenty','gisborne','hawke','manawatu','taranaki','wellington','tasman','nelson','marlborough'],
+  'NZ:Ilha Sul':                ['canterbury','west coast','otago','southland'],
+  /* IE */
+  'IE:Dublin e Este':           ['dublin','wicklow','wexford','carlow','kildare','meath','louth','monaghan','cavan'],
+  'IE:Sul':                     ['cork','kerry','limerick','tipperary','waterford','kilkenny'],
+  'IE:Oeste':                   ['galway','mayo','sligo','roscommon','leitrim','donegal','clare','offaly','westmeath','longford','laois'],
+};
+
+function guiaToGeoMatch(a2, nomeGuia, gjFeatures){
+  return guiaToGeoMatchAll(a2, nomeGuia, gjFeatures)[0] || null;
+}
+function guiaToGeoMatchAll(a2, nomeGuia, gjFeatures){
+  const lower = nomeGuia.toLowerCase();
+  const allKeys = GUIA_TO_GEO[a2+':'+nomeGuia] || [];
+  /* Palavras com "!" são exclusões */
+  const keys = allKeys.filter(k => !k.startsWith('!'));
+  const excl = allKeys.filter(k => k.startsWith('!')).map(k => k.slice(1));
+  /* Se há palavras-chave definidas, marcar TODOS os matches */
+  if (keys.length){
+    const matched = gjFeatures.filter(f => {
+      const gn = nomeReg(f).toLowerCase();
+      const inc = keys.some(kw => gn.includes(kw));
+      const ex  = excl.some(kw => gn.includes(kw));
+      return inc && !ex;
+    }).map(nomeReg);
+    if (matched.length) return matched;
+  }
+  /* Correspondência exata */
+  const exato = gjFeatures.find(f => nomeReg(f).toLowerCase() === lower);
+  if (exato) return [nomeReg(exato)];
+  /* Fallback: parcial */
+  const found2 = gjFeatures.find(f => {
+    const gn = nomeReg(f).toLowerCase();
+    return gn.includes(lower) || lower.includes(gn);
+  });
+  return found2 ? [nomeReg(found2)] : [];
+}
+
 window.toggleVista = (a2, k, val)=>{
   const s = seenDe(a2);
   if (val) s.checked[k] = true; else delete s.checked[k];
+  /* Ao marcar um ponto de interesse, marcar automaticamente a região correspondente */
+  if (val){
+    const nomeRegiao = k.split('|')[0];
+    const r = regDe(a2);
+    /* Se o geojson já está em cache, marcar imediatamente */
+    const gjReg = REG_CACHE[a2];
+    if (gjReg){
+      const geoNomes = guiaToGeoMatchAll(a2, nomeRegiao, gjReg.features);
+      geoNomes.forEach(gn => { r.v[gn] = true; });
+    } else {
+      /* Geojson ainda não carregado — carregar agora e marcar quando terminar */
+      carregarRegioes(a2).then(()=>{
+        const gj2 = REG_CACHE[a2];
+        if (gj2){
+          const geoNomes = guiaToGeoMatchAll(a2, nomeRegiao, gj2.features);
+          geoNomes.forEach(gn => { r.v[gn] = true; });
+          save();
+          if (selPais.value === a2) desenharRegioes(a2, gj2);
+        }
+      });
+    }
+  }
   save(); renderPais();
+  /* Redesenhar mapa de regiões se estiver visível */
+  if (REG_CACHE[a2] && selPais.value === a2) desenharRegioes(a2, REG_CACHE[a2]);
 };
 window.addVista = (a2, regiao, input)=>{
   const v = input.value.trim(); if (!v) return;
@@ -709,7 +976,7 @@ document.getElementById('fileImport').addEventListener('change', ev=>{
     try {
       const data = JSON.parse(r.result);
       if (!data.countries && !data.trips) throw new Error();
-      state = Object.assign({countries:{}, trips:[], seen:{}}, data);
+      state = Object.assign({countries:{}, trips:[], seen:{}, regioes:{}}, data);
       save(); renderTrips(); renderPais();
       toast('Dados importados ✓');
     } catch(e){ toast('Ficheiro inválido'); }
@@ -718,8 +985,173 @@ document.getElementById('fileImport').addEventListener('change', ev=>{
   r.readAsText(f);
 });
 
+
+/* ============ TEMA ============ */
+document.documentElement.dataset.theme = localStorage.getItem('atlasTheme') || 'light';
+const btnTheme = document.getElementById('btnTheme');
+function syncTheme(){ btnTheme.textContent = document.documentElement.dataset.theme === 'dark' ? '☀' : '🌙'; }
+btnTheme.onclick = ()=>{
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('atlasTheme', t);
+  syncTheme();
+};
+syncTheme();
+
+/* ============ REGIÕES (geoBoundaries ADM1) ============ */
+const A2A3 = {"AW":"ABW","AF":"AFG","AO":"AGO","AI":"AIA","AX":"ALA","AL":"ALB","AD":"AND","AE":"ARE","AR":"ARG","AM":"ARM","AS":"ASM","AQ":"ATA","TF":"ATF","AG":"ATG","AU":"AUS","AT":"AUT","AZ":"AZE","BI":"BDI","BE":"BEL","BJ":"BEN","BQ":"BES","BF":"BFA","BD":"BGD","BG":"BGR","BH":"BHR","BS":"BHS","BA":"BIH","BL":"BLM","BY":"BLR","BZ":"BLZ","BM":"BMU","BO":"BOL","BR":"BRA","BB":"BRB","BN":"BRN","BT":"BTN","BV":"BVT","BW":"BWA","CF":"CAF","CA":"CAN","CC":"CCK","CH":"CHE","CL":"CHL","CN":"CHN","CI":"CIV","CM":"CMR","CD":"COD","CG":"COG","CK":"COK","CO":"COL","KM":"COM","CV":"CPV","CR":"CRI","CU":"CUB","CW":"CUW","CX":"CXR","KY":"CYM","CY":"CYP","CZ":"CZE","DE":"DEU","DJ":"DJI","DM":"DMA","DK":"DNK","DO":"DOM","DZ":"DZA","EC":"ECU","EG":"EGY","ER":"ERI","EH":"ESH","ES":"ESP","EE":"EST","ET":"ETH","FI":"FIN","FJ":"FJI","FK":"FLK","FR":"FRA","FO":"FRO","FM":"FSM","GA":"GAB","GB":"GBR","GE":"GEO","GG":"GGY","GH":"GHA","GI":"GIB","GN":"GIN","GP":"GLP","GM":"GMB","GW":"GNB","GQ":"GNQ","GR":"GRC","GD":"GRD","GL":"GRL","GT":"GTM","GF":"GUF","GU":"GUM","GY":"GUY","HK":"HKG","HM":"HMD","HN":"HND","HR":"HRV","HT":"HTI","HU":"HUN","ID":"IDN","IM":"IMN","IN":"IND","IO":"IOT","IE":"IRL","IR":"IRN","IQ":"IRQ","IS":"ISL","IL":"ISR","IT":"ITA","JM":"JAM","JE":"JEY","JO":"JOR","JP":"JPN","KZ":"KAZ","KE":"KEN","KG":"KGZ","KH":"KHM","KI":"KIR","KN":"KNA","KR":"KOR","KW":"KWT","LA":"LAO","LB":"LBN","LR":"LBR","LY":"LBY","LC":"LCA","LI":"LIE","LK":"LKA","LS":"LSO","LT":"LTU","LU":"LUX","LV":"LVA","MO":"MAC","MF":"MAF","MA":"MAR","MC":"MCO","MD":"MDA","MG":"MDG","MV":"MDV","MX":"MEX","MH":"MHL","MK":"MKD","ML":"MLI","MT":"MLT","MM":"MMR","ME":"MNE","MN":"MNG","MP":"MNP","MZ":"MOZ","MR":"MRT","MS":"MSR","MQ":"MTQ","MU":"MUS","MW":"MWI","MY":"MYS","YT":"MYT","NA":"NAM","NC":"NCL","NE":"NER","NF":"NFK","NG":"NGA","NI":"NIC","NU":"NIU","NL":"NLD","NO":"NOR","NP":"NPL","NR":"NRU","NZ":"NZL","OM":"OMN","PK":"PAK","PA":"PAN","PN":"PCN","PE":"PER","PH":"PHL","PW":"PLW","PG":"PNG","PL":"POL","PR":"PRI","KP":"PRK","PT":"PRT","PY":"PRY","PS":"PSE","PF":"PYF","QA":"QAT","RE":"REU","RO":"ROU","RU":"RUS","RW":"RWA","SA":"SAU","SD":"SDN","SN":"SEN","SG":"SGP","GS":"SGS","SH":"SHN","SJ":"SJM","SB":"SLB","SL":"SLE","SV":"SLV","SM":"SMR","SO":"SOM","PM":"SPM","RS":"SRB","SS":"SSD","ST":"STP","SR":"SUR","SK":"SVK","SI":"SVN","SE":"SWE","SZ":"SWZ","SX":"SXM","SC":"SYC","SY":"SYR","TC":"TCA","TD":"TCD","TG":"TGO","TH":"THA","TJ":"TJK","TK":"TKL","TM":"TKM","TL":"TLS","TO":"TON","TT":"TTO","TN":"TUN","TR":"TUR","TV":"TUV","TW":"TWN","TZ":"TZA","UG":"UGA","UA":"UKR","UM":"UMI","UY":"URY","US":"USA","UZ":"UZB","VA":"VAT","VC":"VCT","VE":"VEN","VG":"VGB","VI":"VIR","VN":"VNM","VU":"VUT","WF":"WLF","WS":"WSM","YE":"YEM","ZA":"ZAF","ZM":"ZMB","ZW":"ZWE"};
+const REG_CACHE = {};
+function regDe(a2){ if (!state.regioes[a2]) state.regioes[a2] = { total:0, v:{} }; return state.regioes[a2]; }
+
+async function carregarRegioes(a2){
+  const cont = document.getElementById('regMapa');
+  const lista = document.getElementById('regLista');
+  lista.innerHTML = '';
+  document.getElementById('regProgLbl').textContent = '—';
+  if (REG_CACHE[a2]){ desenharRegioes(a2, REG_CACHE[a2]); return; }
+  cont.innerHTML = '<p class="reg-hint">A carregar regiões…</p>';
+  const a3 = A2A3[a2];
+  if (!a3){ cont.innerHTML = '<p class="reg-hint">Sem dados de regiões para este território — usa apenas o estado manual acima.</p>'; return; }
+  try{
+    const meta = await (await fetch('https://www.geoboundaries.org/api/current/gbOpen/' + a3 + '/ADM1/')).json();
+    const gjUrl = meta.simplifiedGeometryGeoJSON
+      .replace('https://github.com/', 'https://media.githubusercontent.com/media/')
+      .replace('/raw/', '/');
+    const gj = await (await fetch(gjUrl)).json();
+    REG_CACHE[a2] = rewind(gj);
+  } catch(e){
+    if (selPais.value === a2) cont.innerHTML = '<p class="reg-hint">Não foi possível obter as regiões deste território (sem dados ou sem internet). Podes usar o estado manual acima.</p>';
+    return;
+  }
+  if (selPais.value !== a2) return;
+  desenharRegioes(a2, REG_CACHE[a2]);
+}
+
+function rewindPoly(coords){
+  /* Se o polígono "cobre" mais de meio globo, a orientação está invertida — inverte os anéis */
+  if (d3.geoArea({type:'Polygon', coordinates: coords}) > Math.PI)
+    coords.forEach(ring => ring.reverse());
+}
+function rewind(gj){
+  gj.features.forEach(f => {
+    const g = f.geometry; if (!g) return;
+    if (g.type === 'Polygon') rewindPoly(g.coordinates);
+    else if (g.type === 'MultiPolygon') g.coordinates.forEach(rewindPoly);
+  });
+  return gj;
+}
+function fixEnc(t){
+  /* Alguns ficheiros geoBoundaries vêm com UTF-8 mal descodificado (ex.: "RegiÃ£o") — repara */
+  if (!/Ã|Â/.test(t)) return t;
+  try{
+    const bytes = Uint8Array.from([...t].map(c => c.charCodeAt(0) & 0xff));
+    const dec = new TextDecoder('utf-8', {fatal:true}).decode(bytes);
+    return dec;
+  } catch(e){ return t; }
+}
+function nomeReg(f){ return fixEnc(f.properties.shapeName || f.properties.name || '—'); }
+
+function desenharRegioes(a2, gj){
+  const r = regDe(a2);
+  if (r.total !== gj.features.length){ r.total = gj.features.length; save(); }
+  const cont = document.getElementById('regMapa');
+  cont.innerHTML = '';
+  const W = 760, H = 420;
+  const proj = d3.geoMercator().fitExtent([[8,8],[W-8,H-8]], gj);
+  const path = d3.geoPath(proj);
+  const svg = d3.select(cont).append('svg').attr('viewBox', `0 0 ${W} ${H}`);
+
+  /* Polígonos */
+  svg.selectAll('path.region').data(gj.features).join('path')
+    .attr('class','region').attr('d', path)
+    .attr('fill', d => r.v[nomeReg(d)] ? 'var(--gold)' : 'var(--land)')
+    .on('click', (ev,d)=> toggleRegiao(a2, nomeReg(d)))
+    .append('title').text(d => nomeReg(d));
+
+  /* Etiquetas das capitais/cidades principais por região */
+  const labelG = svg.append('g').attr('class','reg-labels');
+  gj.features.forEach(f => {
+    const nome = nomeReg(f);
+    const geo = f.geometry;
+    if (!geo) return;
+
+    /* Centroide visual (poleOfInaccessibility seria melhor mas usamos o centroide D3) */
+    let cx, cy;
+    try {
+      const c = d3.geoPath(proj).centroid(f);
+      if (!c || isNaN(c[0]) || isNaN(c[1])) return;
+      [cx, cy] = c;
+    } catch(e){ return; }
+
+    /* Tamanho da região: polígonos pequenos não recebem etiqueta de texto, só ponto */
+    const area = d3.geoArea(f);
+    const showText = area > 0.00015; /* ~≥ 1500 km² aprox */
+
+    /* Ponto central */
+    labelG.append('circle')
+      .attr('cx', cx).attr('cy', cy).attr('r', 2.5)
+      .attr('fill', r.v[nome] ? 'rgba(0,0,0,.5)' : 'rgba(80,60,30,.55)')
+      .attr('pointer-events','none');
+
+    if (showText){
+      /* Sombra branca */
+      labelG.append('text')
+        .attr('x', cx).attr('y', cy - 5)
+        .attr('text-anchor','middle')
+        .attr('font-size', '9px').attr('font-family','sans-serif')
+        .attr('fill','rgba(255,255,255,.85)').attr('stroke','rgba(255,255,255,.85)')
+        .attr('stroke-width','3').attr('paint-order','stroke')
+        .attr('pointer-events','none')
+        .text(nome);
+      /* Texto principal */
+      labelG.append('text')
+        .attr('x', cx).attr('y', cy - 5)
+        .attr('text-anchor','middle')
+        .attr('font-size', '9px').attr('font-family','sans-serif')
+        .attr('fill', r.v[nome] ? 'rgba(50,30,0,.9)' : 'rgba(60,50,40,.85)')
+        .attr('pointer-events','none')
+        .text(nome);
+    }
+  });
+
+  renderChips(a2, gj);
+  atualizarRegProg(a2);
+}
+
+function renderChips(a2, gj){
+  const r = regDe(a2);
+  const nomes = gj.features.map(nomeReg).sort((x,y)=>x.localeCompare(y,'pt'));
+  document.getElementById('regLista').innerHTML = nomes.map(n =>
+    `<button class="chip ${r.v[n] ? 'on' : ''}" onclick="toggleRegiao('${a2}','${escAttr(n)}')">${esc(n)}</button>`
+  ).join('');
+}
+
+function atualizarRegProg(a2){
+  const r = regDe(a2);
+  const n = Object.keys(r.v).length;
+  document.getElementById('regProgLbl').textContent = `${n}/${r.total} regiões visitadas — ${bandeira(a2)} ${nomePT(a2)}`;
+}
+
+window.toggleRegiao = (a2, nome)=>{
+  const r = regDe(a2);
+  if (r.v[nome]) delete r.v[nome]; else r.v[nome] = true;
+  save();
+  if (REG_CACHE[a2] && selPais.value === a2) desenharRegioes(a2, REG_CACHE[a2]);
+  marcarBtns(document.getElementById('pStatus'), statusDe(a2));
+};
+
+document.getElementById('btnLimparReg').onclick = ()=>{
+  const a2 = selPais.value;
+  if (!confirm('Limpar todas as regiões marcadas de ' + nomePT(a2) + '?')) return;
+  delete state.regioes[a2];
+  save();
+  if (REG_CACHE[a2]) desenharRegioes(a2, REG_CACHE[a2]);
+  marcarBtns(document.getElementById('pStatus'), statusDe(a2));
+  toast('Regiões limpas');
+};
+
 /* ============ ARRANQUE ============ */
-refreshStats(); renderTrips(); renderPais();
+refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
 </script>
 </body>
 </html>
