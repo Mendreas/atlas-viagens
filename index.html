@@ -139,6 +139,80 @@ h2.sec span{color:var(--gold);}
 #toast.show{transform:translateX(-50%) translateY(0);}
 
 
+
+/* ---------- Diário: imagens e links ---------- */
+.trip-gallery{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px;}
+.trip-gallery img{width:90px;height:72px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;}
+.trip-gallery img:hover{border-color:var(--gold);}
+.trip-links{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px;}
+.trip-links a{font-size:.82rem;color:var(--teal);text-decoration:none;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 10px;}
+.trip-links a:hover{border-color:var(--teal);}
+.img-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:300;cursor:zoom-out;}
+.img-modal img{max-width:92vw;max-height:88vh;border-radius:8px;}
+.form-section{border:1px dashed var(--line);border-radius:var(--radius);padding:12px 14px;margin-top:14px;}
+.form-section label.sec-title{font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px;display:block;}
+.link-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+.link-row input{flex:1;}
+.link-row .btn{flex:none;padding:6px 10px;}
+.imgs-preview{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.imgs-preview .thumb{position:relative;}
+.imgs-preview img{width:72px;height:58px;object-fit:cover;border-radius:5px;}
+.imgs-preview .del-img{position:absolute;top:-5px;right:-5px;background:var(--coral);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.7rem;line-height:18px;text-align:center;cursor:pointer;}
+
+
+
+/* ---------- Modal de entrada do diário ---------- */
+.trip{cursor:pointer;}
+.trip:hover{border-color:var(--gold);}
+#diarioModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
+  align-items:flex-start;justify-content:center;z-index:160;padding:20px;overflow-y:auto;}
+#diarioModal.open{display:flex;}
+#diarioModalBox{background:var(--panel);border:1px solid var(--gold);border-radius:var(--radius);
+  padding:28px 30px;width:100%;max-width:760px;margin:auto;position:relative;}
+#diarioModalBox .dm-close{position:absolute;top:14px;right:16px;background:none;border:none;
+  font-size:1.5rem;cursor:pointer;color:var(--muted);}
+#diarioModalBox .dm-flag{font-size:2rem;margin-bottom:2px;}
+#diarioModalBox h2{font-family:'Fraunces',serif;font-size:1.5rem;margin:4px 0 2px;}
+#diarioModalBox .dm-meta{font-family:ui-monospace,Menlo,monospace;color:var(--muted);font-size:.82rem;margin-bottom:12px;}
+#diarioModalBox .dm-locais{color:var(--gold);font-size:.9rem;margin-bottom:10px;}
+#diarioModalBox .dm-notas{font-size:.95rem;white-space:pre-wrap;line-height:1.6;margin-bottom:14px;}
+#diarioModalBox .dm-gallery{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;}
+#diarioModalBox .dm-gallery img{width:140px;height:112px;object-fit:cover;border-radius:8px;cursor:pointer;transition:opacity .15s;}
+#diarioModalBox .dm-gallery img:hover{opacity:.85;}
+#diarioModalBox .dm-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+#diarioModalBox .dm-links a{color:var(--teal);text-decoration:none;font-size:.88rem;
+  background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:4px 12px;}
+#diarioModalBox .dm-links a:hover{border-color:var(--teal);}
+#diarioModalBox .dm-fotos-aviso{font-size:.82rem;color:var(--muted);margin-top:10px;}
+#diarioModalBox .dm-actions{margin-top:18px;display:flex;gap:8px;border-top:1px solid var(--line);padding-top:14px;}
+
+/* ---------- Modal de estatísticas ---------- */
+.stat{cursor:pointer;transition:border-color .15s,transform .1s;}
+.stat:hover{border-color:var(--gold);transform:translateY(-2px);}
+#statModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;
+  align-items:flex-start;justify-content:center;z-index:150;padding:20px;overflow-y:auto;}
+#statModal.open{display:flex;}
+#statModalBox{background:var(--panel);border:1px solid var(--gold);border-radius:var(--radius);
+  padding:24px;width:100%;max-width:720px;margin:auto;}
+#statModalBox h2{font-family:'Fraunces',serif;font-size:1.4rem;margin-bottom:16px;}
+#statModalBox h2 span{color:var(--gold);}
+.stat-list{display:grid;gap:10px;}
+.stat-item{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 16px;}
+.stat-item .si-top{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.stat-item .si-flag{font-size:1.3rem;}
+.stat-item .si-nome{font-weight:700;font-size:1rem;}
+.stat-item .si-meta{font-size:.78rem;color:var(--muted);font-family:ui-monospace,Menlo,monospace;}
+.stat-item .si-regs{font-size:.8rem;color:var(--teal);margin-top:2px;}
+.stat-item .si-notas{font-size:.85rem;margin-top:6px;white-space:pre-wrap;color:var(--paper);}
+.stat-item .si-gallery{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.stat-item .si-gallery img{width:80px;height:64px;object-fit:cover;border-radius:5px;cursor:pointer;}
+.stat-item .si-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.stat-item .si-links a{font-size:.78rem;color:var(--teal);text-decoration:none;
+  background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:2px 8px;}
+.stat-item .si-links a:hover{border-color:var(--teal);}
+#statModalClose{float:right;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted);margin-top:-4px;}
+.stat-empty{color:var(--muted);text-align:center;padding:20px;}
+
 /* ---------- Aba Regiões / Sub-continentes ---------- */
 .cont-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:14px;}
 .cont-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;cursor:pointer;transition:border-color .15s,transform .1s;}
@@ -184,11 +258,11 @@ h2.sec span{color:var(--gold);}
 </header>
 
 <div class="stats">
-  <div class="stat"><b id="stVisitados">0</b><small>Países visitados</small></div>
-  <div class="stat teal"><b id="stPlaneados">0</b><small>Planeados</small></div>
-  <div class="stat"><b id="stPct">0%</b><small>Do mundo</small></div>
-  <div class="stat"><b id="stRegioes">0</b><small>Regiões visitadas</small></div>
-  <div class="stat teal"><b id="stViagens">0</b><small>Viagens no diário</small></div>
+  <div class="stat" onclick="abrirStatModal('visitados')" title="Ver lista"><b id="stVisitados">0</b><small>Países visitados</small></div>
+  <div class="stat teal" onclick="abrirStatModal('planeados')" title="Ver lista"><b id="stPlaneados">0</b><small>Planeados</small></div>
+  <div class="stat" onclick="abrirStatModal('visitados')" title="Ver lista"><b id="stPct">0%</b><small>Do mundo</small></div>
+  <div class="stat" onclick="abrirStatModal('regioes')" title="Ver detalhes"><b id="stRegioes">0</b><small>Regiões visitadas</small></div>
+  <div class="stat teal" onclick="abrirStatModal('viagens')" title="Ver viagens"><b id="stViagens">0</b><small>Viagens no diário</small></div>
 </div>
 
 <nav>
@@ -231,6 +305,21 @@ h2.sec span{color:var(--gold);}
       <div><label>Locais visitados</label><input type="text" id="tLocais" placeholder="Ex.: Florença, Siena, Pisa"></div>
     </div>
     <div style="margin-top:14px"><label>Notas / diário</label><textarea id="tNotas" placeholder="O que viste, comeste, sentiste…"></textarea></div>
+
+    <div class="form-section">
+      <label class="sec-title">📸 Fotografias</label>
+      <input type="file" id="tImgInput" accept="image/*" multiple style="display:none">
+      <button class="btn" id="btnAddImgs" type="button">+ Adicionar fotos</button>
+      <small style="color:var(--muted);margin-left:8px;font-size:.78rem">Comprimidas e guardadas na app. Máx. 10 fotos por viagem.</small>
+      <div class="imgs-preview" id="tImgsPreview"></div>
+    </div>
+
+    <div class="form-section">
+      <label class="sec-title">🔗 Links externos (Google Photos, Flickr, etc.)</label>
+      <div id="tLinksContainer"></div>
+      <button class="btn" id="btnAddLink" type="button">+ Adicionar link</button>
+    </div>
+
     <div style="margin-top:14px; display:flex; gap:8px">
       <button class="btn gold" id="btnSaveTrip">Guardar viagem</button>
       <button class="btn" id="btnCancelEdit" style="display:none">Cancelar edição</button>
@@ -287,6 +376,37 @@ h2.sec span{color:var(--gold);}
     <div class="country-grid" id="countryGrid"></div>
   </div>
 </section>
+
+
+
+<!-- ============ MODAL DIÁRIO ============ -->
+<div id="diarioModal">
+  <div id="diarioModalBox">
+    <button class="dm-close" id="diarioModalClose">✕</button>
+    <div class="dm-flag" id="dmFlag"></div>
+    <h2 id="dmTitulo"></h2>
+    <div class="dm-meta" id="dmMeta"></div>
+    <div class="dm-locais" id="dmLocais"></div>
+    <div class="dm-notas" id="dmNotas"></div>
+    <div class="dm-gallery" id="dmGallery"></div>
+    <div id="dmFotosAviso"></div>
+    <div class="dm-links" id="dmLinks"></div>
+    <div class="dm-actions">
+      <button class="btn gold" id="dmEditar">Editar</button>
+      <button class="btn danger" id="dmApagar">Apagar</button>
+      <button class="btn" id="diarioModalClose2">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL ESTATÍSTICAS ============ -->
+<div id="statModal">
+  <div id="statModalBox">
+    <button id="statModalClose">✕</button>
+    <h2 id="statModalTitulo">Países <span>visitados</span></h2>
+    <div id="statModalContent" class="stat-list"></div>
+  </div>
+</div>
 
 <!-- Modal país (mapa) -->
 <div id="overlay">
@@ -644,12 +764,14 @@ function renderTrips(){
   const hoje = new Date().toISOString().slice(0,10);
   const trips = [...state.trips].sort((a,b)=> b.ini.localeCompare(a.ini));
   list.innerHTML = trips.map(t=>`
-    <div class="trip ${t.ini > hoje ? 'futura' : ''}">
+    <div class="trip ${t.ini > hoje ? 'futura' : ''}" onclick="abrirDiarioModal(${t.id})">
       <h3><span class="flag">${bandeira(t.pais)}</span>${esc(t.titulo)}</h3>
       <div class="meta">${nomePT(t.pais)} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}</div>
       ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
       ${t.notas ? `<p>${esc(t.notas)}</p>` : ''}
-      <div class="trip-actions">
+      ${t.imgs && t.imgs.length ? `<div class="trip-gallery">${t.imgs.map(f=>`<img src="${f.dataUrl}" title="${esc(f.name)}" onclick="event.stopPropagation();verImagem('${f.dataUrl}')">`).join('')}</div>` : ''}
+      ${t.links && t.links.length ? `<div class="trip-links">${t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label||l.url)}</a>`).join('')}</div>` : ''}
+      <div class="trip-actions" onclick="event.stopPropagation()">
         <button class="btn" onclick="editarTrip(${t.id})">Editar</button>
         <button class="btn danger" onclick="apagarTrip(${t.id})">Apagar</button>
       </div>
@@ -1609,6 +1731,369 @@ function desenharZonaExtraNoMapa(cont, a2, zona, r, W, H){
     cont.innerHTML += '<p class="reg-hint">Sem acesso ao mapa desta zona.</p>';
   });
 }
+
+
+/* ============ DIÁRIO: IMAGENS E LINKS ============ */
+/* Fotos: guardadas como {name, objUrl} em memória volátil — NÃO persistem no localStorage.
+   Ao sair da entrada do diário, os ObjectURLs são revogados e a memória libertada. */
+let formImgs = [];   // [{name, objUrl, file}] temporário durante edição
+let formLinks = [];  // [{url, label}] temporário durante edição
+/* Mapa id_viagem → [{name, objUrl}] para fotos carregadas nesta sessão */
+const sessFotos = {};
+
+/* Revogar todos os ObjectURLs de uma viagem (libertar memória) */
+function libertarFotos(tripId){
+  if (sessFotos[tripId]){
+    sessFotos[tripId].forEach(f => { try { URL.revokeObjectURL(f.objUrl); } catch(e){} });
+    delete sessFotos[tripId];
+  }
+}
+/* Revogar tudo (ex: ao sair da aba diário) */
+function libertarTodasFotos(){
+  Object.keys(sessFotos).forEach(libertarFotos);
+  formImgs.forEach(f => { try { URL.revokeObjectURL(f.objUrl); } catch(e){} });
+  formImgs = [];
+  renderFormImgs();
+}
+
+/* Botão adicionar fotos */
+document.getElementById('btnAddImgs').onclick = () => document.getElementById('tImgInput').click();
+document.getElementById('tImgInput').addEventListener('change', ev => {
+  const files = [...ev.target.files];
+  const total = formImgs.length + files.length;
+  if (total > 10){ toast('Máximo 10 fotos por viagem'); return; }
+  files.forEach(f => comprimirEAdicionar(f));
+  ev.target.value = '';
+});
+
+function comprimirEAdicionar(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      /* Redimensionar para máx. 1200px no lado maior, qualidade 0.75 */
+      const MAX = 1200;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX){
+        if (w > h){ h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      const kb = Math.round(dataUrl.length * 0.75 / 1024);
+      formImgs.push({ name: file.name, dataUrl });
+      renderFormImgs();
+      toast(file.name.substring(0,20) + ' → ' + kb + ' KB');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderFormImgs(){
+  const prev = document.getElementById('tImgsPreview');
+  prev.innerHTML = '';
+  formImgs.forEach((img) => {
+    const div = document.createElement('div');
+    div.className = 'thumb';
+    const im = document.createElement('img');
+    im.src = img.dataUrl;
+    im.title = img.name;
+    im.onclick = () => verImagem(img.dataUrl);
+    const btn = document.createElement('button');
+    btn.className = 'del-img';
+    btn.textContent = '✕';
+    btn.onclick = (ev) => {
+      ev.stopPropagation();
+      formImgs = formImgs.filter(f => f.dataUrl !== img.dataUrl);
+      renderFormImgs();
+    };
+    div.appendChild(im);
+    div.appendChild(btn);
+    prev.appendChild(div);
+  });
+}
+
+/* Links */
+document.getElementById('btnAddLink').onclick = () => { formLinks.push({url:'',label:''}); renderFormLinks(); };
+
+function renderFormLinks(){
+  const cont = document.getElementById('tLinksContainer');
+  cont.innerHTML = formLinks.map((l, i) => `
+    <div class="link-row">
+      <input type="text" placeholder="Etiqueta (ex.: Álbum Toscânia)" value="${esc(l.label)}"
+        oninput="formLinks[${i}].label=this.value">
+      <input type="url" placeholder="https://photos.google.com/..." value="${esc(l.url)}"
+        oninput="formLinks[${i}].url=this.value">
+      <button class="btn danger" onclick="formLinks.splice(${i},1); renderFormLinks()">✕</button>
+    </div>`).join('');
+}
+
+/* Limpar form também limpa imagens e links */
+const _limparFormOld = limparForm;
+limparForm = function(){
+  _limparFormOld();
+  formImgs = []; formLinks = [];
+  renderFormImgs(); renderFormLinks();
+};
+
+/* Guardar viagem: incluir imagens e links */
+const _btnSaveTripOld = document.getElementById('btnSaveTrip').onclick;
+document.getElementById('btnSaveTrip').onclick = null;
+document.getElementById('btnSaveTrip').onclick = ()=>{
+  const pais = selTrip.value;
+  const ini = document.getElementById('tIni').value;
+  const fim = document.getElementById('tFim').value || ini;
+  const titulo = document.getElementById('tTitulo').value.trim();
+  if (!ini){ toast('Indica pelo menos a data de início'); return; }
+  const trip = { id: editId || Date.now(), pais, ini, fim,
+    titulo: titulo || ('Viagem a ' + nomePT(pais)),
+    locais: document.getElementById('tLocais').value.trim(),
+    notas: document.getElementById('tNotas').value.trim(),
+    imgs: formImgs.map(f => ({name: f.name, dataUrl: f.dataUrl})),
+    links: formLinks.filter(l => l.url.trim()) };
+  if (editId){ state.trips = state.trips.map(t=> t.id===editId ? trip : t); editId = null; }
+  else state.trips.push(trip);
+  const hoje = new Date().toISOString().slice(0,10);
+  if (fim <= hoje) setStatus(pais, 'visitado');
+  else if (statusDe(pais) !== 'visitado') setStatus(pais, 'planeado');
+  limparForm(); save(); renderTrips();
+  toast('Viagem guardada ✓');
+};
+
+/* Editar viagem: pré-preencher imagens e links */
+const _editarTripOld = window.editarTrip;
+window.editarTrip = id => {
+  _editarTripOld(id);
+  const t = state.trips.find(x=>x.id===id); if (!t) return;
+  /* Carregar fotos existentes para o formulário */
+  formImgs = t.imgs ? t.imgs.map(f => ({name: f.name, dataUrl: f.dataUrl})) : [];
+  formLinks = t.links ? [...t.links] : [];
+  renderFormImgs(); renderFormLinks();
+};
+
+/* Ver imagem em tamanho grande */
+window.verImagem = src => {
+  const modal = document.createElement('div');
+  modal.className = 'img-modal';
+  modal.innerHTML = `<img src="${src}">`;
+  modal.onclick = () => modal.remove();
+  document.body.appendChild(modal);
+};
+
+/* Carregar fotos de uma viagem a partir do disco */
+window.carregarFotosViagem = (tripId, btn) => {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.multiple = true;
+  input.onchange = ev => {
+    const files = [...ev.target.files];
+    if (sessFotos[tripId]) libertarFotos(tripId);
+    sessFotos[tripId] = files.map(f => ({name: f.name, objUrl: URL.createObjectURL(f)}));
+    renderTrips(); toast('Fotos carregadas ✓');
+  };
+  input.click();
+};
+
+/* Libertar fotos ao mudar de aba (opcional — poupa memória) */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  if (t.dataset.tab !== 'diario') { /* manter fotos enquanto no diário */ }
+}));
+
+
+/* ============ MODAL DE ESTATÍSTICAS ============ */
+document.getElementById('statModalClose').onclick = () =>
+  document.getElementById('statModal').classList.remove('open');
+document.getElementById('statModal').addEventListener('click', ev => {
+  if (ev.target.id === 'statModal') ev.target.classList.remove('open');
+});
+
+function abrirStatModal(tipo){
+  const modal = document.getElementById('statModal');
+  const titulo = document.getElementById('statModalTitulo');
+  const cont = document.getElementById('statModalContent');
+  modal.classList.add('open');
+  cont.innerHTML = '';
+
+  if (tipo === 'visitados' || tipo === 'planeados'){
+    const label = tipo === 'visitados' ? 'visitados' : 'planeados';
+    titulo.innerHTML = 'Países <span>' + (tipo==='visitados'?'visitados':'planeados') + '</span>';
+    /* Recolher países desse estado (directo + por regiões) */
+    const todos = new Set([...Object.keys(state.countries), ...Object.keys(state.regioes||{})]);
+    const lista = [...todos]
+      .filter(a2 => statusDe(a2) === (tipo==='visitados' ? 'visitado' : tipo==='visitados' ? 'parcial' : 'planeado'))
+      .sort((a,b) => nomePT(a).localeCompare(nomePT(b),'pt'));
+    /* Para visitados, incluir também parciais */
+    const lista2 = tipo === 'visitados'
+      ? [...todos].filter(a2 => { const st=statusDe(a2); return st==='visitado'||st==='parcial'; })
+                  .sort((a,b)=>nomePT(a).localeCompare(nomePT(b),'pt'))
+      : lista;
+    if (!lista2.length){ cont.innerHTML='<p class="stat-empty">Nenhum país nesta categoria.</p>'; return; }
+    /* Viagens associadas a cada país */
+    cont.innerHTML = lista2.map(a2 => {
+      const st = statusDe(a2);
+      const r = state.regioes && state.regioes[a2];
+      const nReg = r ? Object.keys(r.v||{}).length : 0;
+      const totalReg = r ? r.total : 0;
+      const viagens = state.trips.filter(t => t.pais === a2)
+        .sort((a,b) => b.ini.localeCompare(a.ini));
+      const regsStr = nReg > 0 ? `${nReg}/${totalReg} regiões visitadas` : '';
+      const badge = st==='parcial' ? ' <span style="font-size:.7rem;background:var(--parcial);color:#1d1607;border-radius:4px;padding:1px 5px">parcial</span>' : '';
+      return `<div class="stat-item">
+        <div class="si-top">
+          <span class="si-flag">${bandeira(a2)}</span>
+          <div>
+            <div class="si-nome">${nomePT(a2)}${badge}</div>
+            ${regsStr ? `<div class="si-regs">📍 ${regsStr}</div>` : ''}
+          </div>
+        </div>
+        ${viagens.map(t => tripMiniCard(t)).join('')}
+      </div>`;
+    }).join('');
+  }
+
+  else if (tipo === 'regioes'){
+    titulo.innerHTML = 'Regiões <span>visitadas</span>';
+    const regs = state.regioes || {};
+    const paisesComRegs = Object.keys(regs)
+      .filter(a2 => Object.keys(regs[a2].v||{}).length > 0)
+      .sort((a,b) => nomePT(a).localeCompare(nomePT(b),'pt'));
+    if (!paisesComRegs.length){ cont.innerHTML='<p class="stat-empty">Ainda não marcaste regiões.</p>'; return; }
+    cont.innerHTML = paisesComRegs.map(a2 => {
+      const r = regs[a2];
+      const visitadas = Object.keys(r.v||{});
+      return `<div class="stat-item">
+        <div class="si-top">
+          <span class="si-flag">${bandeira(a2)}</span>
+          <div>
+            <div class="si-nome">${nomePT(a2)}</div>
+            <div class="si-meta">${visitadas.length}/${r.total} regiões</div>
+          </div>
+        </div>
+        <div class="si-regs" style="margin-top:4px">${visitadas.sort().join(' · ')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  else if (tipo === 'viagens'){
+    titulo.innerHTML = 'Viagens no <span>diário</span>';
+    if (!state.trips.length){ cont.innerHTML='<p class="stat-empty">Ainda não há viagens no diário.</p>'; return; }
+    const sorted = [...state.trips].sort((a,b)=>b.ini.localeCompare(a.ini));
+    cont.innerHTML = sorted.map(t => `<div class="stat-item">${tripMiniCard(t)}</div>`).join('');
+  }
+}
+
+function tripMiniCard(t){
+  const hoje = new Date().toISOString().slice(0,10);
+  const futura = t.ini > hoje;
+  const fotos = sessFotos && sessFotos[t.id];
+  return `
+    <div style="margin-top:4px">
+      <div class="si-top" style="margin-bottom:2px">
+        <span style="font-size:.95rem">${futura?'✈️':'📌'}</span>
+        <div>
+          <div style="font-weight:700;font-size:.92rem">${esc(t.titulo)}</div>
+          <div class="si-meta">${fmtData(t.ini)}${t.fim&&t.fim!==t.ini?' → '+fmtData(t.fim):''} ${futura?'· PLANEADA':''}</div>
+        </div>
+      </div>
+      ${t.locais ? `<div style="font-size:.8rem;color:var(--gold)">📍 ${esc(t.locais)}</div>` : ''}
+      ${t.notas ? `<div class="si-notas">${esc(t.notas)}</div>` : ''}
+      ${fotos && fotos.length ? `<div class="si-gallery">${fotos.map(f=>`<img src="${f.objUrl}" title="${esc(f.name)}" onclick="verImagem('${f.objUrl}')">`).join('')}</div>` : ''}
+      ${t.imgNomes && t.imgNomes.length && !(fotos&&fotos.length) ? `<div style="font-size:.78rem;color:var(--muted)">📷 ${t.imgNomes.length} foto(s) — <button class="btn" style="padding:1px 7px;font-size:.73rem" onclick="carregarFotosModal(${t.id})">📂 Ver</button></div>` : ''}
+      ${t.links && t.links.length ? `<div class="si-links">${t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label||l.url)}</a>`).join('')}</div>` : ''}
+    </div>`;
+}
+
+/* Carregar fotos directamente dentro do modal */
+window.carregarFotosModal = (tripId) => {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.multiple = true;
+  input.onchange = ev => {
+    const files = [...ev.target.files];
+    if (sessFotos[tripId]) libertarFotos(tripId);
+    sessFotos[tripId] = files.map(f => ({name: f.name, objUrl: URL.createObjectURL(f)}));
+    /* Refrescar o modal sem fechar */
+    const tipo = document.getElementById('statModalTitulo').dataset.tipo || 'viagens';
+    abrirStatModal(tipo);
+    toast('Fotos carregadas ✓');
+  };
+  input.click();
+};
+
+/* Guardar o tipo activo no título para refrescar após carregar fotos */
+const _abrirStatModalOld = window.abrirStatModal;
+window.abrirStatModal = (tipo) => {
+  document.getElementById('statModalTitulo').dataset.tipo = tipo;
+  _abrirStatModalOld(tipo);
+};
+
+
+/* ============ MODAL DO DIÁRIO ============ */
+let _dmTripId = null;
+
+function fecharDiarioModal(){
+  _dmTripId = null;
+  document.getElementById('diarioModal').classList.remove('open');
+}
+
+function preencherGaleria(id){
+  const t = state.trips.find(x => x.id === id); if (!t) return;
+  const gal = document.getElementById('dmGallery');
+  document.getElementById('dmFotosAviso').innerHTML = '';
+  gal.innerHTML = '';
+  if (t.imgs && t.imgs.length){
+    t.imgs.forEach(f => {
+      const img = document.createElement('img');
+      img.src = f.dataUrl; img.title = f.name;
+      img.onclick = () => verImagem(f.dataUrl);
+      gal.appendChild(img);
+    });
+  }
+}
+
+function abrirDiarioModal(id){
+  const t = state.trips.find(x => x.id === id); if (!t) return;
+  _dmTripId = id;
+  const hoje = new Date().toISOString().slice(0,10);
+  document.getElementById('dmFlag').textContent = bandeira(t.pais);
+  document.getElementById('dmTitulo').textContent = t.titulo;
+  document.getElementById('dmMeta').textContent =
+    nomePT(t.pais) + ' · ' + fmtData(t.ini) +
+    (t.fim && t.fim !== t.ini ? ' → ' + fmtData(t.fim) : '') +
+    (t.ini > hoje ? ' · PLANEADA' : '');
+  document.getElementById('dmLocais').textContent = t.locais ? '📍 ' + t.locais : '';
+  document.getElementById('dmNotas').textContent = t.notas || '';
+  /* Links */
+  const links = document.getElementById('dmLinks');
+  links.innerHTML = t.links && t.links.length
+    ? t.links.map(l => `<a href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label || l.url)}</a>`).join('')
+    : '';
+  document.getElementById('diarioModal').classList.add('open');
+
+  preencherGaleria(id);
+}
+
+document.getElementById('diarioModalClose').onclick =
+document.getElementById('diarioModalClose2').onclick =
+  () => fecharDiarioModal();
+document.getElementById('diarioModal').addEventListener('click', ev => {
+  if (ev.target.id === 'diarioModal') fecharDiarioModal();
+});
+
+document.getElementById('dmEditar').onclick = () => {
+  fecharDiarioModal();
+  editarTrip(_dmTripId);
+  showTab('diario');
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+document.getElementById('dmApagar').onclick = () => {
+  if (!confirm('Apagar esta viagem do diário?')) return;
+  fecharDiarioModal();
+  apagarTrip(_dmTripId);
+};
+
+
 
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
