@@ -1,0 +1,656 @@
+{
+  "countries": {
+    "PT": {
+      "status": "visitado"
+    },
+    "US": {
+      "status": "visitado"
+    },
+    "ES": {
+      "status": "visitado"
+    },
+    "FR": {
+      "status": "visitado"
+    },
+    "GB": {
+      "status": "visitado"
+    },
+    "IE": {
+      "status": "visitado"
+    },
+    "BE": {
+      "status": "visitado"
+    },
+    "NL": {
+      "status": "visitado"
+    },
+    "LU": {
+      "status": "visitado"
+    },
+    "DE": {
+      "status": "visitado"
+    },
+    "DK": {
+      "status": "visitado"
+    },
+    "CZ": {
+      "status": "visitado"
+    },
+    "CH": {
+      "status": "visitado"
+    },
+    "IT": {
+      "status": "visitado"
+    },
+    "AT": {
+      "status": "visitado"
+    },
+    "HR": {
+      "status": "visitado"
+    },
+    "BG": {
+      "status": "visitado"
+    },
+    "GR": {
+      "status": "visitado"
+    },
+    "AL": {
+      "status": "visitado"
+    },
+    "MA": {
+      "status": "visitado"
+    },
+    "TN": {
+      "status": "visitado"
+    },
+    "EG": {
+      "status": "visitado"
+    },
+    "LK": {
+      "status": "visitado"
+    },
+    "JM": {
+      "status": "visitado"
+    },
+    "JP": {
+      "status": "planeado"
+    },
+    "CA": {
+      "status": "visitado"
+    },
+    "MX": {
+      "status": "visitado"
+    },
+    "CU": {
+      "status": "visitado"
+    },
+    "NZ": {
+      "status": "planeado"
+    },
+    "AU": {
+      "status": "planeado"
+    },
+    "CN": {
+      "status": "planeado"
+    },
+    "IN": {
+      "status": "planeado"
+    },
+    "FI": {
+      "status": "planeado"
+    },
+    "EE": {
+      "status": "planeado"
+    },
+    "LV": {
+      "status": "planeado"
+    },
+    "LT": {
+      "status": "planeado"
+    },
+    "RU": {
+      "status": "planeado"
+    },
+    "UA": {
+      "status": "planeado"
+    },
+    "TR": {
+      "status": "planeado"
+    },
+    "AD": {
+      "status": "visitado"
+    }
+  },
+  "trips": [],
+  "seen": {
+    "PT": {
+      "checked": {
+        "Norte|Porto: Ribeira, caves de vinho do Porto e Livraria Lello": true,
+        "Norte|Guimarães e Braga (Bom Jesus)": true,
+        "Norte|Douro Vinhateiro (Pinhão, Peso da Régua)": true,
+        "Norte|Parque Nacional Peneda-Gerês": true,
+        "Centro|Coimbra: Universidade e Biblioteca Joanina": true,
+        "Centro|Aveiro e Costa Nova": true,
+        "Centro|Serra da Estrela": true,
+        "Centro|Aldeias históricas (Monsanto, Piódão)": true,
+        "Lisboa e Vale do Tejo|Belém: Torre e Mosteiro dos Jerónimos": true,
+        "Lisboa e Vale do Tejo|Alfama e Castelo de S. Jorge": true,
+        "Lisboa e Vale do Tejo|Sintra: Pena e Quinta da Regaleira": true,
+        "Lisboa e Vale do Tejo|Cascais e Cabo da Roca": true,
+        "Lisboa e Vale do Tejo|Óbidos e Tomar (Convento de Cristo)": true,
+        "Alentejo|Évora: Templo de Diana e Capela dos Ossos": true,
+        "Alentejo|Monsaraz e o Alqueva": true,
+        "Alentejo|Comporta e costa alentejana": true,
+        "Alentejo|Marvão e Castelo de Vide": true,
+        "Algarve|Lagos: Ponta da Piedade": true,
+        "Algarve|Benagil e praias de Carvoeiro": true,
+        "Algarve|Sagres e Cabo de S. Vicente": true,
+        "Algarve|Ria Formosa (Faro, Tavira)": true,
+        "Madeira|Funchal: mercado e teleférico do Monte": true,
+        "Madeira|Levadas (25 Fontes, Caldeirão Verde)": true,
+        "Madeira|Pico do Areeiro – Pico Ruivo": true,
+        "Madeira|Porto Santo: praia dourada": true,
+        "Açores|S. Miguel: Sete Cidades e Furnas": true,
+        "Açores|Faial: Horta e Capelinhos": true,
+        "Açores|Terceira: Angra do Heroísmo": true
+      },
+      "custom": []
+    },
+    "US": {
+      "checked": {
+        "Nordeste|Nova Iorque: Times Square, Central Park, Estátua da Liberdade": true,
+        "Oeste|Los Angeles e Hollywood": true,
+        "Oeste|Las Vegas": true
+      },
+      "custom": []
+    },
+    "SE": {
+      "checked": {
+        "Resto do país|Malmö e ponte de Øresund": true
+      },
+      "custom": []
+    },
+    "BR": {
+      "checked": {
+        "Sudeste|Paraty e Ilha Grande": true,
+        "Sudeste|São Paulo": true,
+        "Sudeste|Copacabana e Ipanema": true,
+        "Sudeste|Rio: Cristo Redentor e Pão de Açúcar": true,
+        "Nordeste|Jericoacoara e Porto de Galinhas": true,
+        "Nordeste|Lençóis Maranhenses": true,
+        "Nordeste|Salvador: Pelourinho": true
+      },
+      "custom": []
+    },
+    "CA": {
+      "checked": {
+        "Norte e Atlântico|Terra Nova": true
+      },
+      "custom": []
+    },
+    "ES": {
+      "checked": {
+        "Madrid e Centro|Museu do Prado e Reina Sofía": true,
+        "Madrid e Centro|Palácio Real e Plaza Mayor": true,
+        "Madrid e Centro|Toledo": true,
+        "Madrid e Centro|Segóvia: aqueduto e Alcázar": true,
+        "Catalunha|Barcelona: Sagrada Família e Park Güell": true,
+        "Catalunha|Bairro Gótico e La Rambla": true,
+        "Catalunha|Montserrat": true,
+        "Catalunha|Costa Brava (Cadaqués)": true,
+        "Andaluzia|Granada: Alhambra": true,
+        "Andaluzia|Sevilha: catedral, Alcázar e Plaza de España": true,
+        "Andaluzia|Córdova: Mesquita-Catedral": true,
+        "Andaluzia|Ronda e aldeias brancas": true,
+        "Norte|Bilbau: Guggenheim": true,
+        "Norte|San Sebastián e pintxos": true,
+        "Norte|Santiago de Compostela": true,
+        "Ilhas|Ibiza e Formentera": true
+      },
+      "custom": []
+    },
+    "AD": {
+      "checked": {},
+      "custom": []
+    },
+    "FR": {
+      "checked": {},
+      "custom": []
+    },
+    "MA": {
+      "checked": {
+        "Cidades imperiais|Marraquexe: Jemaa el-Fna e souks": true,
+        "Cidades imperiais|Rabat": true,
+        "Sul e deserto|Essaouira e Agadir": true
+      },
+      "custom": []
+    },
+    "MX": {
+      "checked": {
+        "Iucatão|Chichén Itzá": true,
+        "Iucatão|Tulum e cenotes": true,
+        "Iucatão|Cancún / Riviera Maya": true
+      },
+      "custom": []
+    },
+    "EG": {
+      "checked": {
+        "Cairo e Gizé|Pirâmides e Esfinge": true,
+        "Cairo e Gizé|Museu Egípcio / GEM": true,
+        "Cairo e Gizé|Cairo islâmico e Khan el-Khalili": true,
+        "Cairo e Gizé|Sakkara e Mênfis": true,
+        "Vale do Nilo|Luxor: Karnak e Vale dos Reis": true,
+        "Vale do Nilo|Assuão e templo de Philae": true,
+        "Vale do Nilo|Abu Simbel": true,
+        "Vale do Nilo|Cruzeiro no Nilo": true
+      },
+      "custom": []
+    },
+    "IE": {
+      "checked": {
+        "Dublin e Este|Trinity College e Book of Kells": true,
+        "Dublin e Este|Temple Bar e Guinness Storehouse": true,
+        "Dublin e Este|Glendalough (Wicklow)": true
+      },
+      "custom": []
+    },
+    "BE": {
+      "checked": {
+        "Bruxelas|Grand-Place": true,
+        "Bruxelas|Atomium": true,
+        "Bruxelas|Manneken Pis e chocolate": true,
+        "Flandres|Bruges: canais e Markt": true,
+        "Flandres|Gante: castelo e Graslei": true,
+        "Flandres|Antuérpia: catedral e estação": true,
+        "Valónia|Waterloo": true
+      },
+      "custom": []
+    },
+    "NL": {
+      "checked": {
+        "Amesterdão|Canais e Casa de Anne Frank": true,
+        "Amesterdão|Rijksmuseum e Van Gogh Museum": true,
+        "Amesterdão|Jordaan e mercados": true,
+        "Amesterdão|Vondelpark": true,
+        "Resto do país|Moinhos de Kinderdijk e Zaanse Schans": true,
+        "Resto do país|Keukenhof (tulipas, primavera)": true,
+        "Resto do país|Roterdão: arquitetura moderna": true,
+        "Resto do país|Haia e Delft": true
+      },
+      "custom": []
+    },
+    "IT": {
+      "checked": {
+        "Norte|Veneza: Praça de S. Marcos e canais": true,
+        "Norte|Milão: Duomo e Última Ceia": true,
+        "Norte|Lagos (Como, Garda)": true,
+        "Centro|Roma: Coliseu, Fórum e Vaticano": true,
+        "Centro|Florença: Duomo e Uffizi": true,
+        "Centro|Toscânia: Siena, San Gimignano, Val d'Orcia": true,
+        "Centro|Pisa e Lucca": true
+      },
+      "custom": []
+    },
+    "TN": {
+      "checked": {},
+      "custom": []
+    },
+    "BG": {
+      "checked": {},
+      "custom": []
+    },
+    "GR": {
+      "checked": {
+        "Atenas e Ática|Acrópole e Parténon": true,
+        "Atenas e Ática|Museu da Acrópole": true,
+        "Atenas e Ática|Plaka e Monastiraki": true,
+        "Continente|Delfos": true,
+        "Cíclades|Santorini: Oia e caldeira": true
+      },
+      "custom": []
+    },
+    "DE": {
+      "checked": {
+        "Berlim e Este|Portão de Brandeburgo e Reichstag": true,
+        "Baviera|Munique: Marienplatz e Oktoberfest": true,
+        "Baviera|Castelo de Neuschwanstein": true,
+        "Oeste|Colónia: catedral": true
+      },
+      "custom": []
+    },
+    "CH": {
+      "checked": {},
+      "custom": []
+    },
+    "HR": {
+      "checked": {
+        "Dalmácia|Dubrovnik: muralhas da cidade velha": true,
+        "Interior e Norte|Zagreb": true
+      },
+      "custom": []
+    },
+    "AL": {
+      "checked": {},
+      "custom": []
+    },
+    "SI": {
+      "checked": {},
+      "custom": []
+    },
+    "AT": {
+      "checked": {
+        "Viena|Palácio de Schönbrunn": true,
+        "Viena|Ópera e Hofburg": true,
+        "Viena|Catedral de Santo Estêvão": true,
+        "Viena|Cafés históricos e Prater": true,
+        "Salzburgo e Lagos|Cidade velha e fortaleza Hohensalzburg": true
+      },
+      "custom": []
+    },
+    "CZ": {
+      "checked": {
+        "Praga|Ponte Carlos e cidade velha": true,
+        "Praga|Castelo de Praga e S. Vito": true,
+        "Praga|Relógio astronómico": true,
+        "Praga|Bairro judeu": true
+      },
+      "custom": []
+    },
+    "NO": {
+      "checked": {
+        "Cidades|Oslo: ópera e museus": true
+      },
+      "custom": []
+    },
+    "AE": {
+      "checked": {
+        "Dubai|Burj Khalifa e Dubai Mall": true,
+        "Dubai|Palm Jumeirah": true,
+        "Dubai|Dubai Marina e souks antigos": true,
+        "Abu Dhabi e outros|Mesquita Sheikh Zayed": true,
+        "Abu Dhabi e outros|Sharjah e Fujairah": true
+      },
+      "custom": []
+    },
+    "PL": {
+      "checked": {
+        "Sul|Cracóvia: Rynek e castelo Wawel": true,
+        "Centro e Norte|Varsóvia: cidade velha reconstruída": true
+      },
+      "custom": []
+    },
+    "LK": {
+      "checked": {},
+      "custom": []
+    }
+  },
+  "regioes": {
+    "PT": {
+      "total": 20,
+      "v": {
+        "AVEIRO": true,
+        "BEJA": true,
+        "BRAGA": true,
+        "BRAGANÇA": true,
+        "CASTELO BRANCO": true,
+        "COIMBRA": true,
+        "ÉVORA": true,
+        "FARO": true,
+        "GUARDA": true,
+        "LEIRIA": true,
+        "LISBOA": true,
+        "PORTALEGRE": true,
+        "PORTO": true,
+        "Região Autónoma da Madeira": true,
+        "SANTARÉM": true,
+        "SETÚBAL": true,
+        "VIANA DO CASTELO": true,
+        "VILA REAL": true,
+        "VISEU": true,
+        "Região Autónoma dos Açores": true
+      }
+    },
+    "AD": {
+      "total": 7,
+      "v": {}
+    },
+    "FR": {
+      "total": 13,
+      "v": {
+        "Auvergne-Rhône-Alpes": true,
+        "Bourgogne-Franche-Comté": true,
+        "Centre-Val de Loire": true,
+        "Normandie": true,
+        "Île-de-France": true,
+        "Nouvelle-Aquitaine": true,
+        "Occitanie": true,
+        "Provence-Alpes-Côte d'Azur": true,
+        "Hauts-de-France": true,
+        "Pays de la Loire": true,
+        "Grand Est": true
+      }
+    },
+    "ES": {
+      "total": 19,
+      "v": {
+        "Galicia": true,
+        "Extremadura": true,
+        "Andalucía": true,
+        "Castilla-La Mancha": true,
+        "Comunidad de Madrid": true,
+        "Castilla y León": true,
+        "La Rioja": true,
+        "Comunidad Foral de Navarra": true,
+        "Aragón": true,
+        "Cataluña/Catalunya": true,
+        "Comunitat Valenciana": true,
+        "Región de Murcia": true,
+        "Illes Balears": true,
+        "Canarias": true,
+        "País Vasco/Euskadi": true,
+        "Principado de Asturias": true,
+        "Cantabria": true
+      }
+    },
+    "MA": {
+      "total": 12,
+      "v": {
+        "Casablanca-Settat": true,
+        "Marrakech-Safi": true,
+        "Rabat-Salé-Kenitra": true
+      }
+    },
+    "US": {
+      "total": 56,
+      "v": {
+        "New York": true,
+        "California": true,
+        "Nevada": true
+      }
+    },
+    "CA": {
+      "total": 13,
+      "v": {
+        "Newfoundland and Labrador": true
+      }
+    },
+    "MX": {
+      "total": 32,
+      "v": {
+        "Yucatan": true
+      }
+    },
+    "EG": {
+      "total": 27,
+      "v": {
+        "Red Sea Governorate": true,
+        "Cairo Governorate": true
+      }
+    },
+    "IE": {
+      "total": 4,
+      "v": {
+        "Leinster": true,
+        "Connacht": true
+      }
+    },
+    "BE": {
+      "total": 3,
+      "v": {
+        "Wallonne Gewest": true,
+        "Vlaams Gewest": true,
+        "Brussels Hoofdstedelijk": true
+      }
+    },
+    "NL": {
+      "total": 12,
+      "v": {
+        "Noord-Holland": true,
+        "Zuid-Holland": true,
+        "Zeeland": true,
+        "Fryslân": true,
+        "Limburg": true,
+        "Noord-Brabant": true,
+        "Gelderland": true,
+        "Utrecht": true,
+        "Flevoland": true
+      }
+    },
+    "IT": {
+      "total": 5,
+      "v": {
+        "Nord-Ovest": true,
+        "Nord-Est": true,
+        "Centro": true,
+        "Sud": true
+      }
+    },
+    "TN": {
+      "total": 24,
+      "v": {
+        "Médenine": true,
+        "Tataouine": true
+      }
+    },
+    "BG": {
+      "total": 28,
+      "v": {
+        "Sofia": true
+      }
+    },
+    "GR": {
+      "total": 8,
+      "v": {
+        "Attica": true
+      }
+    },
+    "DE": {
+      "total": 16,
+      "v": {
+        "Niedersachsen": true,
+        "Nordrhein-Westfalen": true,
+        "Rheinland-Pfalz": true,
+        "Mecklenburg-Vorpommern": true,
+        "Berlin": true,
+        "Schleswig-Holstein": true,
+        "Hamburg": true,
+        "Saarland": true,
+        "Bayern": true
+      }
+    },
+    "CH": {
+      "total": 26,
+      "v": {
+        "Zürich": true,
+        "Jura": true,
+        "Solothurn": true,
+        "Aargau": true,
+        "St. Gallen": true,
+        "Graubünden": true,
+        "Bern": true,
+        "Neuchâtel": true,
+        "Vaud": true,
+        "Fribourg": true,
+        "Luzern": true
+      }
+    },
+    "HR": {
+      "total": 21,
+      "v": {
+        "City of Zagreb": true,
+        "Dubrovnik-Neretva": true
+      }
+    },
+    "AL": {
+      "total": 12,
+      "v": {
+        "Vlorë": true
+      }
+    },
+    "SI": {
+      "total": 2,
+      "v": {}
+    },
+    "AT": {
+      "total": 9,
+      "v": {
+        "Wien": true,
+        "Salzburg": true
+      }
+    },
+    "CZ": {
+      "total": 14,
+      "v": {
+        "Hlavní město Praha": true
+      }
+    },
+    "NO": {
+      "total": 11,
+      "v": {
+        "Oslo": true
+      }
+    },
+    "SE": {
+      "total": 21,
+      "v": {
+        "Hallands län": true
+      }
+    },
+    "AE": {
+      "total": 7,
+      "v": {
+        "Dubai": true,
+        "Abu Dhabi": true
+      }
+    },
+    "PL": {
+      "total": 16,
+      "v": {
+        "Lesser Poland Voivodeship": true,
+        "Warmian-Masurian Voivodeship": true
+      }
+    },
+    "BR": {
+      "total": 27,
+      "v": {
+        "Minas Gerais": true,
+        "Espirito Santo": true,
+        "Rio de Jeneiro": true,
+        "Sao Paulo": true,
+        "Maranhao": true,
+        "Ceara": true,
+        "Rio Granda do Norte": true,
+        "Paraiba": true,
+        "Piaui": true,
+        "Pernambuco": true,
+        "Alagoas": true,
+        "Sergipe": true,
+        "Bahia": true
+      }
+    },
+    "LK": {
+      "total": 9,
+      "v": {}
+    }
+  }
+}
