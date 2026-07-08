@@ -142,6 +142,54 @@ h2.sec span{color:var(--gold);}
 
 
 
+
+/* ---------- Modal de planeamento ---------- */
+#planModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
+  align-items:flex-start;justify-content:center;z-index:180;padding:16px;overflow-y:auto;}
+#planModal.open{display:flex;}
+#planModalBox{background:var(--panel);border:1px solid var(--gold);border-radius:var(--radius);
+  width:100%;max-width:820px;margin:auto;overflow:hidden;}
+.pm-header{background:var(--panel2);border-bottom:1px solid var(--line);
+  padding:18px 24px;display:flex;align-items:center;gap:14px;}
+.pm-header .pm-flag{font-size:2.4rem;}
+.pm-header h2{font-family:'Fraunces',serif;font-size:1.5rem;flex:1;}
+.pm-header .pm-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted);}
+.pm-body{padding:20px 24px;}
+.pm-section{margin-bottom:20px;}
+.pm-section h3{font-family:'Fraunces',serif;font-size:1rem;color:var(--gold);
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.pm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.pm-card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  padding:10px 12px;font-size:.82rem;}
+.pm-card strong{display:block;color:var(--gold);font-size:.7rem;text-transform:uppercase;
+  letter-spacing:.06em;margin-bottom:2px;}
+.plug-types{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.plug-badge{background:var(--ink);color:var(--paper);border-radius:4px;
+  padding:2px 7px;font-size:.78rem;font-weight:700;}
+html[data-theme="dark"] .plug-badge{background:var(--line);}
+.pm-checklist{display:grid;gap:5px;max-height:280px;overflow-y:auto;padding-right:4px;}
+.pm-check{display:flex;align-items:flex-start;gap:8px;font-size:.85rem;padding:4px 6px;
+  border-radius:5px;cursor:pointer;}
+.pm-check:hover{background:var(--panel2);}
+.pm-check input{width:16px;height:16px;accent-color:var(--gold);flex:none;margin-top:1px;}
+.pm-check.on span{text-decoration:line-through;color:var(--muted);}
+.pm-check .pm-cat{font-size:.68rem;color:var(--muted);margin-left:4px;white-space:nowrap;}
+.pm-notas{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  color:var(--paper);padding:10px 12px;font-size:.88rem;font-family:inherit;resize:vertical;
+  min-height:70px;}
+.pm-notas:focus{outline:none;border-color:var(--gold);}
+.pm-dias-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.pm-dias-row label{font-size:.85rem;color:var(--muted);}
+.pm-dias-row input[type=number]{width:70px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:6px;color:var(--paper);padding:6px 10px;font-size:.9rem;}
+.pm-footer{border-top:1px solid var(--line);padding:14px 24px;
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel2);}
+.pm-footer .btn{padding:8px 16px;}
+#pmItinerario{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  padding:14px 16px;font-size:.88rem;line-height:1.6;white-space:pre-wrap;
+  max-height:350px;overflow-y:auto;margin-top:12px;display:none;}
+#pmItinerario h4{font-family:'Fraunces',serif;color:var(--gold);margin:10px 0 4px;}
+
 /* ---------- Modal ficha do país ---------- */
 #fichaModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
   align-items:flex-start;justify-content:center;z-index:170;padding:20px;overflow-y:auto;}
@@ -379,6 +427,7 @@ h2.sec span{color:var(--gold);}
           <button class="btn" data-st="nao">Por visitar</button>
         </div>
         <button class="btn-ficha" id="btnFicha">ℹ️ Ficha do país</button>
+        <button class="btn-ficha" id="btnPlanear" style="background:var(--teal);color:#062621;border-color:var(--teal)">🗒 Planear visita</button>
       </div>
     </div>
     <div style="margin-top:16px">
@@ -439,6 +488,24 @@ h2.sec span{color:var(--gold);}
   </div>
 </div>
 
+
+
+<!-- ============ MODAL PLANEAMENTO ============ -->
+<div id="planModal">
+  <div id="planModalBox">
+    <div class="pm-header">
+      <span class="pm-flag" id="pmFlag"></span>
+      <h2 id="pmNome"></h2>
+      <div style="display:flex;gap:6px">
+        <button class="btn" id="btnPlanPDF" style="padding:6px 12px;font-size:.82rem">⬇ PDF</button>
+        <button class="pm-close" id="planModalClose">✕</button>
+      </div>
+    </div>
+    <div class="pm-body" id="pmBody">
+      <!-- preenchido por JS -->
+    </div>
+  </div>
+</div>
 
 <!-- ============ MODAL FICHA DO PAÍS ============ -->
 <div id="fichaModal">
@@ -2589,6 +2656,239 @@ Responde APENAS com o HTML, sem texto antes ou depois.`
       `<p style="color:var(--coral)">Não foi possível gerar a ficha: ${esc(e.message)}</p>
        <p style="color:var(--muted);font-size:.85rem">Verifica a ligação à internet e tenta de novo.</p>`;
   }
+}
+
+const PLUGS = {"AD":["C,F","230V","50Hz"],"AE":["C,D,G","230V","50Hz"],"AF":["C,F","220V","50Hz"],"AG":["A,B","230V","60Hz"],"AI":["A,B","110V","60Hz"],"AL":["C,F","230V","50Hz"],"AM":["C,F","230V","50Hz"],"AO":["C","220V","50Hz"],"AQ":["varies","varies","varies"],"AR":["C,I","220V","50Hz"],"AS":["A,B","120V","60Hz"],"AT":["C,F","230V","50Hz"],"AU":["I","230V","50Hz"],"AW":["A,B,F","127V","60Hz"],"AZ":["C,F","220V","50Hz"],"BA":["C,F","230V","50Hz"],"BB":["A,B","115V","50Hz"],"BD":["C,D,G,K","220V","50Hz"],"BE":["C,E","230V","50Hz"],"BF":["C,E","220V","50Hz"],"BG":["C,F","230V","50Hz"],"BH":["G","230V","50Hz"],"BI":["C,E","220V","50Hz"],"BJ":["C,E","220V","50Hz"],"BL":["C,E","230V","60Hz"],"BM":["A,B","120V","60Hz"],"BN":["G","240V","50Hz"],"BO":["A,C","230V","50Hz"],"BR":["C,N","127/220V","60Hz"],"BS":["A,B","120V","60Hz"],"BT":["C,D,F","230V","50Hz"],"BW":["D,G,M","230V","50Hz"],"BY":["C,F","220V","50Hz"],"BZ":["A,B,G","110/220V","60Hz"],"CA":["A,B","120V","60Hz"],"CD":["C,D,E","220V","50Hz"],"CF":["C,E","220V","50Hz"],"CG":["C,E","230V","50Hz"],"CH":["C,J","230V","50Hz"],"CI":["C,E","220V","50Hz"],"CK":["I","240V","50Hz"],"CL":["C,L","220V","50Hz"],"CM":["C,E","220V","50Hz"],"CN":["A,C,I","220V","50Hz"],"CO":["A,B","110V","60Hz"],"CR":["A,B","120V","60Hz"],"CU":["A,B","110/220V","60Hz"],"CV":["C,F","220V","50Hz"],"CW":["A,B","127V","50Hz"],"CY":["G","240V","50Hz"],"CZ":["C,E","230V","50Hz"],"DE":["C,F","230V","50Hz"],"DJ":["C,E","220V","50Hz"],"DK":["C,E,F,K","230V","50Hz"],"DM":["D,G","230V","50Hz"],"DO":["A,B","110V","60Hz"],"DZ":["C,F","230V","50Hz"],"EC":["A,B","120V","60Hz"],"EE":["C,F","230V","50Hz"],"EG":["C,F","220V","50Hz"],"EH":["C,E","220V","50Hz"],"ER":["C,L","230V","50Hz"],"ES":["C,F","230V","50Hz"],"ET":["C,E,F","220V","50Hz"],"FI":["C,F","230V","50Hz"],"FJ":["I","240V","50Hz"],"FK":["G","240V","50Hz"],"FM":["A,B","120V","60Hz"],"FO":["C,E,F,K","230V","50Hz"],"FR":["C,E","230V","50Hz"],"GA":["C","220V","50Hz"],"GB":["G","230V","50Hz"],"GD":["G","230V","50Hz"],"GE":["C,F","220V","50Hz"],"GF":["C,D,E","220V","50Hz"],"GG":["G","230V","50Hz"],"GH":["D,G","230V","50Hz"],"GI":["G","240V","50Hz"],"GL":["C,E,F,K","230V","50Hz"],"GM":["G","230V","50Hz"],"GN":["C,F,K","220V","50Hz"],"GP":["C,D,E","230V","60Hz"],"GQ":["C,E","220V","50Hz"],"GR":["C,F","230V","50Hz"],"GS":["G","240V","50Hz"],"GT":["A,B","120V","60Hz"],"GU":["A,B","110V","60Hz"],"GW":["C","220V","50Hz"],"GY":["A,B,D,G","120/240V","60Hz"],"HK":["G","220V","50Hz"],"HN":["A,B","110V","60Hz"],"HR":["C,F","230V","50Hz"],"HT":["A,B","110V","60Hz"],"HU":["C,F","230V","50Hz"],"ID":["C,F","230V","50Hz"],"IE":["G","230V","50Hz"],"IL":["C,H,M","230V","50Hz"],"IM":["G","240V","50Hz"],"IN":["C,D,M","230V","50Hz"],"IO":["G","240V","50Hz"],"IQ":["C,D,G","230V","50Hz"],"IR":["C,F","220V","50Hz"],"IS":["C,F","230V","50Hz"],"IT":["C,F,L","230V","50Hz"],"JE":["G","230V","50Hz"],"JM":["A,B","110V","50Hz"],"JO":["B,C,D,F,G","230V","50Hz"],"JP":["A,B","100V","50/60Hz"],"KE":["G","240V","50Hz"],"KG":["C,F","220V","50Hz"],"KH":["A,C,G","230V","50Hz"],"KI":["I","240V","50Hz"],"KM":["C,E","220V","50Hz"],"KN":["A,B","230V","60Hz"],"KP":["C,F","220V","50Hz"],"KR":["C,F","220V","60Hz"],"KW":["G","240V","50Hz"],"KY":["A,B","120V","60Hz"],"KZ":["C,F","220V","50Hz"],"LA":["A,B,C,E,F","230V","50Hz"],"LB":["C,D,G","230V","50Hz"],"LC":["G","240V","50Hz"],"LI":["C,J","230V","50Hz"],"LK":["D,G","230V","50Hz"],"LR":["A,B","120V","60Hz"],"LS":["M","220V","50Hz"],"LT":["C,F","230V","50Hz"],"LU":["C,F","230V","50Hz"],"LV":["C,F","230V","50Hz"],"LY":["C,L","127V","50Hz"],"MA":["C,E","220V","50Hz"],"MC":["C,D,E,F","230V","50Hz"],"MD":["C,F","220V","50Hz"],"ME":["C,F","230V","50Hz"],"MF":["C,E","220V","60Hz"],"MG":["C,D,E,J,K","127/220V","50Hz"],"MH":["A,B","120V","60Hz"],"MK":["C,F","230V","50Hz"],"ML":["C,E","220V","50Hz"],"MM":["C,D,F,G,I","230V","50Hz"],"MN":["C,E","230V","50Hz"],"MO":["G","220V","50Hz"],"MP":["A,B","120V","60Hz"],"MQ":["C,D,E","220V","50Hz"],"MR":["C,E","220V","50Hz"],"MS":["A,B","230V","60Hz"],"MT":["G","230V","50Hz"],"MU":["C,G","230V","50Hz"],"MV":["C,D,G,J,K,L","230V","50Hz"],"MW":["G","230V","50Hz"],"MX":["A,B","127V","60Hz"],"MY":["G","240V","50Hz"],"MZ":["C,F,M","220V","50Hz"],"NA":["D,M","220V","50Hz"],"NC":["F","220V","50Hz"],"NE":["A,B,C,D,E,F","220V","50Hz"],"NG":["D,G","240V","50Hz"],"NI":["A,B","120V","60Hz"],"NL":["C,F","230V","50Hz"],"NO":["C,F","230V","50Hz"],"NP":["C,D,M","230V","50Hz"],"NR":["I","240V","50Hz"],"NU":["I","240V","50Hz"],"NZ":["I","230V","50Hz"],"OM":["G","240V","50Hz"],"PA":["A,B","120V","60Hz"],"PE":["A,B,C","220V","60Hz"],"PF":["E","220V","60Hz"],"PG":["I","240V","50Hz"],"PH":["A,B,C","220V","60Hz"],"PK":["C,D,M","230V","50Hz"],"PL":["C,E","230V","50Hz"],"PM":["C,D,E","230V","50Hz"],"PN":["varies","varies","varies"],"PR":["A,B","120V","60Hz"],"PS":["C,H","230V","50Hz"],"PT":["C,F","230V","50Hz"],"PW":["A,B","120V","60Hz"],"PY":["A,B,C","220V","50Hz"],"QA":["D,G","240V","50Hz"],"RE":["C,E","220V","50Hz"],"RO":["C,F","230V","50Hz"],"RS":["C,F","230V","50Hz"],"RU":["C,F","220V","50Hz"],"RW":["C,J","230V","50Hz"],"SA":["A,B,G","127/220V","60Hz"],"SB":["G,I","230V","50Hz"],"SC":["G","240V","50Hz"],"SD":["C,D","230V","50Hz"],"SE":["C,F","230V","50Hz"],"SG":["G","230V","50Hz"],"SH":["G","240V","50Hz"],"SI":["C,F","230V","50Hz"],"SK":["C,E","230V","50Hz"],"SL":["D,G","230V","50Hz"],"SM":["C,F,L","230V","50Hz"],"SN":["C,D,E,K","230V","50Hz"],"SO":["C","220V","50Hz"],"SR":["C,F","127V","60Hz"],"SS":["C,D","230V","50Hz"],"ST":["C,F","220V","50Hz"],"SV":["A,B","115V","60Hz"],"SX":["A,B,F","120V","60Hz"],"SY":["C,E,L","220V","50Hz"],"SZ":["M","230V","50Hz"],"TC":["A,B","120V","60Hz"],"TD":["C,D,E,F","220V","50Hz"],"TF":["E","220V","50Hz"],"TG":["C","220V","50Hz"],"TH":["A,B,C","220V","50Hz"],"TJ":["C,F","220V","50Hz"],"TK":["I","230V","50Hz"],"TL":["C,E,F,I","220V","50Hz"],"TM":["B,C,F","220V","50Hz"],"TN":["C,E","230V","50Hz"],"TO":["I","240V","50Hz"],"TR":["C,F","230V","50Hz"],"TT":["A,B","115V","60Hz"],"TV":["I","220V","50Hz"],"TW":["A,B","110V","60Hz"],"TZ":["D,G","230V","50Hz"],"UA":["C,F","220V","50Hz"],"UG":["G","240V","50Hz"],"US":["A,B","120V","60Hz"],"UY":["C,F,I,L","220V","50Hz"],"UZ":["C,F","220V","50Hz"],"VA":["C,F,L","230V","50Hz"],"VC":["A,C,E,G,I,K","230V","50Hz"],"VE":["A,B","120V","60Hz"],"VG":["A,B","110V","60Hz"],"VI":["A,B","110V","60Hz"],"VN":["A,C","220V","50Hz"],"VU":["C,G,I","220V","50Hz"],"WF":["C,E","220V","50Hz"],"WS":["I","230V","50Hz"],"XK":["C,F","230V","50Hz"],"YE":["A,D,G","230V","50Hz"],"YT":["C,E","220V","50Hz"],"ZA":["C,M,N","230V","50Hz"],"ZM":["C,G","230V","50Hz"],"ZW":["D,G","240V","50Hz"]};
+
+
+/* ============ MODAL DE PLANEAMENTO ============ */
+const PLUG_SYMBOLS = {
+  'A':'🔌 A (2 pinos planos)',
+  'B':'🔌 B (3 pinos planos)',
+  'C':'🔌 C (Schuko/Euro 2 pinos)',
+  'D':'🔌 D (3 pinos triangular)',
+  'E':'🔌 E (francês)',
+  'F':'🔌 F (Schuko 2 pinos+terra)',
+  'G':'🔌 G (britânico 3 pinos)',
+  'H':'🔌 H (israelita)',
+  'I':'🔌 I (australiano)',
+  'J':'🔌 J (suíço)',
+  'K':'🔌 K (dinamarquês)',
+  'L':'🔌 L (italiano)',
+  'M':'🔌 M (sul-africano grande)',
+  'N':'🔌 N (brasileiro/sul-africano)',
+  'O':'🔌 O (tailandês)'
+};
+
+document.getElementById('planModalClose').onclick =
+  () => document.getElementById('planModal').classList.remove('open');
+document.getElementById('planModal').addEventListener('click', ev => {
+  if (ev.target.id === 'planModal') ev.target.classList.remove('open');
+});
+document.getElementById('btnPlanear').onclick = () => abrirPlaneamento(selPais.value);
+
+function abrirPlaneamento(a2){
+  const nome = nomePT(a2);
+  document.getElementById('pmFlag').textContent = bandeira(a2);
+  document.getElementById('pmNome').textContent = 'Planear: ' + nome;
+  document.getElementById('planModal').classList.add('open');
+
+  const plug = PLUGS[a2] || ['?','?','?'];
+  const plugTipos = plug[0].split(',').map(t=>t.trim()).filter(Boolean);
+  const plugHtml = plugTipos.map(t=>`<span class="plug-badge">${t}</span>`).join(' ');
+
+  /* Recolher locais marcados: UNESCO + O que ver + regiões */
+  const marcados = [];
+  /* UNESCO */
+  const uSeen = (state.unescoSeen||{})[a2] || {};
+  Object.keys(uSeen).forEach(n => marcados.push({cat:'🏛 UNESCO', nome:n}));
+  /* O que ver (seenDe) */
+  const seenObj = (state.seen||{})[a2] || {};
+  Object.keys((seenObj.checked)||{}).forEach(k => {
+    const [reg, ponto] = k.split('|');
+    if (ponto) marcados.push({cat:'👁 '+reg, nome:ponto});
+  });
+
+  /* Locais que o utilizador quer adicionar ao planeamento */
+  const planKey = 'plan_' + a2;
+  let planNotas = localStorage.getItem(planKey) || '';
+
+  const checkedIds = new Set(marcados.map((_,i)=>i));
+
+  document.getElementById('pmBody').innerHTML = `
+    <div class="pm-section">
+      <h3>⚡ Electricidade & Adaptador</h3>
+      <div class="pm-cards">
+        <div class="pm-card"><strong>Tensão</strong>${plug[1]}</div>
+        <div class="pm-card"><strong>Frequência</strong>${plug[2]}</div>
+        <div class="pm-card" style="grid-column:span 2">
+          <strong>Tipo(s) de ficha</strong>
+          <div class="plug-types">${plugHtml || '–'}</div>
+          ${plug[1] !== '230V' && plug[1] !== '220V' ? '<div style="color:var(--coral);font-size:.78rem;margin-top:4px">⚠️ Voltagem diferente de 230V — verifica os teus equipamentos</div>' : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="pm-section">
+      <h3>📍 Locais que quero visitar</h3>
+      ${marcados.length ? `
+        <div class="pm-checklist" id="pmChecklist">
+          ${marcados.map((m,i)=>`
+            <label class="pm-check on" id="pmck${i}">
+              <input type="checkbox" checked onchange="togglePmCheck(${i})">
+              <span>${esc(m.nome)}</span>
+              <span class="pm-cat">${m.cat}</span>
+            </label>`).join('')}
+        </div>` : '<p style="color:var(--muted);font-size:.85rem">Ainda não marcaste locais neste país. Usa a secção "O que ver" e "Património UNESCO" na aba Países.</p>'}
+    </div>
+
+    <div class="pm-section">
+      <h3>📝 Notas e outros locais</h3>
+      <textarea class="pm-notas" id="pmNotas" placeholder="Hotéis, restaurantes, outros locais…">${esc(planNotas)}</textarea>
+    </div>
+
+    <div class="pm-section">
+      <h3>🗓 Gerar percurso em dias (IA)</h3>
+      <div class="pm-dias-row">
+        <label>Número de dias:</label>
+        <input type="number" id="pmDias" value="5" min="1" max="30">
+        <button class="btn gold" onclick="gerarPercurso('${a2}')">✨ Gerar com IA</button>
+      </div>
+      <div id="pmItinerario"></div>
+    </div>`;
+
+  /* Guardar notas ao escrever */
+  document.getElementById('pmNotas').oninput = () => {
+    localStorage.setItem(planKey, document.getElementById('pmNotas').value);
+  };
+
+  /* PDF */
+  document.getElementById('btnPlanPDF').onclick = () => exportarPlanPDF(a2, nome, marcados, plugHtml, plug);
+}
+
+window.togglePmCheck = (i) => {
+  const el = document.getElementById('pmck'+i);
+  if (el) el.classList.toggle('on');
+};
+
+async function gerarPercurso(a2){
+  const itEl = document.getElementById('pmItinerario');
+  const dias = parseInt(document.getElementById('pmDias').value) || 5;
+  const notas = document.getElementById('pmNotas').value.trim();
+  const nome = nomePT(a2);
+
+  /* Locais seleccionados */
+  const locais = [];
+  document.querySelectorAll('#pmChecklist .pm-check').forEach(el => {
+    if (el.querySelector('input').checked){
+      const span = el.querySelectorAll('span')[0];
+      const cat = el.querySelectorAll('span')[1];
+      if (span) locais.push((cat?'['+cat.textContent+'] ':'')+span.textContent);
+    }
+  });
+  if (notas) locais.push('Notas adicionais: '+notas);
+
+  itEl.style.display = 'block';
+  itEl.textContent = 'A gerar percurso de ' + dias + ' dias para ' + nome + '…';
+
+  try {
+    const prompt = `Cria um roteiro de viagem de ${dias} dias para ${nome} em português europeu.
+
+Locais que o viajante quer visitar:
+${locais.length ? locais.map(l=>'- '+l).join('\n') : '(sem locais específicos — sugere os mais emblemáticos)'}
+
+Formato: para cada dia, um título curto e uma lista de 3-5 actividades ordenadas logicamente (por proximidade geográfica). Inclui uma sugestão de refeição por dia. Sê conciso e prático. Usa este formato:
+
+DIA 1: [Título]
+• Actividade/local 1
+• Actividade/local 2
+• 🍽 Refeição: sugestão
+...
+
+(continua para todos os ${dias} dias)`;
+
+    const resp = await fetch('https://curly-sound-5d5e.mendreas.workers.dev', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        messages: [{role:'user', content: prompt}]
+      })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    const texto = data.content[0].text.trim();
+    itEl.innerHTML = '<h4>🗓 Roteiro ' + dias + ' dias — ' + nome + '</h4>' +
+      texto.split('\n').map(l => {
+        if (l.startsWith('DIA ')) return '<h4>' + esc(l) + '</h4>';
+        if (l.startsWith('•') || l.startsWith('-')) return '<p style="margin:2px 0 2px 10px">' + esc(l) + '</p>';
+        return l ? '<p style="margin:4px 0">' + esc(l) + '</p>' : '';
+      }).join('');
+    /* Guardar no localStorage para o PDF */
+    localStorage.setItem('plan_roteiro_'+a2, texto);
+  } catch(e){
+    itEl.textContent = 'Erro: ' + e.message;
+  }
+}
+
+function exportarPlanPDF(a2, nome, marcados, plugHtml, plug){
+  const notas = document.getElementById('pmNotas')?.value || '';
+  const roteiro = localStorage.getItem('plan_roteiro_'+a2) || '';
+  const locaisSel = [];
+  document.querySelectorAll('#pmChecklist .pm-check').forEach(el => {
+    if (el.querySelector('input').checked){
+      const span = el.querySelectorAll('span')[0];
+      const cat = el.querySelectorAll('span')[1];
+      if (span) locaisSel.push({nome:span.textContent, cat:cat?.textContent||''});
+    }
+  });
+
+  const html = `<!DOCTYPE html><html lang="pt"><head>
+<meta charset="UTF-8">
+<title>Planeamento — ${nome}</title>
+<style>
+  body{font-family:Georgia,serif;max-width:800px;margin:40px auto;color:#1a1a1a;line-height:1.6;}
+  h1{font-size:2rem;border-bottom:3px solid #c58a2a;padding-bottom:8px;margin-bottom:6px;}
+  h2{font-size:1.2rem;color:#c58a2a;margin:24px 0 8px;border-bottom:1px solid #ddd;padding-bottom:4px;}
+  .badge{display:inline-block;background:#1a1a1a;color:#fff;border-radius:4px;padding:1px 6px;font-size:.8rem;margin:2px;}
+  .local{margin:4px 0 4px 12px;font-size:.92rem;}
+  .cat{color:#888;font-size:.8rem;margin-left:6px;}
+  .notas{background:#f9f5ec;border:1px solid #e0d5b0;border-radius:6px;padding:12px;font-size:.9rem;white-space:pre-wrap;}
+  .roteiro{white-space:pre-wrap;font-size:.9rem;background:#f5f5f5;padding:14px;border-radius:6px;}
+  .dia{font-weight:bold;color:#c58a2a;font-size:1rem;margin:14px 0 4px;}
+  .warn{color:#c0563f;font-size:.8rem;}
+  @media print{body{margin:20px;}}
+</style>
+</head><body>
+<h1>${bandeira(a2)} Planeamento — ${nome}</h1>
+<p style="color:#666;font-size:.85rem">Gerado em ${new Date().toLocaleDateString('pt-PT')} pela app Atlas de Viagens</p>
+
+<h2>⚡ Electricidade</h2>
+<p>Tensão: <strong>${plug[1]}</strong> | Frequência: <strong>${plug[2]}</strong></p>
+<p>Tipo(s) de ficha: ${plug[0].split(',').map(t=>`<span class="badge">${t.trim()}</span>`).join(' ')}</p>
+${plug[1] !== '230V' && plug[1] !== '220V' ? `<p class="warn">⚠️ Voltagem diferente de 230V — verifica os teus equipamentos</p>` : ''}
+
+${locaisSel.length ? `<h2>📍 Locais a visitar (${locaisSel.length})</h2>
+${locaisSel.map(l=>`<p class="local">• ${l.nome} <span class="cat">${l.cat}</span></p>`).join('')}` : ''}
+
+${notas ? `<h2>📝 Notas</h2><div class="notas">${notas.replace(/</g,'&lt;')}</div>` : ''}
+
+${roteiro ? `<h2>🗓 Roteiro</h2>
+<div class="roteiro">${roteiro.split('\n').map(l =>
+  l.startsWith('DIA ') ? `<p class="dia">${l}</p>` : `<p>${l}</p>`
+).join('')}</div>` : ''}
+
+<p style="margin-top:40px;color:#aaa;font-size:.75rem;border-top:1px solid #eee;padding-top:8px">
+Atlas de Viagens • mendreas.github.io/atlas-viagens</p>
+</body></html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'planeamento-' + nome.toLowerCase().replace(/[^a-z0-9]/g,'-') + '.html';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Planeamento guardado — abre o ficheiro e usa Ctrl+P para imprimir/PDF');
 }
 
 /* ============ ARRANQUE ============ */
