@@ -141,6 +141,31 @@ h2.sec span{color:var(--gold);}
 
 
 
+
+/* ---------- Modal ficha do país ---------- */
+#fichaModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
+  align-items:flex-start;justify-content:center;z-index:170;padding:20px;overflow-y:auto;}
+#fichaModal.open{display:flex;}
+#fichaModalBox{background:var(--panel);border:1px solid var(--gold);border-radius:var(--radius);
+  padding:26px 28px;width:100%;max-width:700px;margin:auto;position:relative;}
+#fichaModalBox .fm-close{position:absolute;top:14px;right:16px;background:none;border:none;
+  font-size:1.4rem;cursor:pointer;color:var(--muted);}
+#fichaModalBox .fm-head{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+#fichaModalBox .fm-flag{font-size:2.5rem;}
+#fichaModalBox h2{font-family:'Fraunces',serif;font-size:1.5rem;}
+#fichaModalBox .fm-body{font-size:.92rem;line-height:1.7;}
+#fichaModalBox .fm-body h3{font-family:'Fraunces',serif;font-size:1rem;color:var(--gold);
+  margin:14px 0 4px;border-bottom:1px solid var(--line);padding-bottom:3px;}
+#fichaModalBox .fm-body p{margin:4px 0;}
+#fichaModalBox .fm-body strong{color:var(--paper);}
+#fichaModalBox .fm-loading{color:var(--muted);font-style:italic;padding:20px 0;text-align:center;}
+#fichaModalBox .fm-nota{font-size:.75rem;color:var(--muted);margin-top:14px;
+  border-top:1px solid var(--line);padding-top:10px;}
+.btn-ficha{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  padding:7px 14px;font-size:.85rem;cursor:pointer;color:var(--paper);font-family:inherit;
+  transition:border-color .15s;}
+.btn-ficha:hover{border-color:var(--gold);}
+
 /* ---------- Secção UNESCO ---------- */
 .unesco-section{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-top:14px;overflow:hidden;}
 .unesco-section>h3{font-family:'Fraunces',serif;font-size:1.05rem;padding:12px 18px;background:var(--panel2);display:flex;justify-content:space-between;align-items:center;}
@@ -353,6 +378,7 @@ h2.sec span{color:var(--gold);}
           <button class="btn" data-st="planeado">Planeado</button>
           <button class="btn" data-st="nao">Por visitar</button>
         </div>
+        <button class="btn-ficha" id="btnFicha">ℹ️ Ficha do país</button>
       </div>
     </div>
     <div style="margin-top:16px">
@@ -410,6 +436,25 @@ h2.sec span{color:var(--gold);}
       <button class="btn danger" id="dmApagar">Apagar</button>
       <button class="btn" id="diarioModalClose2">Fechar</button>
     </div>
+  </div>
+</div>
+
+
+<!-- ============ MODAL FICHA DO PAÍS ============ -->
+<div id="fichaModal">
+  <div id="fichaModalBox">
+    <button class="fm-close" id="fichaModalClose">✕</button>
+    <div class="fm-head">
+      <span class="fm-flag" id="fmFlag"></span>
+      <div>
+        <h2 id="fmNome"></h2>
+        <div style="color:var(--muted);font-size:.8rem" id="fmSub"></div>
+      </div>
+    </div>
+    <div class="fm-body" id="fmBody">
+      <div class="fm-loading">A gerar ficha do país…</div>
+    </div>
+    <div class="fm-nota">ℹ️ Informação gerada por IA (Claude) — pode conter imprecisões. Dados de conhecimento geral.</div>
   </div>
 </div>
 
@@ -2472,6 +2517,79 @@ window.toggleUnesco = (a2, nome, val) => {
   renderUnesco(a2);
   refreshStats(); /* atualizar contadores */
 };
+
+
+/* ============ FICHA DO PAÍS (Claude AI) ============ */
+const _fichaCache = {};  /* cache por sessão: a2 → html */
+
+document.getElementById('fichaModalClose').onclick =
+  () => document.getElementById('fichaModal').classList.remove('open');
+document.getElementById('fichaModal').addEventListener('click', ev => {
+  if (ev.target.id === 'fichaModal') ev.target.classList.remove('open');
+});
+
+document.getElementById('btnFicha').onclick = () => abrirFicha(selPais.value);
+
+async function abrirFicha(a2){
+  const nome = nomePT(a2);
+  document.getElementById('fmFlag').textContent  = bandeira(a2);
+  document.getElementById('fmNome').textContent  = nome;
+  document.getElementById('fmSub').textContent   = a2;
+  document.getElementById('fmBody').innerHTML    = '<div class="fm-loading">A gerar ficha de ' + nome + '…</div>';
+  document.getElementById('fichaModal').classList.add('open');
+
+  /* Cache hit */
+  if (_fichaCache[a2]){ document.getElementById('fmBody').innerHTML = _fichaCache[a2]; return; }
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `Gera uma ficha informativa concisa sobre ${nome} (código ISO: ${a2}) em português europeu.
+
+Usa este formato HTML exacto (sem markdown, sem blocos de código, só HTML puro):
+
+<h3>📍 Dados Básicos</h3>
+<p><strong>Capital:</strong> ...</p>
+<p><strong>População:</strong> ... (ano aproximado)</p>
+<p><strong>Área:</strong> ... km²</p>
+<p><strong>Idioma(s):</strong> ...</p>
+<p><strong>Moeda:</strong> ...</p>
+<p><strong>Governo:</strong> ...</p>
+
+<h3>🌍 Geografia</h3>
+<p>2-3 frases sobre localização, relevo, clima.</p>
+
+<h3>📜 História</h3>
+<p>2-3 frases sobre os momentos históricos mais marcantes.</p>
+
+<h3>💰 Economia</h3>
+<p>2-3 frases sobre economia, principais sectores, nível de desenvolvimento.</p>
+
+<h3>✈️ Para o Viajante</h3>
+<p>2-3 frases sobre o que é interessante visitar, gastronomia, época ideal, dicas práticas.</p>
+
+Responde APENAS com o HTML, sem texto antes ou depois.`
+        }]
+      })
+    });
+
+    const data = await resp.json();
+    if (data.error){ throw new Error(data.error.message); }
+    const html = data.content[0].text.trim();
+    _fichaCache[a2] = html;
+    document.getElementById('fmBody').innerHTML = html;
+  } catch(e){
+    document.getElementById('fmBody').innerHTML =
+      `<p style="color:var(--coral)">Não foi possível gerar a ficha: ${esc(e.message)}</p>
+       <p style="color:var(--muted);font-size:.85rem">Verifica a ligação à internet e tenta de novo.</p>`;
+  }
+}
 
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
