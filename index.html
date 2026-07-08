@@ -2542,7 +2542,7 @@ async function abrirFicha(a2){
   if (_fichaCache[a2]){ document.getElementById('fmBody').innerHTML = _fichaCache[a2]; return; }
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://curly-sound-5d5e.mendreas.workers.dev', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
