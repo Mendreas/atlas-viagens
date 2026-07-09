@@ -225,6 +225,31 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
 .u-site.done span{color:var(--muted);text-decoration:line-through;text-decoration-color:#0a7a8e;}
 .u-site .u-icon{flex:none;font-size:1rem;}
 
+
+/* ---------- Toggle de utilizadores ---------- */
+.user-toggle{display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);}
+.user-toggle label{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--muted);margin-right:4px;}
+.utbtn{border:2px solid var(--line);border-radius:20px;padding:5px 14px;
+  font-size:.82rem;font-weight:700;cursor:pointer;background:var(--panel2);
+  color:var(--muted);font-family:inherit;transition:all .15s;}
+.utbtn.active{color:#fff;}
+.utbtn[data-uid="u1"].active{background:#c58a2a;border-color:#c58a2a;}
+.utbtn[data-uid="u2"].active{background:#2e8f85;border-color:#2e8f85;}
+.utbtn[data-uid="ambos"].active{background:var(--paper);color:var(--ink);border-color:var(--paper);}
+.edit-user-indicator{font-size:.75rem;color:var(--muted);margin-left:8px;}
+.edit-user-indicator b{font-weight:700;}
+/* ---------- Aba Preferências ---------- */
+.pref-section{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px;margin-bottom:16px;}
+.pref-section h3{font-family:'Fraunces',serif;font-size:1.05rem;margin-bottom:14px;color:var(--paper);}
+.pref-user-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.pref-user-row input[type=text]{flex:1;min-width:150px;}
+.pref-user-row input[type=color]{width:40px;height:36px;border:1px solid var(--line);
+  border-radius:6px;cursor:pointer;padding:2px;}
+.pref-user-row .btn{flex:none;}
+
 /* ---------- Diário: imagens e links ---------- */
 .trip-gallery{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px;}
 .trip-gallery img{width:90px;height:72px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;}
@@ -356,10 +381,16 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   <button class="tab" data-tab="diario">📔 Diário</button>
   <button class="tab" data-tab="paises">📍 Países</button>
   <button class="tab" data-tab="regioes">🌍 Regiões</button>
+  <button class="tab" data-tab="prefs">⚙️ Preferências</button>
 </nav>
 
 <!-- ============ MAPA ============ -->
 <section class="page active" id="page-mapa">
+  <div class="user-toggle" id="userToggle">
+    <label>Ver mapa de:</label>
+    <!-- preenchido por JS -->
+    <span class="edit-user-indicator">A editar: <b id="editUserLabel">—</b></span>
+  </div>
   <div id="mapWrap">
     <div id="mapa"></div>
     <div class="legend">
@@ -489,6 +520,30 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
 </div>
 
 
+
+
+<!-- ============ ABA PREFERÊNCIAS ============ -->
+<section class="page" id="page-prefs">
+  <div class="pref-section">
+    <h3>👥 Utilizadores</h3>
+    <div id="prefUsersContainer"></div>
+    <button class="btn" id="btnAddUser" style="margin-top:8px">+ Adicionar utilizador</button>
+  </div>
+  <div class="pref-section">
+    <h3>🗺 Mapa — utilizador a editar</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:10px">
+      Quando editas países, regiões ou UNESCO, os dados são guardados para o utilizador seleccionado aqui.
+    </p>
+    <div id="prefEditUser" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+  </div>
+  <div class="pref-section">
+    <h3>🎨 Cores dos utilizadores no mapa</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:10px">
+      Quando vês "Ambos" no mapa, cada utilizador tem a sua cor.
+    </p>
+    <div id="prefCores" style="display:flex;gap:12px;flex-wrap:wrap"></div>
+  </div>
+</section>
 
 <!-- ============ MODAL PLANEAMENTO ============ -->
 <div id="planModal">
@@ -726,8 +781,52 @@ const LS_KEY = 'atlasViagens_v1';
 const dn = new Intl.DisplayNames(['pt'], {type:'region'});
 const TOTAL_PAISES = 195; // países reconhecidos pela ONU (referência para %)
 
-let state = { countries:{}, trips:[], seen:{}, regioes:{}, unescoSeen:{} };
-try { const raw = localStorage.getItem(LS_KEY); if (raw) state = Object.assign(state, JSON.parse(raw)); } catch(e){}
+let state = {
+  users: [{id:'u1', nome:'Utilizador 1', cor:'#d9a441'},
+          {id:'u2', nome:'Utilizador 2', cor:'#45b0a4'}],
+  byUser: {
+    u1: {countries:{}, regioes:{}, seen:{}, unescoSeen:{}},
+    u2: {countries:{}, regioes:{}, seen:{}, unescoSeen:{}}
+  },
+  trips: [],
+  activeUsers: ['u1','u2'],   /* users visíveis no mapa */
+  editingUser: 'u1'           /* user activo para editar */
+};
+/* Atalhos dinâmicos — sempre apontam para o user em edição */
+function udOf(uid){
+  if (!state.byUser[uid]) state.byUser[uid] = {};
+  const u = state.byUser[uid];
+  if (!u.countries)  u.countries  = {};
+  if (!u.regioes)    u.regioes    = {};
+  if (!u.seen)       u.seen       = {};
+  if (!u.unescoSeen) u.unescoSeen = {};
+  return u;
+}
+function ud(){ return udOf(state.editingUser); }
+function udForUser(uid){ return udOf(uid); }
+try {
+  const raw = localStorage.getItem(LS_KEY);
+  if (raw) {
+    const parsed = JSON.parse(raw);
+    /* Migração v1→v2: se não tem byUser, os dados antigos vão para u1 */
+    if (parsed.byUser) {
+      state = Object.assign(state, parsed);
+    } else {
+      /* Formato antigo — migrar para u1 */
+      state.byUser.u1.countries  = parsed.countries  || {};
+      state.byUser.u1.regioes    = parsed.regioes    || {};
+      state.byUser.u1.seen       = parsed.seen       || {};
+      state.byUser.u1.unescoSeen = parsed.unescoSeen || {};
+      state.trips = parsed.trips || [];
+      if (parsed.users) state.users = parsed.users;
+      console.log('Migrado dados antigos para u1');
+    }
+    /* Garantir que editingUser e activeUsers existem */
+    if (!state.editingUser) state.editingUser = state.users[0]?.id || 'u1';
+    if (!state.activeUsers) state.activeUsers = state.users.map(u=>u.id);
+    if (!state.byUser[state.editingUser]) state.byUser[state.editingUser] = {};
+  }
+} catch(e){}
 
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); refreshStats(); paintMap(); }
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2200); }
@@ -735,16 +834,16 @@ function nomePT(a2){ try { return dn.of(a2) || a2; } catch(e){ return a2; } }
 function bandeira(a2){ if(!/^[A-Z]{2}$/.test(a2)) return '🏳'; return String.fromCodePoint(...[...a2].map(c=>0x1F1E6 + c.charCodeAt(0) - 65)); }
 function statusDe(a2){
   /* Estado manual tem prioridade absoluta */
-  const manual = state.countries[a2] && state.countries[a2].status;
+  const manual = ud().countries[a2] && ud().countries[a2].status;
   if (manual) return manual;
   /* Sem estado manual: regiões marcadas → parcial */
-  const r = state.regioes && state.regioes[a2];
+  const r = ud().regioes && ud().regioes[a2];
   if (r && r.total > 0 && Object.keys(r.v || {}).length > 0) return 'parcial';
   return 'nao';
 }
 function setStatus(a2, st){
-  if (st === 'nao') delete state.countries[a2];
-  else state.countries[a2] = { status: st };
+  if (st === 'nao') delete ud().countries[a2];
+  else ud().countries[a2] = { status: st };
   save();
 }
 
@@ -755,17 +854,17 @@ const TODOS = Object.values(N2A)
 
 /* ============ ESTATÍSTICAS ============ */
 function refreshStats(){
-  const todos = new Set([...Object.keys(state.countries), ...Object.keys(state.regioes||{})]);
+  const todos = new Set([...Object.keys(ud().countries), ...Object.keys(ud().regioes||{})]);
   let v = 0, p = 0;
   todos.forEach(a2=>{ const st = statusDe(a2); if (st==='visitado' || st==='parcial') v++; else if (st==='planeado') p++; });
-  const reg = Object.values(state.regioes || {}).reduce((t,r)=> t + Object.keys(r.v||{}).length, 0);
+  const reg = Object.values(ud().regioes || {}).reduce((t,r)=> t + Object.keys(r.v||{}).length, 0);
   document.getElementById('stRegioes').textContent = reg;
   document.getElementById('stVisitados').textContent = v;
   document.getElementById('stPlaneados').textContent = p;
   document.getElementById('stPct').textContent = Math.round(v / TOTAL_PAISES * 100) + '%';
   document.getElementById('stViagens').textContent = state.trips.length;
   /* UNESCO counter */
-  const unescoCount = Object.values(state.unescoSeen||{}).reduce((t,v)=>t+Object.keys(v).length,0);
+  const unescoCount = Object.values(ud().unescoSeen||{}).reduce((t,v)=>t+Object.keys(v).length,0);
   const stUnesco = document.getElementById('stUnesco');
   if (stUnesco) stUnesco.textContent = unescoCount;
   /* Atualizar modal se aberto */
@@ -826,7 +925,7 @@ function abrirModal(a2){
   modalA2 = a2;
   document.getElementById('mFlag').textContent = bandeira(a2);
   document.getElementById('mNome').textContent = nomePT(a2);
-  const rr = state.regioes && state.regioes[a2];
+  const rr = ud().regioes && ud().regioes[a2];
   const nn = rr ? Object.keys(rr.v || {}).length : 0;
   document.getElementById('mReg').textContent = nn ? `${nn}/${rr.total} regiões visitadas` : '';
   marcarBtns(document.getElementById('mStatus'), statusDe(a2));
@@ -938,10 +1037,10 @@ window.apagarTrip = id=>{
 
 /* ============ PÁGINA PAÍSES ============ */
 function seenDe(a2){
-  if (!state.seen[a2]) state.seen[a2] = { checked:{}, custom:[] };
-  if (!state.seen[a2].checked) state.seen[a2].checked = {};
-  if (!state.seen[a2].custom) state.seen[a2].custom = [];
-  return state.seen[a2];
+  if (!ud().seen[a2]) ud().seen[a2] = { checked:{}, custom:[] };
+  if (!ud().seen[a2].checked) ud().seen[a2].checked = {};
+  if (!ud().seen[a2].custom) ud().seen[a2].custom = [];
+  return ud().seen[a2];
 }
 function regioesDe(a2){
   const base = (GUIA[a2] && GUIA[a2].r) ? GUIA[a2].r.map(r=>({n:r.n, v:[...r.v], custom:false})) : [];
@@ -1277,7 +1376,18 @@ document.getElementById('fileImport').addEventListener('change', ev=>{
     try {
       const data = JSON.parse(r.result);
       if (!data.countries && !data.trips) throw new Error();
-      state = Object.assign({countries:{}, trips:[], seen:{}, regioes:{}, unescoSeen:{}}, data);
+      const defaultState = {
+  users: [{id:'u1',nome:'Utilizador 1',cor:'#d9a441'},{id:'u2',nome:'Utilizador 2',cor:'#45b0a4'}],
+  byUser: {u1:{countries:{},regioes:{},seen:{},unescoSeen:{}},u2:{countries:{},regioes:{},seen:{},unescoSeen:{}}},
+  trips: [], activeUsers: ['u1','u2'], editingUser: 'u1'
+};
+if (data.byUser) {
+  state = Object.assign(defaultState, data);
+} else {
+  /* Importar formato antigo */
+  state = Object.assign(defaultState, {trips: data.trips||[]});
+  state.byUser.u1 = {countries:data.countries||{},regioes:data.regioes||{},seen:data.seen||{},unescoSeen:data.unescoSeen||{}};
+}
       save(); renderTrips(); renderPais();
       toast('Dados importados ✓');
     } catch(e){ toast('Ficheiro inválido'); }
@@ -1302,7 +1412,7 @@ syncTheme();
 /* ============ REGIÕES (geoBoundaries ADM1) ============ */
 const A2A3 = {"AW":"ABW","AF":"AFG","AO":"AGO","AI":"AIA","AX":"ALA","AL":"ALB","AD":"AND","AE":"ARE","AR":"ARG","AM":"ARM","AS":"ASM","AQ":"ATA","TF":"ATF","AG":"ATG","AU":"AUS","AT":"AUT","AZ":"AZE","BI":"BDI","BE":"BEL","BJ":"BEN","BQ":"BES","BF":"BFA","BD":"BGD","BG":"BGR","BH":"BHR","BS":"BHS","BA":"BIH","BL":"BLM","BY":"BLR","BZ":"BLZ","BM":"BMU","BO":"BOL","BR":"BRA","BB":"BRB","BN":"BRN","BT":"BTN","BV":"BVT","BW":"BWA","CF":"CAF","CA":"CAN","CC":"CCK","CH":"CHE","CL":"CHL","CN":"CHN","CI":"CIV","CM":"CMR","CD":"COD","CG":"COG","CK":"COK","CO":"COL","KM":"COM","CV":"CPV","CR":"CRI","CU":"CUB","CW":"CUW","CX":"CXR","KY":"CYM","CY":"CYP","CZ":"CZE","DE":"DEU","DJ":"DJI","DM":"DMA","DK":"DNK","DO":"DOM","DZ":"DZA","EC":"ECU","EG":"EGY","ER":"ERI","EH":"ESH","ES":"ESP","EE":"EST","ET":"ETH","FI":"FIN","FJ":"FJI","FK":"FLK","FR":"FRA","FO":"FRO","FM":"FSM","GA":"GAB","GB":"GBR","GE":"GEO","GG":"GGY","GH":"GHA","GI":"GIB","GN":"GIN","GP":"GLP","GM":"GMB","GW":"GNB","GQ":"GNQ","GR":"GRC","GD":"GRD","GL":"GRL","GT":"GTM","GF":"GUF","GU":"GUM","GY":"GUY","HK":"HKG","HM":"HMD","HN":"HND","HR":"HRV","HT":"HTI","HU":"HUN","ID":"IDN","IM":"IMN","IN":"IND","IO":"IOT","IE":"IRL","IR":"IRN","IQ":"IRQ","IS":"ISL","IL":"ISR","IT":"ITA","JM":"JAM","JE":"JEY","JO":"JOR","JP":"JPN","KZ":"KAZ","KE":"KEN","KG":"KGZ","KH":"KHM","KI":"KIR","KN":"KNA","KR":"KOR","KW":"KWT","LA":"LAO","LB":"LBN","LR":"LBR","LY":"LBY","LC":"LCA","LI":"LIE","LK":"LKA","LS":"LSO","LT":"LTU","LU":"LUX","LV":"LVA","MO":"MAC","MF":"MAF","MA":"MAR","MC":"MCO","MD":"MDA","MG":"MDG","MV":"MDV","MX":"MEX","MH":"MHL","MK":"MKD","ML":"MLI","MT":"MLT","MM":"MMR","ME":"MNE","MN":"MNG","MP":"MNP","MZ":"MOZ","MR":"MRT","MS":"MSR","MQ":"MTQ","MU":"MUS","MW":"MWI","MY":"MYS","YT":"MYT","NA":"NAM","NC":"NCL","NE":"NER","NF":"NFK","NG":"NGA","NI":"NIC","NU":"NIU","NL":"NLD","NO":"NOR","NP":"NPL","NR":"NRU","NZ":"NZL","OM":"OMN","PK":"PAK","PA":"PAN","PN":"PCN","PE":"PER","PH":"PHL","PW":"PLW","PG":"PNG","PL":"POL","PR":"PRI","KP":"PRK","PT":"PRT","PY":"PRY","PS":"PSE","PF":"PYF","QA":"QAT","RE":"REU","RO":"ROU","RU":"RUS","RW":"RWA","SA":"SAU","SD":"SDN","SN":"SEN","SG":"SGP","GS":"SGS","SH":"SHN","SJ":"SJM","SB":"SLB","SL":"SLE","SV":"SLV","SM":"SMR","SO":"SOM","PM":"SPM","RS":"SRB","SS":"SSD","ST":"STP","SR":"SUR","SK":"SVK","SI":"SVN","SE":"SWE","SZ":"SWZ","SX":"SXM","SC":"SYC","SY":"SYR","TC":"TCA","TD":"TCD","TG":"TGO","TH":"THA","TJ":"TJK","TK":"TKL","TM":"TKM","TL":"TLS","TO":"TON","TT":"TTO","TN":"TUN","TR":"TUR","TV":"TUV","TW":"TWN","TZ":"TZA","UG":"UGA","UA":"UKR","UM":"UMI","UY":"URY","US":"USA","UZ":"UZB","VA":"VAT","VC":"VCT","VE":"VEN","VG":"VGB","VI":"VIR","VN":"VNM","VU":"VUT","WF":"WLF","WS":"WSM","YE":"YEM","ZA":"ZAF","ZM":"ZMB","ZW":"ZWE"};
 const REG_CACHE = {};
-function regDe(a2){ if (!state.regioes[a2]) state.regioes[a2] = { total:0, v:{} }; return state.regioes[a2]; }
+function regDe(a2){ if (!ud().regioes[a2]) ud().regioes[a2] = { total:0, v:{} }; return ud().regioes[a2]; }
 
 async function carregarRegioes(a2){
   const cont = document.getElementById('regMapa');
@@ -1462,7 +1572,7 @@ window.toggleRegiao = (a2, nome)=>{
 document.getElementById('btnLimparReg').onclick = ()=>{
   const a2 = selPais.value;
   if (!confirm('Limpar todas as regiões marcadas de ' + nomePT(a2) + '?')) return;
-  delete state.regioes[a2];
+  delete ud().regioes[a2];
   save();
   if (REG_CACHE[a2]) desenharRegioes(a2, REG_CACHE[a2]);
   marcarBtns(document.getElementById('pStatus'), statusDe(a2));
@@ -2097,7 +2207,7 @@ function abrirStatModal(tipo){
     const label = tipo === 'visitados' ? 'visitados' : 'planeados';
     titulo.innerHTML = 'Países <span>' + (tipo==='visitados'?'visitados':'planeados') + '</span>';
     /* Recolher países desse estado (directo + por regiões) */
-    const todos = new Set([...Object.keys(state.countries), ...Object.keys(state.regioes||{})]);
+    const todos = new Set([...Object.keys(ud().countries), ...Object.keys(ud().regioes||{})]);
     const lista = [...todos]
       .filter(a2 => statusDe(a2) === (tipo==='visitados' ? 'visitado' : tipo==='visitados' ? 'parcial' : 'planeado'))
       .sort((a,b) => nomePT(a).localeCompare(nomePT(b),'pt'));
@@ -2110,7 +2220,7 @@ function abrirStatModal(tipo){
     /* Viagens associadas a cada país */
     cont.innerHTML = lista2.map(a2 => {
       const st = statusDe(a2);
-      const r = state.regioes && state.regioes[a2];
+      const r = ud().regioes && ud().regioes[a2];
       const nReg = r ? Object.keys(r.v||{}).length : 0;
       const totalReg = r ? r.total : 0;
       const viagens = state.trips.filter(t => t.pais === a2)
@@ -2143,7 +2253,7 @@ function abrirStatModal(tipo){
 
   else if (tipo === 'regioes'){
     titulo.innerHTML = 'Regiões <span>visitadas</span>';
-    const regs = state.regioes || {};
+    const regs = ud().regioes || {};
     const paisesComRegs = Object.keys(regs)
       .filter(a2 => Object.keys(regs[a2].v||{}).length > 0)
       .sort((a,b) => nomePT(a).localeCompare(nomePT(b),'pt'));
@@ -2167,7 +2277,7 @@ function abrirStatModal(tipo){
   else if (tipo === 'unesco'){
     titulo.innerHTML = 'UNESCO <span>visitados</span>';
     const todosSites = [];
-    Object.entries(state.unescoSeen||{}).forEach(([a2, visto])=>{
+    Object.entries(ud().unescoSeen||{}).forEach(([a2, visto])=>{
       Object.keys(visto).forEach(nome => todosSites.push({a2, nome}));
     });
     if (!todosSites.length){ cont.innerHTML='<p class="stat-empty">Ainda não marcaste nenhum site UNESCO.</p>'; return; }
@@ -2554,10 +2664,10 @@ function renderUnesco(a2){
   if (!cont) return;
   const sites = UNESCO_WHS[a2];
   if (!sites || !sites.length){ cont.innerHTML = ''; return; }
-  /* Estado dos sites visitados: state.unescoSeen[a2] = {nomeSite: true} */
-  if (!state.unescoSeen) state.unescoSeen = {};
-  if (!state.unescoSeen[a2]) state.unescoSeen[a2] = {};
-  const seen = state.unescoSeen[a2];
+  /* Estado dos sites visitados: ud().unescoSeen[a2] = {nomeSite: true} */
+  if (!ud().unescoSeen) ud().unescoSeen = {};
+  if (!ud().unescoSeen[a2]) ud().unescoSeen[a2] = {};
+  const seen = ud().unescoSeen[a2];
   const nVisto = Object.keys(seen).length;
   cont.innerHTML = `
     <div class="unesco-section">
@@ -2576,10 +2686,10 @@ function renderUnesco(a2){
 }
 
 window.toggleUnesco = (a2, nome, val) => {
-  if (!state.unescoSeen) state.unescoSeen = {};
-  if (!state.unescoSeen[a2]) state.unescoSeen[a2] = {};
-  if (val) state.unescoSeen[a2][nome] = true;
-  else delete state.unescoSeen[a2][nome];
+  if (!ud().unescoSeen) ud().unescoSeen = {};
+  if (!ud().unescoSeen[a2]) ud().unescoSeen[a2] = {};
+  if (val) ud().unescoSeen[a2][nome] = true;
+  else delete ud().unescoSeen[a2][nome];
   save();
   renderUnesco(a2);
   refreshStats(); /* atualizar contadores */
@@ -2700,10 +2810,10 @@ function abrirPlaneamento(a2){
   /* Recolher locais marcados: UNESCO + O que ver + regiões */
   const marcados = [];
   /* UNESCO */
-  const uSeen = (state.unescoSeen||{})[a2] || {};
+  const uSeen = (ud().unescoSeen||{})[a2] || {};
   Object.keys(uSeen).forEach(n => marcados.push({cat:'🏛 UNESCO', nome:n}));
   /* O que ver (seenDe) */
-  const seenObj = (state.seen||{})[a2] || {};
+  const seenObj = (ud().seen||{})[a2] || {};
   Object.keys((seenObj.checked)||{}).forEach(k => {
     const [reg, ponto] = k.split('|');
     if (ponto) marcados.push({cat:'👁 '+reg, nome:ponto});
@@ -2891,8 +3001,171 @@ Atlas de Viagens • mendreas.github.io/atlas-viagens</p>
   toast('Planeamento guardado — abre o ficheiro e usa Ctrl+P para imprimir/PDF');
 }
 
+
+/* ============ MULTI-UTILIZADOR ============ */
+
+/* ── Cor do utilizador no mapa ─────────────────────────────────────── */
+function corUser(uid){
+  const u = state.users.find(x=>x.id===uid);
+  return u ? u.cor : 'var(--gold)';
+}
+function nomeUser(uid){
+  const u = state.users.find(x=>x.id===uid);
+  return u ? u.nome : uid;
+}
+
+/* ── Renderizar toggle de utilizadores ────────────────────────────── */
+function renderUserToggle(){
+  const cont = document.getElementById('userToggle');
+  if (!cont) return;
+  /* Remover botões antigos (manter o label e o indicator) */
+  cont.querySelectorAll('.utbtn').forEach(b=>b.remove());
+  const label = cont.querySelector('label');
+  const ind = cont.querySelector('.edit-user-indicator');
+
+  state.users.forEach(u => {
+    const btn = document.createElement('button');
+    btn.className = 'utbtn' + (state.activeUsers.includes(u.id)?' active':'');
+    btn.dataset.uid = u.id;
+    btn.textContent = u.nome;
+    if (state.activeUsers.includes(u.id))
+      btn.style.cssText = `background:${u.cor};border-color:${u.cor};color:#fff`;
+    btn.onclick = () => toggleUserVisibility(u.id);
+    cont.insertBefore(btn, ind);
+  });
+
+  /* Botão "Ambos" se há 2+ users */
+  if (state.users.length >= 2){
+    const btnA = document.createElement('button');
+    btnA.className = 'utbtn' + (state.activeUsers.length===state.users.length?' active':'');
+    btnA.dataset.uid = 'ambos';
+    btnA.textContent = 'Ambos';
+    cont.insertBefore(btnA, ind);
+    btnA.onclick = () => {
+      if (state.activeUsers.length === state.users.length)
+        state.activeUsers = [state.users[0].id];
+      else
+        state.activeUsers = state.users.map(u=>u.id);
+      renderUserToggle(); paintMap();
+    };
+  }
+
+  /* Indicador do user em edição */
+  const editLabel = document.getElementById('editUserLabel');
+  if (editLabel) editLabel.textContent = nomeUser(state.editingUser);
+}
+
+function toggleUserVisibility(uid){
+  if (state.activeUsers.includes(uid)){
+    if (state.activeUsers.length === 1) return; /* pelo menos 1 visível */
+    state.activeUsers = state.activeUsers.filter(x=>x!==uid);
+  } else {
+    state.activeUsers = [...state.activeUsers, uid];
+  }
+  renderUserToggle();
+  paintMap();
+}
+
+/* ── paintMap multi-user ───────────────────────────────────────────── */
+/* Override do paintMap original para suporte multi-user */
+const _paintMapOriginal = paintMap;
+window.paintMap = function(){
+  if (!gPaises) return;
+  if (state.activeUsers.length === 1){
+    /* Modo single user — usa a lógica normal mas para o user activo */
+    const uid = state.activeUsers[0];
+    const savedEditing = state.editingUser;
+    state.editingUser = uid;
+    gPaises.attr('fill', d => {
+      const a2 = N2A[String(+d.id)] || '';
+      return CORES[statusDe(a2)] || CORES['nao'];
+    });
+    state.editingUser = savedEditing;
+  } else {
+    /* Modo "Ambos" — cada país pintado pela combinação dos dois users */
+    gPaises.attr('fill', d => {
+      const a2 = N2A[String(+d.id)] || '';
+      const statuses = state.users.map(u => {
+        const saved = state.editingUser;
+        state.editingUser = u.id;
+        const st = statusDe(a2);
+        state.editingUser = saved;
+        return {uid: u.id, st};
+      }).filter(x => state.activeUsers.includes(x.uid));
+
+      /* Lógica de combinação: visitado > parcial > planeado > nao */
+      const visited = statuses.filter(x=>x.st==='visitado');
+      const planned = statuses.filter(x=>x.st==='planeado');
+      const partial = statuses.filter(x=>x.st==='parcial');
+
+      if (visited.length === statuses.length) return 'var(--gold)'; /* todos visitado */
+      if (visited.length > 0 && planned.length > 0) return 'var(--parcial)'; /* um visitou outro planeia */
+      if (visited.length > 0) return visited.length === 1
+        ? corUser(visited[0].uid) : 'var(--gold)';
+      if (partial.length > 0) return 'var(--parcial)';
+      if (planned.length > 0) return 'var(--teal)';
+      return 'var(--land)';
+    });
+  }
+};
+
+/* ── Aba Preferências ──────────────────────────────────────────────── */
+function renderPrefs(){
+  /* Lista de utilizadores */
+  const cont = document.getElementById('prefUsersContainer');
+  if (cont) cont.innerHTML = state.users.map((u,i) => `
+    <div class="pref-user-row">
+      <input type="color" value="${u.cor}" onchange="state.users[${i}].cor=this.value; save(); renderUserToggle(); paintMap(); renderPrefs();">
+      <input type="text" value="${esc(u.nome)}" placeholder="Nome do utilizador"
+        onchange="state.users[${i}].nome=this.value; save(); renderUserToggle(); renderPrefs();">
+      ${state.users.length>1 ? `<button class="btn danger" onclick="removerUser(${i})">Remover</button>` : ''}
+    </div>`).join('');
+
+  /* Selector de user em edição */
+  const editCont = document.getElementById('prefEditUser');
+  if (editCont) editCont.innerHTML = state.users.map(u => `
+    <button class="btn ${state.editingUser===u.id?'gold':''}"
+      onclick="state.editingUser='${u.id}'; save(); renderPrefs(); renderUserToggle(); document.getElementById('editUserLabel').textContent='${esc(u.nome)}';">
+      ${esc(u.nome)}
+    </button>`).join('');
+
+  /* Legenda de cores */
+  const coresCont = document.getElementById('prefCores');
+  if (coresCont) coresCont.innerHTML = state.users.map(u => `
+    <div style="display:flex;align-items:center;gap:8px;font-size:.88rem">
+      <span style="width:20px;height:20px;border-radius:4px;background:${u.cor};display:inline-block"></span>
+      <span>${esc(u.nome)}</span>
+    </div>`).join('');
+}
+
+window.removerUser = (i) => {
+  if (!confirm(`Remover "${state.users[i].nome}"? Os seus dados de países serão apagados.`)) return;
+  const uid = state.users[i].id;
+  state.users.splice(i,1);
+  delete state.byUser[uid];
+  state.activeUsers = state.activeUsers.filter(x=>x!==uid);
+  if (state.editingUser===uid) state.editingUser = state.users[0]?.id||'u1';
+  save(); renderUserToggle(); renderPrefs(); paintMap();
+};
+
+document.getElementById('btnAddUser').onclick = () => {
+  const newId = 'u' + Date.now();
+  state.users.push({id:newId, nome:'Novo utilizador', cor:'#9b59b6'});
+  state.byUser[newId] = {countries:{},regioes:{},seen:{},unescoSeen:{}};
+  state.activeUsers.push(newId);
+  save(); renderUserToggle(); renderPrefs(); paintMap();
+};
+
+/* ── showTab: renderizar prefs ao abrir ─────────────────────────────── */
+const _showTabOld = showTab;
+window.showTab = function(name){
+  _showTabOld(name);
+  if (name==='prefs') renderPrefs();
+};
+
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
+renderUserToggle();
 </script>
 </body>
 </html>
