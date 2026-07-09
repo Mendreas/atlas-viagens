@@ -197,6 +197,20 @@ h2.sec span{color:var(--gold);}
 .clear-row .cr-label{font-size:.88rem;}
 .clear-row .cr-desc{font-size:.75rem;color:var(--muted);margin-top:2px;}
 
+
+/* ---------- Modal formulário de viagem ---------- */
+#formModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
+  align-items:flex-start;justify-content:center;z-index:190;padding:16px;overflow-y:auto;}
+#formModal.open{display:flex;}
+#formModalBox{background:var(--panel);border:1px solid var(--gold);border-radius:var(--radius);
+  width:100%;max-width:760px;margin:auto;overflow:hidden;}
+.fm2-header{background:var(--panel2);border-bottom:1px solid var(--line);
+  padding:16px 22px;display:flex;align-items:center;justify-content:space-between;}
+.fm2-header h2{font-family:'Fraunces',serif;font-size:1.3rem;}
+.fm2-body{padding:20px 22px;}
+.fm2-footer{border-top:1px solid var(--line);padding:14px 22px;
+  display:flex;gap:8px;background:var(--panel2);}
+
 /* ---------- Modal importação Excel ---------- */
 #importModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
   align-items:flex-start;justify-content:center;z-index:200;padding:16px;overflow-y:auto;}
@@ -562,53 +576,12 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     <button class="btn-limpar-filtros" id="btnLimparFiltros">✕ Limpar filtros</button>
     <button class="btn" id="btnExportDiario" style="margin-left:auto;padding:5px 12px;font-size:.82rem">⬇ Exportar HTML</button>
   </div>
-  <div class="card">
-    <h2 class="sec" style="margin-top:0">Nova <span>viagem</span></h2>
-    <div class="grid c3">
-      <div><label>País</label><select id="tPais"></select></div>
-      <div><label>Data de início</label><input type="date" id="tIni"></div>
-      <div><label>Data de fim</label><input type="date" id="tFim"></div>
-    </div>
-    <div style="margin-top:12px">
-      <label style="font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:6px">Quem foi</label>
-      <div id="tUserSelector" style="display:flex;gap:10px;flex-wrap:wrap"></div>
-    </div>
-    <div class="grid c2" style="margin-top:14px">
-      <div><label>Título</label><input type="text" id="tTitulo" placeholder="Ex.: Lua de mel na Toscânia"></div>
-      <div><label>Locais visitados</label><input type="text" id="tLocais" placeholder="Ex.: Florença, Siena, Pisa"></div>
-    </div>
-    <div class="grid c2" style="margin-top:10px">
-      <div>
-        <label>Companhia aérea</label>
-        <input type="text" id="tAirline" placeholder="Ex.: TAP, Ryanair, Emirates…" list="tAirlineList" autocomplete="off">
-        <datalist id="tAirlineList"></datalist>
-      </div>
-      <div>
-        <label>Voo / Rota</label>
-        <input type="text" id="tRota" placeholder="Ex.: TP1234  ou  LIS-LHR">
-      </div>
-    </div>
-    <div style="margin-top:14px"><label>Notas / diário</label><textarea id="tNotas" placeholder="O que viste, comeste, sentiste…"></textarea></div>
-
-    <div class="form-section">
-      <label class="sec-title">📸 Fotografias</label>
-      <input type="file" id="tImgInput" accept="image/*" multiple style="display:none">
-      <button class="btn" id="btnAddImgs" type="button">+ Adicionar fotos</button>
-      <small style="color:var(--muted);margin-left:8px;font-size:.78rem">Guardadas permanentemente na app (IndexedDB — sem limite prático).</small>
-      <div class="imgs-preview" id="tImgsPreview"></div>
-    </div>
-
-    <div class="form-section">
-      <label class="sec-title">🔗 Links externos (Google Photos, Flickr, etc.)</label>
-      <div id="tLinksContainer"></div>
-      <button class="btn" id="btnAddLink" type="button">+ Adicionar link</button>
-    </div>
-
-    <div style="margin-top:14px; display:flex; gap:8px">
-      <button class="btn gold" id="btnSaveTrip">Guardar viagem</button>
-      <button class="btn" id="btnCancelEdit" style="display:none">Cancelar edição</button>
-    </div>
+  <div style="text-align:center;padding:14px 0 4px">
+    <button class="btn gold" id="btnNovaViagem" style="padding:10px 28px;font-size:1rem;border-radius:8px">
+      ✈️ Nova viagem
+    </button>
   </div>
+
   <div id="tripList"></div>
 </section>
 
@@ -795,6 +768,64 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   <div class="airlines-grid" id="airlinesGrid"></div>
 </section>
 
+
+
+<!-- ============ MODAL FORMULÁRIO DE VIAGEM ============ -->
+<div id="formModal">
+  <div id="formModalBox">
+    <div class="fm2-header">
+      <h2 id="formModalTitulo">Nova <span style="color:var(--gold)">viagem</span></h2>
+      <button style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted)"
+        onclick="fecharFormModal()">✕</button>
+    </div>
+    <div class="fm2-body">
+      <div class="grid c3">
+        <div><label>País</label><select id="tPais"></select></div>
+        <div><label>Data de início</label><input type="date" id="tIni"></div>
+        <div><label>Data de fim</label><input type="date" id="tFim"></div>
+      </div>
+      <div style="margin-top:12px">
+        <label style="font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:6px">Quem foi</label>
+        <div id="tUserSelector" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+      </div>
+      <div class="grid c2" style="margin-top:14px">
+        <div><label>Título</label><input type="text" id="tTitulo" placeholder="Ex.: Lua de mel na Toscânia"></div>
+        <div><label>Locais visitados</label><input type="text" id="tLocais" placeholder="Ex.: Florença, Siena, Pisa"></div>
+      </div>
+      <div class="grid c2" style="margin-top:10px">
+        <div>
+          <label>Companhia aérea</label>
+          <input type="text" id="tAirline" placeholder="Ex.: TAP, Ryanair, Emirates…" list="tAirlineList" autocomplete="off">
+          <datalist id="tAirlineList"></datalist>
+        </div>
+        <div>
+          <label>Voo / Rota</label>
+          <input type="text" id="tRota" placeholder="Ex.: TP1234  ou  LIS-LHR">
+        </div>
+      </div>
+      <div style="margin-top:14px"><label>Notas / diário</label><textarea id="tNotas" placeholder="O que viste, comeste, sentiste…"></textarea></div>
+
+      <div class="form-section">
+        <label class="sec-title">📸 Fotografias</label>
+        <input type="file" id="tImgInput" accept="image/*" multiple style="display:none">
+        <button class="btn" id="btnAddImgs" type="button">+ Adicionar fotos</button>
+        <small style="color:var(--muted);margin-left:8px;font-size:.78rem">Guardadas permanentemente na app (IndexedDB — sem limite prático).</small>
+        <div class="imgs-preview" id="tImgsPreview"></div>
+      </div>
+
+      <div class="form-section">
+        <label class="sec-title">🔗 Links externos (Google Photos, Flickr, etc.)</label>
+        <div id="tLinksContainer"></div>
+        <button class="btn" id="btnAddLink" type="button">+ Adicionar link</button>
+      </div>
+    </div>
+    <div class="fm2-footer">
+      <button class="btn gold" id="btnSaveTrip">Guardar viagem</button>
+      <button class="btn" id="btnCancelEdit" style="display:none">Cancelar edição</button>
+      <button class="btn" onclick="fecharFormModal()" style="margin-left:auto">Fechar</button>
+    </div>
+  </div>
+</div>
 
 <!-- ============ MODAL IMPORTAÇÃO EXCEL ============ -->
 <div id="importModal">
@@ -1301,18 +1332,18 @@ document.getElementById('mFicha').onclick = ()=>{
 };
 
 /* ============ DIÁRIO ============ */
-const selTrip = document.getElementById('tPais');
+/* selTrip removido — usar document.getElementById('tPais') directamente */
 const selPais = document.getElementById('pSel');
 TODOS.forEach(a2=>{
   const o1 = new Option(bandeira(a2)+' '+nomePT(a2), a2);
   const o2 = new Option(bandeira(a2)+' '+nomePT(a2), a2);
-  selTrip.add(o1); selPais.add(o2);
+  if(document.getElementById("tPais")) document.getElementById("tPais").add(o1); selPais.add(o2);
 });
-selTrip.value = 'PT'; selPais.value = 'PT';
+document.getElementById('tPais').value = 'PT'; selPais.value = 'PT';
 
 let editId = null;
 document.getElementById('btnSaveTrip').onclick = ()=>{
-  const pais = selTrip.value;
+  const pais = document.getElementById('tPais').value;
   const ini = document.getElementById('tIni').value;
   const fim = document.getElementById('tFim').value || ini;
   const titulo = document.getElementById('tTitulo').value.trim();
@@ -1341,7 +1372,7 @@ document.getElementById('btnCancelEdit').onclick = limparForm;
 function fmtData(d){ if(!d) return ''; const [a,m,dia] = d.split('-'); return `${dia}/${m}/${a}`; }
 function renderTrips(){
   const list = document.getElementById('tripList');
-  populateFiltroDropdowns();
+  try { populateFiltroDropdowns(); } catch(e){}
   const hoje = new Date().toISOString().slice(0,10);
   const allTrips = [...state.trips].sort((a,b)=> b.ini.localeCompare(a.ini));
   const trips = filtrarTrips(allTrips);
@@ -1383,7 +1414,7 @@ function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;
 window.editarTrip = id=>{
   const t = state.trips.find(x=>x.id===id); if(!t) return;
   editId = id;
-  selTrip.value = t.pais;
+  document.getElementById('tPais').value = t.pais;
   document.getElementById('tIni').value = t.ini;
   document.getElementById('tFim').value = t.fim;
   document.getElementById('tTitulo').value = t.titulo;
@@ -2505,41 +2536,7 @@ limparForm = function(){
 /* Guardar viagem: incluir imagens e links */
 const _btnSaveTripOld = document.getElementById('btnSaveTrip').onclick;
 document.getElementById('btnSaveTrip').onclick = null;
-document.getElementById('btnSaveTrip').onclick = ()=>{
-  const pais = selTrip.value;
-  const ini = document.getElementById('tIni').value;
-  const fim = document.getElementById('tFim').value || ini;
-  const titulo = document.getElementById('tTitulo').value.trim();
-  if (!ini){ toast('Indica pelo menos a data de início'); return; }
-  const trip = { id: editId || Date.now(), pais, ini, fim,
-    titulo: titulo || ('Viagem a ' + nomePT(pais)),
-    locais: document.getElementById('tLocais').value.trim(),
-    notas: document.getElementById('tNotas').value.trim(),
-    imgNomes: formImgs.map(f => f.name),
-    links: formLinks.filter(l => l.url.trim()),
-    airline: document.getElementById('tAirline')?.value.trim() || '',
-    rota: document.getElementById('tRota')?.value.trim() || '',
-    userIds: getTUserSelected() };
-  /* Guardar fotos no IndexedDB (async — não bloqueia) */
-  const _idParaFotos = editId || trip.id;
-  if (formImgs.length){
-    /* Se estava a editar e tinha fotos antigas, apagar primeiro */
-    const tripAntiga = editId ? state.trips.find(t=>t.id===editId) : null;
-    if (tripAntiga && tripAntiga.imgNomes && tripAntiga.imgNomes.length)
-      apagarFotosIDB(editId, tripAntiga.imgNomes.length);
-    invalidarCacheFotos(_idParaFotos);
-    guardarFotosIDB(_idParaFotos, formImgs).then(()=>{
-      invalidarCacheFotos(_idParaFotos);
-    });
-  }
-  if (editId){ state.trips = state.trips.map(t=> t.id===editId ? trip : t); editId = null; }
-  else state.trips.push(trip);
-  const hoje = new Date().toISOString().slice(0,10);
-  if (fim <= hoje) setStatus(pais, 'visitado');
-  else if (statusDe(pais) !== 'visitado') setStatus(pais, 'planeado');
-  limparForm(); save(); renderTrips();
-  toast('Viagem guardada ✓');
-};
+/* btnSaveTrip gerido pelo modal de formulário */
 
 /* Editar viagem: pré-preencher imagens e links */
 const _editarTripOld = window.editarTrip;
@@ -3589,6 +3586,10 @@ function populateFiltroDropdowns(){
   const fCont = document.getElementById('fCont');
   if (!fUser||!fPais||!fCont) return;
 
+  /* Preencher datalist de companhias */ 
+  const dlAir = document.getElementById('tAirlineList');
+  if (dlAir && typeof AIRLINES_DB !== 'undefined') dlAir.innerHTML = AIRLINES_DB.map(a=>`<option value="${esc(a.nome)}">`).join('');
+
   /* Users */
   const uSaved = fUser.value;
   fUser.innerHTML = '<option value="">Todos</option>';
@@ -3608,7 +3609,7 @@ function populateFiltroDropdowns(){
   /* Continentes das viagens */
   const contSaved = fCont.value;
   const contsUsados = new Map();
-  state.trips.forEach(t => {
+  if (typeof CONTINENTES !== 'undefined') state.trips.forEach(t => {
     const cont = CONTINENTES.find(c=>c.paises.includes(t.pais));
     if (cont && !contsUsados.has(cont.id)) contsUsados.set(cont.id, cont.nome);
   });
@@ -4269,6 +4270,123 @@ window.limparDados = (tipo) => {
 };
 
 const AIRLINE_LOGO_DATA = {"TP":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQzgxMDJFIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5UUDwvdGV4dD48L3N2Zz4=","FR":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDczNTkwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRjdCNzMxIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5GUjwvdGV4dD48L3N2Zz4=","U2":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRkY2NjAwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5VMjwvdGV4dD48L3N2Zz4=","VY":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRkZENzAwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMUUxRTFFIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5WWTwvdGV4dD48L3N2Zz4=","IB":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQ0MwMDAwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5JQjwvdGV4dD48L3N2Zz4=","BA":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDc1QUFBIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5CQTwvdGV4dD48L3N2Zz4=","AF":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAyMTU3Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BRjwvdGV4dD48L3N2Zz4=","LH":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDUxNjREIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZBRDAwIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5MSDwvdGV4dD48L3N2Zz4=","KL":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA5RkRCIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5LTDwvdGV4dD48L3N2Zz4=","AZ":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA2REI3Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BWjwvdGV4dD48L3N2Zz4=","SK":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzRjg3Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5TSzwvdGV4dD48L3N2Zz4=","AY":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzNTgwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BWTwvdGV4dD48L3N2Zz4=","LX":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQ0MwMDAwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5MWDwvdGV4dD48L3N2Zz4=","OS":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQ0MwMDAwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5PUzwvdGV4dD48L3N2Zz4=","SN":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDgyNTUwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5TTjwvdGV4dD48L3N2Zz4=","LS":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRjA4MTFBIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5MUzwvdGV4dD48L3N2Zz4=","W6":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQzQwQzZEIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5XNjwvdGV4dD48L3N2Zz4=","TK":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQzcwQTBDIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5USzwvdGV4dD48L3N2Zz4=","PS":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA1QkFBIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5QUzwvdGV4dD48L3N2Zz4=","SU":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA1MjlCIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5TVTwvdGV4dD48L3N2Zz4=","A3":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzMDg3Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BMzwvdGV4dD48L3N2Zz4=","LO":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRDkxQTJCIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5MTzwvdGV4dD48L3N2Zz4=","OK":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQ0UwRjFBIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5PSzwvdGV4dD48L3N2Zz4=","RO":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzMDg3Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5STzwvdGV4dD48L3N2Zz4=","BT":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjNzBCOTQ0Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5CVDwvdGV4dD48L3N2Zz4=","AA":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA3OEQyIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BQTwvdGV4dD48L3N2Zz4=","UA":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzMDg3Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5VQTwvdGV4dD48L3N2Zz4=","DL":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRTAxODMzIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5ETDwvdGV4dD48L3N2Zz4=","WN":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMzA0Q0IyIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkRCRTU3IiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5XTjwvdGV4dD48L3N2Zz4=","B6":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzODc2Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5CNjwvdGV4dD48L3N2Zz4=","AS":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA0NjdGIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BUzwvdGV4dD48L3N2Zz4=","F9":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA4RDZBIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5GOTwvdGV4dD48L3N2Zz4=","NK":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRkZFQjAwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5OSzwvdGV4dD48L3N2Zz4=","AC":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRjAxNDI4Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BQzwvdGV4dD48L3N2Zz4=","WS":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzNzY4Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5XUzwvdGV4dD48L3N2Zz4=","AM":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA2Q0I3Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BTTwvdGV4dD48L3N2Zz4=","LA":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRDkxQTIxIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5MQTwvdGV4dD48L3N2Zz4=","G3":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA5NTQxIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5HMzwvdGV4dD48L3N2Zz4=","AD":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMUU0MEFGIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BRDwvdGV4dD48L3N2Zz4=","AR":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjNzRBQUNGIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BUjwvdGV4dD48L3N2Zz4=","CM":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA0MjdGIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5DTTwvdGV4dD48L3N2Zz4=","AV":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRDAxQjJBIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BVjwvdGV4dD48L3N2Zz4=","EK":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRDcxOTIxIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5FSzwvdGV4dD48L3N2Zz4=","EY":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQzVBMDI4Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMUQxRDFCIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5FWTwvdGV4dD48L3N2Zz4=","QR":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjNUMwNjMyIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5RUjwvdGV4dD48L3N2Zz4=","GF":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjOEIxQjQyIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5HRjwvdGV4dD48L3N2Zz4=","MS":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA2RTUxIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5NUzwvdGV4dD48L3N2Zz4=","RJ":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA1Mjk1Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5SSjwvdGV4dD48L3N2Zz4=","LY":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzOEE4Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5MWTwvdGV4dD48L3N2Zz4=","SV":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA2ODMzIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5TVjwvdGV4dD48L3N2Zz4=","ET":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA5QTQ0Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5FVDwvdGV4dD48L3N2Zz4=","KQ":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQ0MwMDAwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5LUTwvdGV4dD48L3N2Zz4=","SA":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA1MjlCIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5TQTwvdGV4dD48L3N2Zz4=","AT":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQ0MwMDAwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BVDwvdGV4dD48L3N2Zz4=","MK":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA1MjlCIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5NSzwvdGV4dD48L3N2Zz4=","SQ":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzMzY2Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRjJBOTAwIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5TUTwvdGV4dD48L3N2Zz4=","CX":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA2NTY0Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5DWDwvdGV4dD48L3N2Zz4=","NH":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzMzhEIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5OSDwvdGV4dD48L3N2Zz4=","JL":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRTYwMDEyIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5KTDwvdGV4dD48L3N2Zz4=","KE":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMEMyMzQwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5LRTwvdGV4dD48L3N2Zz4=","OZ":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAyNTZDIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5PWjwvdGV4dD48L3N2Zz4=","CI":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA0NTdDIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5DSTwvdGV4dD48L3N2Zz4=","BR":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA2QjNGIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5CUjwvdGV4dD48L3N2Zz4=","CA":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjQ0MwMDAwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5DQTwvdGV4dD48L3N2Zz4=","MU":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRDgxOTIwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5NVTwvdGV4dD48L3N2Zz4=","CZ":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA3REM1Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5DWjwvdGV4dD48L3N2Zz4=","AI":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRTgxNzJCIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5BSTwvdGV4dD48L3N2Zz4=","6E":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMUUzQTVGIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj42RTwvdGV4dD48L3N2Zz4=","TG":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjNEMwMDgwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5URzwvdGV4dD48L3N2Zz4=","MH":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA1MjlCIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5NSDwvdGV4dD48L3N2Zz4=","GA":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzNTgwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5HQTwvdGV4dD48L3N2Zz4=","PR":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDAzNUE0Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZEMjAwIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5QUjwvdGV4dD48L3N2Zz4=","VN":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA5QTQ0Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5WTjwvdGV4dD48L3N2Zz4=","FD":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRkYwMDAwIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5GRDwvdGV4dD48L3N2Zz4=","QF":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRTIyMzFBIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5RRjwvdGV4dD48L3N2Zz4=","VA":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjRUYzODI5Ii8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5WQTwvdGV4dD48L3N2Zz4=","NZ":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDgwIDI4Ij48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMjgiIHJ4PSI1IiBmaWxsPSIjMDA0NDdDIi8+PHRleHQgeD0iNDAiIHk9IjE5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZGIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjEzIj5OWjwvdGV4dD48L3N2Zz4="};
+
+
+/* ============ MODAL FORMULÁRIO DE VIAGEM ============ */
+function abrirFormModal(titulo){
+  document.getElementById('formModalTitulo').innerHTML =
+    titulo || 'Nova <span style="color:var(--gold)">viagem</span>';
+  document.getElementById('formModal').classList.add('open');
+  /* Preencher datalist companhias (só se AIRLINES_DB já existir) */
+  const dl = document.getElementById('tAirlineList');
+  if (dl && typeof AIRLINES_DB !== 'undefined')
+    dl.innerHTML = AIRLINES_DB.map(a=>`<option value="${esc(a.nome)}">`).join('');
+}
+
+function fecharFormModal(){
+  document.getElementById('formModal').classList.remove('open');
+}
+
+document.getElementById('formModal').addEventListener('click', ev=>{
+  if (ev.target.id==='formModal') fecharFormModal();
+});
+
+/* Botão Nova Viagem */
+document.getElementById('btnNovaViagem').addEventListener('click', () => {
+  limparForm();
+  abrirFormModal();
+});
+
+/* Ao guardar, fechar o modal */
+const _btnSaveTripOriginal = document.getElementById('btnSaveTrip').onclick;
+document.getElementById('btnSaveTrip').onclick = null;
+document.getElementById('btnSaveTrip').addEventListener('click', function(){
+  const pais = document.getElementById('tPais').value;
+  const ini  = document.getElementById('tIni').value;
+  const fim  = document.getElementById('tFim').value || ini;
+  const titulo = document.getElementById('tTitulo').value.trim();
+  if (!ini){ toast('Indica pelo menos a data de início'); return; }
+
+  const trip = {
+    id: editId || Date.now(),
+    pais, ini, fim,
+    titulo: titulo || ('Viagem a ' + nomePT(pais)),
+    locais: document.getElementById('tLocais').value.trim(),
+    notas:  document.getElementById('tNotas').value.trim(),
+    imgNomes: formImgs.map(f=>f.name),
+    links: formLinks.filter(l=>l.url.trim()),
+    airline: document.getElementById('tAirline')?.value.trim() || '',
+    rota:    document.getElementById('tRota')?.value.trim()    || '',
+    userIds: getTUserSelected(),
+  };
+
+  const sessId = editId || trip.id;
+  if (formImgs.length){
+    if (editId && sessFotos[editId]) libertarFotos(editId);
+    sessFotos[sessId] = formImgs.map(f=>({name:f.name,objUrl:f.objUrl}));
+    formImgs=[];
+  }
+
+  if (editId){ state.trips = state.trips.map(t=>t.id===editId?trip:t); editId=null; }
+  else state.trips.push(trip);
+
+  const hoje = new Date().toISOString().slice(0,10);
+  if (fim<=hoje) {
+    trip.userIds.forEach(uid=>{ const sv=state.editingUser; state.editingUser=uid; setStatus(pais,'visitado'); state.editingUser=sv; });
+  } else {
+    trip.userIds.forEach(uid=>{ const sv=state.editingUser; state.editingUser=uid; if(statusDe(pais)!=='visitado') setStatus(pais,'planeado'); state.editingUser=sv; });
+  }
+
+  limparForm();
+  save(); renderTrips(); refreshStats();
+  fecharFormModal();
+  toast('Viagem guardada ✓');
+});
+
+/* Cancelar edição */
+document.getElementById('btnCancelEdit').onclick = () => {
+  editId=null; limparForm();
+  document.getElementById('btnCancelEdit').style.display='none';
+  document.getElementById('formModalTitulo').innerHTML = 'Nova <span style="color:var(--gold)">viagem</span>';
+};
+
+/* editarTrip: abrir modal em vez de scroll ─────────────────────────────── */
+const _editarTripModalOld = window.editarTrip;
+window.editarTrip = (id) => {
+  const t = state.trips.find(x=>x.id===id); if(!t) return;
+
+  /* Fechar o modal do diário se estiver aberto */
+  document.getElementById('diarioModal')?.classList.remove('open');
+
+  editId = id;
+  document.getElementById('tPais').value = t.pais;
+  document.getElementById('tIni').value  = t.ini||'';
+  document.getElementById('tFim').value  = t.fim||'';
+  document.getElementById('tTitulo').value = t.titulo;
+  document.getElementById('tLocais').value = t.locais||'';
+  document.getElementById('tNotas').value  = t.notas||'';
+  if(document.getElementById('tAirline')) document.getElementById('tAirline').value = t.airline||'';
+  if(document.getElementById('tRota'))   document.getElementById('tRota').value   = t.rota||'';
+
+  formLinks = t.links ? [...t.links] : [];
+  formImgs  = [];
+  renderFormImgs(); renderFormLinks();
+
+  const tripUserIds = t.userIds || (t.userId ? [t.userId] : [state.editingUser]);
+  renderTUserSelector(tripUserIds);
+
+  if(t.imgNomes && t.imgNomes.length){
+    document.getElementById('tImgsPreview').innerHTML =
+      `<p style="color:var(--muted);font-size:.8rem">A carregar fotos existentes…</p>`;
+    getFotos(t.id, t.imgNomes.length).then(fotos => {
+      formImgs = fotos.map((url,i) => ({name: t.imgNomes[i]||'foto.jpg', dataUrl: url}));
+      renderFormImgs();
+    });
+  }
+
+  document.getElementById('btnCancelEdit').style.display='inline-flex';
+  abrirFormModal('Editar <span style="color:var(--gold)">viagem</span>');
+};
 
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
