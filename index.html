@@ -143,6 +143,22 @@ h2.sec span{color:var(--gold);}
 
 
 
+
+/* ---------- Filtros do diário ---------- */
+.filtros-bar{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 18px;margin-bottom:14px;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.filtros-bar label{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--muted);display:block;margin-bottom:3px;}
+.filtros-bar select,.filtros-bar input{width:100%;}
+.filtros-bar .f-wide{grid-column:span 2;}
+.filtros-resumo{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+.filtros-resumo .f-count{font-size:.85rem;color:var(--muted);}
+.filtros-resumo .f-count b{color:var(--gold);}
+.btn-limpar-filtros{font-size:.78rem;color:var(--coral);background:none;border:none;
+  cursor:pointer;padding:0;font-family:inherit;}
+.btn-limpar-filtros:hover{text-decoration:underline;}
+
 /* ---------- Modal de planeamento ---------- */
 #planModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
   align-items:flex-start;justify-content:center;z-index:180;padding:16px;overflow-y:auto;}
@@ -410,6 +426,44 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
 
 <!-- ============ DIÁRIO ============ -->
 <section class="page" id="page-diario">
+  <!-- Filtros -->
+  <div class="filtros-bar" id="filtrosBar">
+    <div>
+      <label>Utilizador</label>
+      <select id="fUser">
+        <option value="">Todos</option>
+      </select>
+    </div>
+    <div>
+      <label>País</label>
+      <select id="fPais">
+        <option value="">Todos os países</option>
+      </select>
+    </div>
+    <div>
+      <label>Continente</label>
+      <select id="fCont">
+        <option value="">Todos os continentes</option>
+      </select>
+    </div>
+    <div>
+      <label>Ano início</label>
+      <input type="number" id="fAnoMin" placeholder="ex: 2020" min="1900" max="2100">
+    </div>
+    <div>
+      <label>Ano fim</label>
+      <input type="number" id="fAnoMax" placeholder="ex: 2026" min="1900" max="2100">
+    </div>
+    <div class="f-wide">
+      <label>Pesquisa (título, local, notas)</label>
+      <input type="text" id="fTexto" placeholder="ex: Paris, jantar, museu…">
+    </div>
+  </div>
+  <div class="filtros-resumo">
+    <span class="f-count" id="fCount"><b>0</b> viagens</span>
+    <button class="btn-limpar-filtros" id="btnLimparFiltros">✕ Limpar filtros</button>
+    <button class="btn" id="btnExportDiario" style="margin-left:auto;padding:5px 12px;font-size:.82rem">⬇ Exportar HTML</button>
+  </div>
   <div class="card">
     <h2 class="sec" style="margin-top:0">Nova <span>viagem</span></h2>
     <div class="grid c3">
@@ -995,13 +1049,24 @@ document.getElementById('btnCancelEdit').onclick = limparForm;
 function fmtData(d){ if(!d) return ''; const [a,m,dia] = d.split('-'); return `${dia}/${m}/${a}`; }
 function renderTrips(){
   const list = document.getElementById('tripList');
-  if (!state.trips.length){ list.innerHTML = '<div class="empty">Ainda não há viagens no diário. Regista a primeira acima. ✈️</div>'; return; }
+  populateFiltroDropdowns();
   const hoje = new Date().toISOString().slice(0,10);
-  const trips = [...state.trips].sort((a,b)=> b.ini.localeCompare(a.ini));
-
+  const allTrips = [...state.trips].sort((a,b)=> b.ini.localeCompare(a.ini));
+  const trips = filtrarTrips(allTrips);
+  /* Actualizar contador */
+  const countEl = document.getElementById('fCount');
+  if (countEl) countEl.innerHTML = `<b>${trips.length}</b> viagem${trips.length!==1?'s':''}`;
+  if (!allTrips.length){
+    list.innerHTML = '<div class="empty">Ainda não há viagens no diário. Regista a primeira acima. ✈️</div>';
+    return;
+  }
+  if (!trips.length){
+    list.innerHTML = '<div class="empty">Nenhuma viagem corresponde aos filtros activos.</div>';
+    return;
+  }
   list.innerHTML = trips.map(t=>`
     <div class="trip ${t.ini > hoje ? 'futura' : ''}" onclick="abrirDiarioModal(${t.id})">
-      <h3><span class="flag">${bandeira(t.pais)}</span>${esc(t.titulo)}</h3>
+      <h3><span class="flag">${bandeira(t.pais)}</span>${esc(t.titulo)}${(()=>{const u=state.users.find(x=>x.id===t.userId);return u&&state.users.length>1?`<span style="font-size:.7rem;background:${u.cor};color:#fff;border-radius:3px;padding:1px 5px;margin-left:6px;font-family:ui-monospace,monospace;vertical-align:middle">${esc(u.nome)}</span>`:''})()}</h3>
       <div class="meta">${nomePT(t.pais)} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}</div>
       ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
       ${t.notas ? `<p>${esc(t.notas)}</p>` : ''}
@@ -1012,7 +1077,9 @@ function renderTrips(){
         <button class="btn danger" onclick="apagarTrip(${t.id})">Apagar</button>
       </div>
     </div>`).join('');
+  carregarGaleriasTrips(trips);
 }
+
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 window.editarTrip = id=>{
   const t = state.trips.find(x=>x.id===id); if(!t) return;
@@ -2149,7 +2216,8 @@ document.getElementById('btnSaveTrip').onclick = ()=>{
     locais: document.getElementById('tLocais').value.trim(),
     notas: document.getElementById('tNotas').value.trim(),
     imgNomes: formImgs.map(f => f.name),
-    links: formLinks.filter(l => l.url.trim()) };
+    links: formLinks.filter(l => l.url.trim()),
+    userId: state.editingUser };
   /* Guardar fotos no IndexedDB (async — não bloqueia) */
   const _idParaFotos = editId || trip.id;
   if (formImgs.length){
@@ -3192,6 +3260,191 @@ window.showTab = function(name){
   _showTabOld(name);
   if (name==='prefs') renderPrefs();
 };
+
+
+/* ============ FILTROS DO DIÁRIO ============ */
+
+/* Preencher dropdown de países e continentes a partir das viagens */
+function populateFiltroDropdowns(){
+  const fUser = document.getElementById('fUser');
+  const fPais = document.getElementById('fPais');
+  const fCont = document.getElementById('fCont');
+  if (!fUser||!fPais||!fCont) return;
+
+  /* Users */
+  const uSaved = fUser.value;
+  fUser.innerHTML = '<option value="">Todos</option>';
+  state.users.forEach(u => {
+    const o = new Option(u.nome, u.id);
+    fUser.add(o);
+  });
+  fUser.value = uSaved;
+
+  /* Países das viagens */
+  const paisSaved = fPais.value;
+  const paisesUsados = [...new Set(state.trips.map(t=>t.pais))].sort((a,b)=>nomePT(a).localeCompare(nomePT(b),'pt'));
+  fPais.innerHTML = '<option value="">Todos os países</option>';
+  paisesUsados.forEach(a2 => fPais.add(new Option(bandeira(a2)+' '+nomePT(a2), a2)));
+  fPais.value = paisSaved;
+
+  /* Continentes das viagens */
+  const contSaved = fCont.value;
+  const contsUsados = new Map();
+  state.trips.forEach(t => {
+    const cont = CONTINENTES.find(c=>c.paises.includes(t.pais));
+    if (cont && !contsUsados.has(cont.id)) contsUsados.set(cont.id, cont.nome);
+  });
+  fCont.innerHTML = '<option value="">Todos os continentes</option>';
+  [...contsUsados.entries()].sort((a,b)=>a[1].localeCompare(b[1])).forEach(([id,nome])=>{
+    fCont.add(new Option(nome, id));
+  });
+  fCont.value = contSaved;
+}
+
+function getFiltroActivo(){
+  return {
+    user:   document.getElementById('fUser')?.value   || '',
+    pais:   document.getElementById('fPais')?.value   || '',
+    cont:   document.getElementById('fCont')?.value   || '',
+    anoMin: parseInt(document.getElementById('fAnoMin')?.value) || 0,
+    anoMax: parseInt(document.getElementById('fAnoMax')?.value) || 9999,
+    texto:  (document.getElementById('fTexto')?.value || '').toLowerCase().trim()
+  };
+}
+
+function filtrarTrips(trips){
+  const f = getFiltroActivo();
+  return trips.filter(t => {
+    if (f.user && t.userId !== f.user) return false;
+    if (f.pais && t.pais !== f.pais) return false;
+    if (f.cont){
+      const cont = CONTINENTES.find(c=>c.paises.includes(t.pais));
+      if (!cont || cont.id !== f.cont) return false;
+    }
+    const ano = parseInt((t.ini||'').substring(0,4)) || 0;
+    if (ano < f.anoMin || ano > f.anoMax) return false;
+    if (f.texto){
+      const haystack = [t.titulo,t.locais,t.notas,nomePT(t.pais)].join(' ').toLowerCase();
+      if (!haystack.includes(f.texto)) return false;
+    }
+    return true;
+  });
+}
+
+/* Ligar os filtros ao renderTrips */
+['fUser','fPais','fCont','fAnoMin','fAnoMax','fTexto'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', ()=>renderTrips());
+  document.getElementById(id)?.addEventListener('change', ()=>renderTrips());
+});
+
+document.getElementById('btnLimparFiltros').onclick = () => {
+  ['fUser','fPais','fAnoMin','fAnoMax','fTexto'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('fCont').value = '';
+  renderTrips();
+};
+
+/* ── Exportar diário em HTML ─────────────────────────────────────────── */
+document.getElementById('btnExportDiario').onclick = () => exportarDiarioHTML();
+
+function exportarDiarioHTML(){
+  const hoje = new Date().toISOString().slice(0,10);
+  const f = getFiltroActivo();
+  const trips = filtrarTrips([...state.trips].sort((a,b)=>b.ini.localeCompare(a.ini)));
+  
+  /* Descrição dos filtros activos */
+  const filtDesc = [];
+  if (f.user){ const u=state.users.find(x=>x.id===f.user); if(u) filtDesc.push('Utilizador: '+u.nome); }
+  if (f.pais) filtDesc.push('País: '+nomePT(f.pais));
+  if (f.cont){ const c=CONTINENTES.find(x=>x.id===f.cont); if(c) filtDesc.push('Continente: '+c.nome); }
+  if (f.anoMin>0||f.anoMax<9999) filtDesc.push('Anos: '+(f.anoMin||'—')+' a '+(f.anoMax||'—'));
+  if (f.texto) filtDesc.push('Pesquisa: "'+f.texto+'"');
+
+  const html = `<!DOCTYPE html>
+<html lang="pt"><head>
+<meta charset="UTF-8">
+<title>Diário de Viagens${filtDesc.length?' — '+filtDesc.join(', '):''}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Source Sans 3',sans-serif;max-width:820px;margin:40px auto;
+    color:#1a1a1a;line-height:1.6;padding:0 20px;}
+  h1{font-family:'EB Garamond',serif;font-size:2.2rem;border-bottom:3px solid #c58a2a;
+    padding-bottom:10px;margin-bottom:6px;}
+  .meta-doc{color:#888;font-size:.82rem;margin-bottom:30px;}
+  .filtros-info{background:#f9f5ec;border:1px solid #e0d5b0;border-radius:6px;
+    padding:8px 14px;font-size:.82rem;margin-bottom:24px;color:#666;}
+  .viagem{border:1px solid #e0d5b0;border-left:4px solid #c58a2a;border-radius:8px;
+    padding:16px 20px;margin-bottom:18px;break-inside:avoid;}
+  .viagem.futura{border-left-color:#2e8f85;}
+  .v-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;}
+  .v-flag{font-size:1.6rem;}
+  .v-titulo{font-family:'EB Garamond',serif;font-size:1.3rem;font-weight:600;}
+  .v-meta{font-size:.78rem;color:#888;font-family:monospace;margin-top:2px;}
+  .v-user{display:inline-block;font-size:.7rem;background:#c58a2a;color:#fff;
+    border-radius:3px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+  .v-locais{color:#c58a2a;font-size:.88rem;margin-bottom:6px;}
+  .v-notas{font-size:.92rem;white-space:pre-wrap;color:#2a2a2a;line-height:1.65;}
+  .v-links{margin-top:8px;font-size:.82rem;}
+  .v-links a{color:#2e8f85;text-decoration:none;}
+  .v-imgs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .v-imgs img{width:100px;height:80px;object-fit:cover;border-radius:4px;}
+  .resumo{background:#f5f5f5;border-radius:6px;padding:10px 14px;
+    font-size:.82rem;margin-bottom:20px;display:flex;gap:20px;flex-wrap:wrap;}
+  .resumo b{color:#c58a2a;}
+  footer{margin-top:40px;color:#aaa;font-size:.72rem;border-top:1px solid #eee;
+    padding-top:8px;text-align:center;}
+  @media print{
+    body{margin:20px auto;}
+    .viagem{break-inside:avoid;}
+    a{color:inherit;text-decoration:none;}
+  }
+</style>
+</head><body>
+
+<h1>📔 Diário de Viagens</h1>
+<p class="meta-doc">Gerado em ${hoje} • ${trips.length} viagem${trips.length!==1?'s':''} • Atlas de Viagens</p>
+
+${filtDesc.length ? `<div class="filtros-info">🔍 Filtros: ${filtDesc.join(' · ')}</div>` : ''}
+
+<div class="resumo">
+  <span>📋 <b>${trips.length}</b> viagem${trips.length!==1?'s':''}</span>
+  <span>🌍 <b>${new Set(trips.map(t=>t.pais)).size}</b> país${new Set(trips.map(t=>t.pais)).size!==1?'es':''}</span>
+  ${f.user ? `<span>👤 <b>${state.users.find(x=>x.id===f.user)?.nome||''}</b></span>` : ''}
+</div>
+
+${trips.map(t => {
+  const hoje2 = new Date().toISOString().slice(0,10);
+  const futura = t.ini > hoje2;
+  const u = state.users.find(x=>x.id===t.userId);
+  const fotos = (sessFotos && sessFotos[t.id]) || [];
+  return `<div class="viagem${futura?' futura':''}">
+    <div class="v-head">
+      <span class="v-flag">${bandeira(t.pais)}</span>
+      <div>
+        <div class="v-titulo">${esc(t.titulo)}${u?`<span class="v-user">${esc(u.nome)}</span>`:''}</div>
+        <div class="v-meta">${nomePT(t.pais)} · ${fmtData(t.ini)}${t.fim&&t.fim!==t.ini?' → '+fmtData(t.fim):''}${futura?' · PLANEADA':''}</div>
+      </div>
+    </div>
+    ${t.locais?`<div class="v-locais">📍 ${esc(t.locais)}</div>`:''}
+    ${t.notas?`<div class="v-notas">${esc(t.notas)}</div>`:''}
+    ${fotos.length?`<div class="v-imgs">${fotos.map(f2=>`<img src="${f2.objUrl}">`).join('')}</div>`:''}
+    ${t.links&&t.links.length?`<div class="v-links">🔗 ${t.links.map(l=>`<a href="${esc(l.url)}">${esc(l.label||l.url)}</a>`).join(' · ')}</div>`:''}
+  </div>`;
+}).join('\n')}
+
+<footer>Atlas de Viagens • mendreas.github.io/atlas-viagens • ${hoje}</footer>
+</body></html>`;
+
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const sufixo = filtDesc.length ? '-filtrado' : '-completo';
+  a.download = 'diario-viagens' + sufixo + '-' + hoje + '.html';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('HTML exportado — abre o ficheiro e faz Ctrl+P para guardar como PDF');
+}
 
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
