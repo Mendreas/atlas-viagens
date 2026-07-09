@@ -467,7 +467,7 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     </div>
   </div>
   <div class="card" style="margin-top:14px">
-    <h2 class="sec" style="margin-top:0">Regiões <span>visitadas</span></h2>
+    <h2 class="sec" style="margin-top:0">Regiões <span id="regContextLabel">visitadas</span></h2>
     <p class="reg-hint">Clica nas regiões no mapa ou na lista para marcar as que já visitaste. No mapa-mundo, o país fica <b>parcial</b> se marcaste regiões mas não definiste o estado manualmente. O estado que defines (Visitado/Planeado) tem sempre prioridade sobre as regiões.</p>
     <div id="regMapa"></div>
     <div class="prog-label" id="regProgLbl" style="margin-top:8px">—</div>
@@ -475,7 +475,7 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     <div style="margin-top:12px"><button class="btn danger" id="btnLimparReg">Limpar regiões deste país</button></div>
   </div>
   <div id="pUnesco"></div>
-  <h2 class="sec">O que <span>ver</span></h2>
+  <h2 class="sec">O que <span id="queVerLabel">ver</span></h2>
   <div id="pRegioes"></div>
   <div class="pais-toolbar">
     <input type="text" id="novaRegiao" placeholder="Nova região (ex.: Norte)" style="max-width:260px">
@@ -796,10 +796,13 @@ let state = {
 function udOf(uid){
   if (!state.byUser[uid]) state.byUser[uid] = {};
   const u = state.byUser[uid];
-  if (!u.countries)  u.countries  = {};
-  if (!u.regioes)    u.regioes    = {};
-  if (!u.seen)       u.seen       = {};
-  if (!u.unescoSeen) u.unescoSeen = {};
+  if (!u.countries)    u.countries    = {};
+  if (!u.regioes)      u.regioes      = {};     /* regiões JÁ visitadas */
+  if (!u.seen)         u.seen         = {};     /* "O que ver" JÁ visto */
+  if (!u.unescoSeen)   u.unescoSeen   = {};     /* UNESCO JÁ visitado */
+  if (!u.planRegioes)  u.planRegioes  = {};     /* regiões que PLANEIA visitar */
+  if (!u.planSeen)     u.planSeen     = {};     /* "O que ver" que PLANEIA */
+  if (!u.planUnesco)   u.planUnesco   = {};     /* UNESCO que PLANEIA */
   return u;
 }
 function ud(){ return udOf(state.editingUser); }
@@ -1036,11 +1039,13 @@ window.apagarTrip = id=>{
 };
 
 /* ============ PÁGINA PAÍSES ============ */
+function seenStore(){ return paisContexto === 'planeado' ? ud().planSeen : ud().seen; }
 function seenDe(a2){
-  if (!ud().seen[a2]) ud().seen[a2] = { checked:{}, custom:[] };
-  if (!ud().seen[a2].checked) ud().seen[a2].checked = {};
-  if (!ud().seen[a2].custom) ud().seen[a2].custom = [];
-  return ud().seen[a2];
+  const store = seenStore();
+  if (!store[a2]) store[a2] = { checked:{}, custom:[] };
+  if (!store[a2].checked) store[a2].checked = {};
+  if (!store[a2].custom) store[a2].custom = [];
+  return seenStore()[a2];
 }
 function regioesDe(a2){
   const base = (GUIA[a2] && GUIA[a2].r) ? GUIA[a2].r.map(r=>({n:r.n, v:[...r.v], custom:false})) : [];
@@ -1055,14 +1060,24 @@ function regioesDe(a2){
 selPais.addEventListener('change', ()=>{ renderPais(); carregarRegioes(selPais.value); });
 document.getElementById('pStatus').addEventListener('click', ev=>{
   const b = ev.target.closest('.btn'); if(!b) return;
-  setStatus(selPais.value, b.dataset.st);
-  marcarBtns(document.getElementById('pStatus'), b.dataset.st);
+  const st = b.dataset.st;
+  setStatus(selPais.value, st);
+  marcarBtns(document.getElementById('pStatus'), st);
+  /* Mudar contexto e re-renderizar a página */
+  paisContexto = (st === 'nao') ? 'por visitar' : st;
+  renderPais();
+  if (REG_CACHE[selPais.value]) desenharRegioes(selPais.value, REG_CACHE[selPais.value]);
   toast(nomePT(selPais.value)+' → '+b.textContent);
 });
 
 function renderPais(){
   const a2 = selPais.value;
-  marcarBtns(document.getElementById('pStatus'), statusDe(a2));
+  const stActual = statusDe(a2);
+  marcarBtns(document.getElementById('pStatus'), stActual);
+  /* Sincronizar contexto com o estado actual do país */
+  if (stActual === 'planeado') paisContexto = 'planeado';
+  else if (stActual === 'visitado' || stActual === 'parcial') paisContexto = 'visitado';
+  else paisContexto = 'por visitar';
   const regs = regioesDe(a2);
   const s = seenDe(a2);
   const cont = document.getElementById('pRegioes');
@@ -1093,6 +1108,15 @@ function renderPais(){
   }
   atualizarProgresso(a2);
   renderUnesco(a2);
+  /* Actualizar labels de contexto */
+  const rl = document.getElementById('regContextLabel');
+  const qvl = document.getElementById('queVerLabel');
+  if (rl) rl.textContent = paisContexto==='planeado' ? 'a planear' : 'visitadas';
+  if (qvl) qvl.textContent = paisContexto==='planeado' ? 'planear' : 'ver';
+  const regHintEl = document.querySelector('.reg-hint');
+  if (regHintEl && paisContexto==='planeado'){
+    regHintEl.innerHTML = '<b>Modo Planeado</b> — marca as regiões e locais que pretendes visitar. Estes dados são independentes do que já visitaste.';
+  }
 }
 function escAttr(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
 function atualizarProgresso(a2){
@@ -1412,7 +1436,12 @@ syncTheme();
 /* ============ REGIÕES (geoBoundaries ADM1) ============ */
 const A2A3 = {"AW":"ABW","AF":"AFG","AO":"AGO","AI":"AIA","AX":"ALA","AL":"ALB","AD":"AND","AE":"ARE","AR":"ARG","AM":"ARM","AS":"ASM","AQ":"ATA","TF":"ATF","AG":"ATG","AU":"AUS","AT":"AUT","AZ":"AZE","BI":"BDI","BE":"BEL","BJ":"BEN","BQ":"BES","BF":"BFA","BD":"BGD","BG":"BGR","BH":"BHR","BS":"BHS","BA":"BIH","BL":"BLM","BY":"BLR","BZ":"BLZ","BM":"BMU","BO":"BOL","BR":"BRA","BB":"BRB","BN":"BRN","BT":"BTN","BV":"BVT","BW":"BWA","CF":"CAF","CA":"CAN","CC":"CCK","CH":"CHE","CL":"CHL","CN":"CHN","CI":"CIV","CM":"CMR","CD":"COD","CG":"COG","CK":"COK","CO":"COL","KM":"COM","CV":"CPV","CR":"CRI","CU":"CUB","CW":"CUW","CX":"CXR","KY":"CYM","CY":"CYP","CZ":"CZE","DE":"DEU","DJ":"DJI","DM":"DMA","DK":"DNK","DO":"DOM","DZ":"DZA","EC":"ECU","EG":"EGY","ER":"ERI","EH":"ESH","ES":"ESP","EE":"EST","ET":"ETH","FI":"FIN","FJ":"FJI","FK":"FLK","FR":"FRA","FO":"FRO","FM":"FSM","GA":"GAB","GB":"GBR","GE":"GEO","GG":"GGY","GH":"GHA","GI":"GIB","GN":"GIN","GP":"GLP","GM":"GMB","GW":"GNB","GQ":"GNQ","GR":"GRC","GD":"GRD","GL":"GRL","GT":"GTM","GF":"GUF","GU":"GUM","GY":"GUY","HK":"HKG","HM":"HMD","HN":"HND","HR":"HRV","HT":"HTI","HU":"HUN","ID":"IDN","IM":"IMN","IN":"IND","IO":"IOT","IE":"IRL","IR":"IRN","IQ":"IRQ","IS":"ISL","IL":"ISR","IT":"ITA","JM":"JAM","JE":"JEY","JO":"JOR","JP":"JPN","KZ":"KAZ","KE":"KEN","KG":"KGZ","KH":"KHM","KI":"KIR","KN":"KNA","KR":"KOR","KW":"KWT","LA":"LAO","LB":"LBN","LR":"LBR","LY":"LBY","LC":"LCA","LI":"LIE","LK":"LKA","LS":"LSO","LT":"LTU","LU":"LUX","LV":"LVA","MO":"MAC","MF":"MAF","MA":"MAR","MC":"MCO","MD":"MDA","MG":"MDG","MV":"MDV","MX":"MEX","MH":"MHL","MK":"MKD","ML":"MLI","MT":"MLT","MM":"MMR","ME":"MNE","MN":"MNG","MP":"MNP","MZ":"MOZ","MR":"MRT","MS":"MSR","MQ":"MTQ","MU":"MUS","MW":"MWI","MY":"MYS","YT":"MYT","NA":"NAM","NC":"NCL","NE":"NER","NF":"NFK","NG":"NGA","NI":"NIC","NU":"NIU","NL":"NLD","NO":"NOR","NP":"NPL","NR":"NRU","NZ":"NZL","OM":"OMN","PK":"PAK","PA":"PAN","PN":"PCN","PE":"PER","PH":"PHL","PW":"PLW","PG":"PNG","PL":"POL","PR":"PRI","KP":"PRK","PT":"PRT","PY":"PRY","PS":"PSE","PF":"PYF","QA":"QAT","RE":"REU","RO":"ROU","RU":"RUS","RW":"RWA","SA":"SAU","SD":"SDN","SN":"SEN","SG":"SGP","GS":"SGS","SH":"SHN","SJ":"SJM","SB":"SLB","SL":"SLE","SV":"SLV","SM":"SMR","SO":"SOM","PM":"SPM","RS":"SRB","SS":"SSD","ST":"STP","SR":"SUR","SK":"SVK","SI":"SVN","SE":"SWE","SZ":"SWZ","SX":"SXM","SC":"SYC","SY":"SYR","TC":"TCA","TD":"TCD","TG":"TGO","TH":"THA","TJ":"TJK","TK":"TKL","TM":"TKM","TL":"TLS","TO":"TON","TT":"TTO","TN":"TUN","TR":"TUR","TV":"TUV","TW":"TWN","TZ":"TZA","UG":"UGA","UA":"UKR","UM":"UMI","UY":"URY","US":"USA","UZ":"UZB","VA":"VAT","VC":"VCT","VE":"VEN","VG":"VGB","VI":"VIR","VN":"VNM","VU":"VUT","WF":"WLF","WS":"WSM","YE":"YEM","ZA":"ZAF","ZM":"ZMB","ZW":"ZWE"};
 const REG_CACHE = {};
-function regDe(a2){ if (!ud().regioes[a2]) ud().regioes[a2] = { total:0, v:{} }; return ud().regioes[a2]; }
+function regStore(){ return paisContexto === 'planeado' ? ud().planRegioes : ud().regioes; }
+function regDe(a2){
+  const store = regStore();
+  if (!store[a2]) store[a2] = { total:0, v:{} };
+  return store[a2];
+}
 
 async function carregarRegioes(a2){
   const cont = document.getElementById('regMapa');
@@ -1572,7 +1601,7 @@ window.toggleRegiao = (a2, nome)=>{
 document.getElementById('btnLimparReg').onclick = ()=>{
   const a2 = selPais.value;
   if (!confirm('Limpar todas as regiões marcadas de ' + nomePT(a2) + '?')) return;
-  delete ud().regioes[a2];
+  delete regStore()[a2];
   save();
   if (REG_CACHE[a2]) desenharRegioes(a2, REG_CACHE[a2]);
   marcarBtns(document.getElementById('pStatus'), statusDe(a2));
@@ -2411,6 +2440,7 @@ const IDB_NAME = 'atlasViagensMedia';
 const IDB_VER  = 1;
 const IDB_STORE = 'fotos';
 let _idb = null;
+let paisContexto = 'visitado'; /* 'visitado' | 'planeado' | 'por visitar' */
 
 function abrirIDB(){
   if (_idb) return Promise.resolve(_idb);
@@ -2665,9 +2695,9 @@ function renderUnesco(a2){
   const sites = UNESCO_WHS[a2];
   if (!sites || !sites.length){ cont.innerHTML = ''; return; }
   /* Estado dos sites visitados: ud().unescoSeen[a2] = {nomeSite: true} */
-  if (!ud().unescoSeen) ud().unescoSeen = {};
-  if (!ud().unescoSeen[a2]) ud().unescoSeen[a2] = {};
-  const seen = ud().unescoSeen[a2];
+  const uStore2 = paisContexto === 'planeado' ? ud().planUnesco : ud().unescoSeen;
+  if (!uStore2[a2]) uStore2[a2] = {};
+  const seen = uStore2[a2];
   const nVisto = Object.keys(seen).length;
   cont.innerHTML = `
     <div class="unesco-section">
@@ -2686,10 +2716,10 @@ function renderUnesco(a2){
 }
 
 window.toggleUnesco = (a2, nome, val) => {
-  if (!ud().unescoSeen) ud().unescoSeen = {};
-  if (!ud().unescoSeen[a2]) ud().unescoSeen[a2] = {};
-  if (val) ud().unescoSeen[a2][nome] = true;
-  else delete ud().unescoSeen[a2][nome];
+  const uStore = paisContexto === 'planeado' ? ud().planUnesco : ud().unescoSeen;
+  if (!uStore[a2]) uStore[a2] = {};
+  if (val) uStore[a2][nome] = true;
+  else delete uStore[a2][nome];
   save();
   renderUnesco(a2);
   refreshStats(); /* atualizar contadores */
