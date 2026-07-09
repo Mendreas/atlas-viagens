@@ -471,6 +471,10 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
       <div><label>Data de início</label><input type="date" id="tIni"></div>
       <div><label>Data de fim</label><input type="date" id="tFim"></div>
     </div>
+    <div style="margin-top:12px">
+      <label style="font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:6px">Quem foi</label>
+      <div id="tUserSelector" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+    </div>
     <div class="grid c2" style="margin-top:14px">
       <div><label>Título</label><input type="text" id="tTitulo" placeholder="Ex.: Lua de mel na Toscânia"></div>
       <div><label>Locais visitados</label><input type="text" id="tLocais" placeholder="Ex.: Florença, Siena, Pisa"></div>
@@ -1066,7 +1070,14 @@ function renderTrips(){
   }
   list.innerHTML = trips.map(t=>`
     <div class="trip ${t.ini > hoje ? 'futura' : ''}" onclick="abrirDiarioModal(${t.id})">
-      <h3><span class="flag">${bandeira(t.pais)}</span>${esc(t.titulo)}${(()=>{const u=state.users.find(x=>x.id===t.userId);return u&&state.users.length>1?`<span style="font-size:.7rem;background:${u.cor};color:#fff;border-radius:3px;padding:1px 5px;margin-left:6px;font-family:ui-monospace,monospace;vertical-align:middle">${esc(u.nome)}</span>`:''})()}</h3>
+      <h3><span class="flag">${bandeira(t.pais)}</span>${esc(t.titulo)}${(()=>{
+  const ids = t.userIds || (t.userId ? [t.userId] : []);
+  if (!ids.length || state.users.length<=1) return '';
+  return ids.map(uid=>{
+    const u=state.users.find(x=>x.id===uid);
+    return u?`<span style="font-size:.7rem;background:${u.cor};color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px;font-family:ui-monospace,monospace;vertical-align:middle">${esc(u.nome)}</span>`:'';
+  }).join('');
+})()}</h3>
       <div class="meta">${nomePT(t.pais)} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}</div>
       ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
       ${t.notas ? `<p>${esc(t.notas)}</p>` : ''}
@@ -2199,6 +2210,7 @@ const _limparFormOld = limparForm;
 limparForm = function(){
   _limparFormOld();
   formImgs = []; formLinks = [];
+  renderTUserSelector([state.editingUser]);
   renderFormImgs(); renderFormLinks();
 };
 
@@ -2217,7 +2229,7 @@ document.getElementById('btnSaveTrip').onclick = ()=>{
     notas: document.getElementById('tNotas').value.trim(),
     imgNomes: formImgs.map(f => f.name),
     links: formLinks.filter(l => l.url.trim()),
-    userId: state.editingUser };
+    userIds: getTUserSelected() };
   /* Guardar fotos no IndexedDB (async — não bloqueia) */
   const _idParaFotos = editId || trip.id;
   if (formImgs.length){
@@ -2247,6 +2259,9 @@ window.editarTrip = id => {
   formLinks = t.links ? [...t.links] : [];
   formImgs = [];
   renderFormImgs(); renderFormLinks();
+  /* Pré-preencher users */
+  const tripUserIds = t.userIds || (t.userId ? [t.userId] : [state.editingUser]);
+  renderTUserSelector(tripUserIds);
   /* Carregar fotos do IDB para o formulário */
   if (t.imgNomes && t.imgNomes.length){
     document.getElementById('tImgsPreview').innerHTML =
@@ -3315,7 +3330,10 @@ function getFiltroActivo(){
 function filtrarTrips(trips){
   const f = getFiltroActivo();
   return trips.filter(t => {
-    if (f.user && t.userId !== f.user) return false;
+    if (f.user){
+      const ids = t.userIds || (t.userId ? [t.userId] : []);
+      if (!ids.includes(f.user)) return false;
+    }
     if (f.pais && t.pais !== f.pais) return false;
     if (f.cont){
       const cont = CONTINENTES.find(c=>c.paises.includes(t.pais));
@@ -3417,7 +3435,8 @@ ${filtDesc.length ? `<div class="filtros-info">🔍 Filtros: ${filtDesc.join(' �
 ${trips.map(t => {
   const hoje2 = new Date().toISOString().slice(0,10);
   const futura = t.ini > hoje2;
-  const u = state.users.find(x=>x.id===t.userId);
+  const ids2 = t.userIds || (t.userId ? [t.userId] : []);
+  const uNames = ids2.map(uid=>{ const u=state.users.find(x=>x.id===uid); return u?`<span class="v-user" style="background:${u.cor}">${u.nome}</span>`:''; }).join('');
   const fotos = (sessFotos && sessFotos[t.id]) || [];
   return `<div class="viagem${futura?' futura':''}">
     <div class="v-head">
@@ -3446,9 +3465,36 @@ ${trips.map(t => {
   toast('HTML exportado — abre o ficheiro e faz Ctrl+P para guardar como PDF');
 }
 
+
+/* ── Selector de utilizadores no formulário do diário ──────────────── */
+function renderTUserSelector(selectedIds){
+  const cont = document.getElementById('tUserSelector');
+  if (!cont) return;
+  const sel = selectedIds || [state.editingUser];
+  cont.innerHTML = state.users.map(u => {
+    const on = sel.includes(u.id);
+    return `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;
+        background:${on ? u.cor : 'var(--panel2)'};color:${on ? '#fff' : 'var(--paper)'};
+        border:2px solid ${on ? u.cor : 'var(--line)'};border-radius:8px;
+        padding:6px 12px;font-size:.85rem;font-weight:${on?'700':'400'};
+        transition:all .12s;user-select:none">
+      <input type="checkbox" ${on?'checked':''} data-uid="${u.id}"
+        style="display:none" onchange="renderTUserSelector(getTUserSelected())">
+      ${esc(u.nome)}
+    </label>`;
+  }).join('');
+}
+
+function getTUserSelected(){
+  const cont = document.getElementById('tUserSelector');
+  if (!cont) return [state.editingUser];
+  const checked = [...cont.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.dataset.uid);
+  return checked.length ? checked : [state.editingUser];
+}
+
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
-renderUserToggle();
+renderUserToggle(); renderTUserSelector([state.editingUser]);
 </script>
 </body>
 </html>
