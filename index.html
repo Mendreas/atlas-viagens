@@ -3069,7 +3069,7 @@ function renderUserToggle(){
     const btnA = document.createElement('button');
     btnA.className = 'utbtn' + (state.activeUsers.length===state.users.length?' active':'');
     btnA.dataset.uid = 'ambos';
-    btnA.textContent = 'Ambos';
+    btnA.textContent = 'Todos';
     cont.insertBefore(btnA, ind);
     btnA.onclick = () => {
       if (state.activeUsers.length === state.users.length)
