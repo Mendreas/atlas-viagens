@@ -3220,14 +3220,14 @@ function abrirPlaneamento(a2){
   const plugTipos = plug[0].split(',').map(t=>t.trim()).filter(Boolean);
   const plugHtml = plugTipos.map(t=>`<span class="plug-badge">${t}</span>`).join(' ');
 
-  /* Recolher locais marcados: UNESCO + O que ver + regiões */
+  /* Recolher locais marcados em modo PLANEADO (planUnesco + planSeen) */
   const marcados = [];
-  /* UNESCO */
-  const uSeen = (ud().unescoSeen||{})[a2] || {};
-  Object.keys(uSeen).forEach(n => marcados.push({cat:'🏛 UNESCO', nome:n}));
-  /* O que ver (seenDe) */
-  const seenObj = (ud().seen||{})[a2] || {};
-  Object.keys((seenObj.checked)||{}).forEach(k => {
+  /* UNESCO planeado */
+  const uPlan = (ud().planUnesco||{})[a2] || {};
+  Object.keys(uPlan).forEach(n => marcados.push({cat:'🏛 UNESCO', nome:n}));
+  /* O que ver planeado (planSeen) */
+  const seenPlanObj = (ud().planSeen||{})[a2] || {};
+  Object.keys((seenPlanObj.checked)||{}).forEach(k => {
     const [reg, ponto] = k.split('|');
     if (ponto) marcados.push({cat:'👁 '+reg, nome:ponto});
   });
