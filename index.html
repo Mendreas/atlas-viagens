@@ -550,6 +550,12 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
       <label>Pesquisa (título, local, notas)</label>
       <input type="text" id="fTexto" placeholder="ex: Paris, jantar, museu…">
     </div>
+    <div>
+      <label>Companhia aérea</label>
+      <select id="fAirline">
+        <option value="">Todas</option>
+      </select>
+    </div>
   </div>
   <div class="filtros-resumo">
     <span class="f-count" id="fCount"><b>0</b> viagens</span>
@@ -658,6 +664,7 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     <div class="dm-meta" id="dmMeta"></div>
     <div class="dm-locais" id="dmLocais"></div>
     <div class="dm-notas" id="dmNotas"></div>
+    <div style="font-size:.85rem;color:var(--teal);margin-bottom:6px" id="dmAirline"></div>
     <div class="dm-gallery" id="dmGallery"></div>
     <div id="dmFotosAviso"></div>
     <div class="dm-links" id="dmLinks"></div>
@@ -1348,7 +1355,7 @@ function renderTrips(){
     return u?`<span style="font-size:.7rem;background:${u.cor};color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px;font-family:ui-monospace,monospace;vertical-align:middle">${esc(u.nome)}</span>`:'';
   }).join('');
 })()}</h3>
-      <div class="meta">${nomePT(t.pais)} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}</div>
+      <div class="meta">${nomePT(t.pais)} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}${t.airline ? ' · ✈️ '+esc(t.airline) : ''}</div>
       ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
       ${t.notas ? `<p>${esc(t.notas)}</p>` : ''}
       ${t.imgNomes && t.imgNomes.length ? `<div class="trip-gallery" id="gal-${t.id}"></div>` : ''}
@@ -2499,6 +2506,8 @@ document.getElementById('btnSaveTrip').onclick = ()=>{
     notas: document.getElementById('tNotas').value.trim(),
     imgNomes: formImgs.map(f => f.name),
     links: formLinks.filter(l => l.url.trim()),
+    airline: document.getElementById('tAirline')?.value.trim() || '',
+    rota: document.getElementById('tRota')?.value.trim() || '',
     userIds: getTUserSelected() };
   /* Guardar fotos no IndexedDB (async — não bloqueia) */
   const _idParaFotos = editId || trip.id;
@@ -2755,6 +2764,9 @@ function abrirDiarioModal(id){
     (t.fim && t.fim !== t.ini ? ' → ' + fmtData(t.fim) : '') +
     (t.ini > hoje ? ' · PLANEADA' : '');
   document.getElementById('dmLocais').textContent = t.locais ? '📍 ' + t.locais : '';
+  /* Companhia */
+  const dmAirEl = document.getElementById('dmAirline');
+  if (dmAirEl) dmAirEl.textContent = t.airline ? '✈️ ' + t.airline + (t.rota?' · '+t.rota:'') : '';
   document.getElementById('dmNotas').textContent = t.notas || '';
   /* Links */
   const links = document.getElementById('dmLinks');
@@ -3594,6 +3606,21 @@ function populateFiltroDropdowns(){
     fCont.add(new Option(nome, id));
   });
   fCont.value = contSaved;
+
+  /* Companhias */
+  const fAirline = document.getElementById('fAirline');
+  if (fAirline) {
+    const airSaved = fAirline.value;
+    const airlinesUsadas = [...new Set(state.trips.map(t=>t.airline).filter(Boolean))].sort();
+    fAirline.innerHTML = '<option value="">Todas as companhias</option>';
+    airlinesUsadas.forEach(a => fAirline.add(new Option(a, a)));
+    fAirline.value = airSaved;
+    /* Datalist para o formulário */
+    const dl = document.getElementById('tAirlineList');
+    if (dl) {
+      dl.innerHTML = AIRLINES_DB.map(a=>`<option value="${esc(a.nome)}">`).join('');
+    }
+  }
 }
 
 function getFiltroActivo(){
@@ -3622,9 +3649,10 @@ function filtrarTrips(trips){
     const ano = parseInt((t.ini||'').substring(0,4)) || 0;
     if (ano < f.anoMin || ano > f.anoMax) return false;
     if (f.texto){
-      const haystack = [t.titulo,t.locais,t.notas,nomePT(t.pais)].join(' ').toLowerCase();
+      const haystack = [t.titulo,t.locais,t.notas,nomePT(t.pais),t.airline||''].join(' ').toLowerCase();
       if (!haystack.includes(f.texto)) return false;
     }
+    if (f.airline && (t.airline||'').toLowerCase() !== f.airline.toLowerCase()) return false;
     return true;
   });
 }
@@ -3636,7 +3664,7 @@ function filtrarTrips(trips){
 });
 
 document.getElementById('btnLimparFiltros').onclick = () => {
-  ['fUser','fPais','fAnoMin','fAnoMax','fTexto'].forEach(id=>{
+  ['fUser','fPais','fAnoMin','fAnoMax','fTexto','fAirline'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('fCont').value = '';
@@ -3727,6 +3755,7 @@ ${trips.map(t => {
       </div>
     </div>
     ${t.locais?`<div class="v-locais">📍 ${esc(t.locais)}</div>`:''}
+    ${t.airline?`<div style="color:#3D7D8F;font-size:.85rem">✈️ ${esc(t.airline)}${t.rota?' · '+esc(t.rota):''}</div>`:''}
     ${t.notas?`<div class="v-notas">${esc(t.notas)}</div>`:''}
     ${fotos.length?`<div class="v-imgs">${fotos.map(f2=>`<img src="${f2.objUrl}">`).join('')}</div>`:''}
     ${t.links&&t.links.length?`<div class="v-links">🔗 ${t.links.map(l=>`<a href="${esc(l.url)}">${esc(l.label||l.url)}</a>`).join(' · ')}</div>`:''}
