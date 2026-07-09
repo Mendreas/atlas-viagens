@@ -437,7 +437,7 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   </div>
   <div class="card" style="margin-top:14px">
     <h2 class="sec" style="margin-top:0">Regiões <span>visitadas</span></h2>
-    <p class="reg-hint">Clica nas regiões no mapa ou na lista para marcar as que já visitaste. No mapa-mundo, o país fica <b>parcial</b> se só visitaste algumas regiões e <b>visitado</b> quando as visitares todas (ou se o marcares manualmente sem regiões).</p>
+    <p class="reg-hint">Clica nas regiões no mapa ou na lista para marcar as que já visitaste. No mapa-mundo, o país fica <b>parcial</b> se marcaste regiões mas não definiste o estado manualmente. O estado que defines (Visitado/Planeado) tem sempre prioridade sobre as regiões.</p>
     <div id="regMapa"></div>
     <div class="prog-label" id="regProgLbl" style="margin-top:8px">—</div>
     <div id="regLista" class="chips"></div>
@@ -734,13 +734,13 @@ function toast(msg){ const t = document.getElementById('toast'); t.textContent =
 function nomePT(a2){ try { return dn.of(a2) || a2; } catch(e){ return a2; } }
 function bandeira(a2){ if(!/^[A-Z]{2}$/.test(a2)) return '🏳'; return String.fromCodePoint(...[...a2].map(c=>0x1F1E6 + c.charCodeAt(0) - 65)); }
 function statusDe(a2){
+  /* Estado manual tem prioridade absoluta */
+  const manual = state.countries[a2] && state.countries[a2].status;
+  if (manual) return manual;
+  /* Sem estado manual: regiões marcadas → parcial */
   const r = state.regioes && state.regioes[a2];
-  if (r && r.total > 0){
-    const n = Object.keys(r.v || {}).length;
-    if (n >= r.total) return 'visitado';
-    if (n > 0) return 'parcial';
-  }
-  return (state.countries[a2] && state.countries[a2].status) || 'nao';
+  if (r && r.total > 0 && Object.keys(r.v || {}).length > 0) return 'parcial';
+  return 'nao';
 }
 function setStatus(a2, st){
   if (st === 'nao') delete state.countries[a2];
