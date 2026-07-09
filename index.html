@@ -577,6 +577,17 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
       <div><label>Título</label><input type="text" id="tTitulo" placeholder="Ex.: Lua de mel na Toscânia"></div>
       <div><label>Locais visitados</label><input type="text" id="tLocais" placeholder="Ex.: Florença, Siena, Pisa"></div>
     </div>
+    <div class="grid c2" style="margin-top:10px">
+      <div>
+        <label>Companhia aérea</label>
+        <input type="text" id="tAirline" placeholder="Ex.: TAP, Ryanair, Emirates…" list="tAirlineList" autocomplete="off">
+        <datalist id="tAirlineList"></datalist>
+      </div>
+      <div>
+        <label>Voo / Rota</label>
+        <input type="text" id="tRota" placeholder="Ex.: TP1234  ou  LIS-LHR">
+      </div>
+    </div>
     <div style="margin-top:14px"><label>Notas / diário</label><textarea id="tNotas" placeholder="O que viste, comeste, sentiste…"></textarea></div>
 
     <div class="form-section">
