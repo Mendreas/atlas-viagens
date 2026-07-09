@@ -144,6 +144,47 @@ h2.sec span{color:var(--gold);}
 
 
 
+
+/* ---------- Companhias aéreas ---------- */
+.airline-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+.airline-filters select,.airline-filters input{padding:7px 10px;font-size:.85rem;}
+.airline-filters label{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+.airlines-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;}
+.airline-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+  position:relative;transition:border-color .12s;}
+.airline-card.voado{border-color:var(--gold);}
+.airline-card.voado .ac-nome{color:var(--gold);}
+.ac-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.ac-logo{width:48px;height:30px;object-fit:contain;border-radius:4px;background:#fff;padding:2px;}
+.ac-logo-placeholder{width:48px;height:30px;background:var(--panel2);border-radius:4px;
+  display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:var(--muted);}
+.ac-info{flex:1;}
+.ac-nome{font-weight:700;font-size:.92rem;}
+.ac-meta{font-size:.72rem;color:var(--muted);margin-top:1px;}
+.ac-alianca{font-size:.68rem;border:1px solid var(--line);border-radius:3px;padding:1px 5px;
+  color:var(--muted);display:inline-block;margin-top:2px;}
+.ac-alianca.star{color:#4a90d9;border-color:#4a90d9;}
+.ac-alianca.sky{color:#c0392b;border-color:#c0392b;}
+.ac-alianca.one{color:#2ecc71;border-color:#2ecc71;}
+.ac-voos{margin-top:8px;display:grid;gap:4px;}
+.ac-voo{display:flex;gap:6px;align-items:center;background:var(--panel2);
+  border-radius:6px;padding:4px 8px;font-size:.8rem;}
+.ac-voo input{flex:1;font-size:.78rem;background:transparent;border:none;color:var(--paper);
+  outline:none;min-width:0;}
+.ac-voo .ac-voo-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;
+  padding:0 2px;flex:none;}
+.ac-voo .ac-voo-del:hover{color:var(--coral);}
+.ac-add-voo{background:none;border:1px dashed var(--line);border-radius:6px;
+  padding:4px 10px;font-size:.78rem;color:var(--muted);cursor:pointer;width:100%;
+  margin-top:4px;text-align:left;}
+.ac-add-voo:hover{border-color:var(--gold);color:var(--gold);}
+.ac-badge{position:absolute;top:10px;right:10px;font-size:.7rem;font-weight:700;
+  background:var(--gold);color:#1d1607;border-radius:3px;padding:1px 5px;}
+.airline-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.airline-stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:8px 14px;font-size:.82rem;}
+.airline-stat b{display:block;font-size:1.2rem;color:var(--gold);font-family:ui-monospace,monospace;}
+
 /* ---------- Filtros do diário ---------- */
 .filtros-bar{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
   padding:14px 18px;margin-bottom:14px;display:grid;
@@ -398,6 +439,7 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   <button class="tab" data-tab="paises">📍 Países</button>
   <button class="tab" data-tab="regioes">🌍 Regiões</button>
   <button class="tab" data-tab="prefs">⚙️ Preferências</button>
+  <button class="tab" data-tab="airlines">✈️ Companhias</button>
 </nav>
 
 <!-- ============ MAPA ============ -->
@@ -601,6 +643,54 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     </p>
     <div id="prefCores" style="display:flex;gap:12px;flex-wrap:wrap"></div>
   </div>
+</section>
+
+
+<!-- ============ ABA COMPANHIAS AÉREAS ============ -->
+<section class="page" id="page-airlines">
+  <div class="airline-filters">
+    <div>
+      <label>Utilizador</label><br>
+      <select id="alUser" onchange="renderAirlines()">
+      </select>
+    </div>
+    <div>
+      <label>Região</label><br>
+      <select id="alRegion" onchange="renderAirlines()">
+        <option value="">Todas</option>
+        <option value="EU">Europa</option>
+        <option value="US">América do Norte</option>
+        <option value="SA">América do Sul</option>
+        <option value="ME">Médio Oriente</option>
+        <option value="AF">África</option>
+        <option value="AS">Ásia / Pacífico</option>
+      </select>
+    </div>
+    <div>
+      <label>Aliança</label><br>
+      <select id="alAlianca" onchange="renderAirlines()">
+        <option value="">Todas</option>
+        <option value="Star Alliance">Star Alliance</option>
+        <option value="Oneworld">Oneworld</option>
+        <option value="SkyTeam">SkyTeam</option>
+        <option value="—">Sem aliança</option>
+      </select>
+    </div>
+    <div>
+      <label>Mostrar</label><br>
+      <select id="alFilter" onchange="renderAirlines()">
+        <option value="todas">Todas</option>
+        <option value="voadas">Já voei</option>
+        <option value="nao">Ainda não voei</option>
+      </select>
+    </div>
+    <div>
+      <label>Pesquisa</label><br>
+      <input type="text" id="alTexto" placeholder="Nome ou código…" oninput="renderAirlines()" style="width:180px">
+    </div>
+  </div>
+  <div class="airline-stats" id="alStats"></div>
+  <div class="airlines-grid" id="airlinesGrid"></div>
 </section>
 
 <!-- ============ MODAL PLANEAMENTO ============ -->
@@ -860,7 +950,8 @@ function udOf(uid){
   if (!u.unescoSeen)   u.unescoSeen   = {};     /* UNESCO JÁ visitado */
   if (!u.planRegioes)  u.planRegioes  = {};     /* regiões que PLANEIA visitar */
   if (!u.planSeen)     u.planSeen     = {};     /* "O que ver" que PLANEIA */
-  if (!u.planUnesco)   u.planUnesco   = {};     /* UNESCO que PLANEIA */
+  if (!u.planUnesco)   u.planUnesco   = {};
+  if (!u.airlines)     u.airlines     = {};     /* UNESCO que PLANEIA */
   return u;
 }
 function ud(){ return udOf(state.editingUser); }
@@ -3491,6 +3582,163 @@ function getTUserSelected(){
   const checked = [...cont.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.dataset.uid);
   return checked.length ? checked : [state.editingUser];
 }
+
+const AIRLINES_DB = [{"iata":"TP","nome":"TAP Air Portugal","pais":"PT","hub":"Lisboa","aliança":"Star Alliance"},{"iata":"FR","nome":"Ryanair","pais":"IE","hub":"Dublin","aliança":"—"},{"iata":"U2","nome":"easyJet","pais":"GB","hub":"Londres Luton","aliança":"—"},{"iata":"VY","nome":"Vueling","pais":"ES","hub":"Barcelona","aliança":"Oneworld"},{"iata":"IB","nome":"Iberia","pais":"ES","hub":"Madrid","aliança":"Oneworld"},{"iata":"BA","nome":"British Airways","pais":"GB","hub":"Londres Heathrow","aliança":"Oneworld"},{"iata":"AF","nome":"Air France","pais":"FR","hub":"Paris CDG","aliança":"SkyTeam"},{"iata":"LH","nome":"Lufthansa","pais":"DE","hub":"Frankfurt","aliança":"Star Alliance"},{"iata":"KL","nome":"KLM","pais":"NL","hub":"Amsterdão","aliança":"SkyTeam"},{"iata":"AZ","nome":"ITA Airways","pais":"IT","hub":"Roma Fiumicino","aliança":"SkyTeam"},{"iata":"SK","nome":"SAS Scandinavian","pais":"SE","hub":"Copenhaga","aliança":"SkyTeam"},{"iata":"AY","nome":"Finnair","pais":"FI","hub":"Helsínquia","aliança":"Oneworld"},{"iata":"LX","nome":"Swiss","pais":"CH","hub":"Zurique","aliança":"Star Alliance"},{"iata":"OS","nome":"Austrian Airlines","pais":"AT","hub":"Viena","aliança":"Star Alliance"},{"iata":"SN","nome":"Brussels Airlines","pais":"BE","hub":"Bruxelas","aliança":"Star Alliance"},{"iata":"LS","nome":"Jet2","pais":"GB","hub":"Leeds Bradford","aliança":"—"},{"iata":"W6","nome":"Wizz Air","pais":"HU","hub":"Budapeste","aliança":"—"},{"iata":"TK","nome":"Turkish Airlines","pais":"TR","hub":"Istambul","aliança":"Star Alliance"},{"iata":"PS","nome":"Ukraine International","pais":"UA","hub":"Kiev","aliança":"—"},{"iata":"SU","nome":"Aeroflot","pais":"RU","hub":"Moscovo","aliança":"SkyTeam"},{"iata":"A3","nome":"Aegean Airlines","pais":"GR","hub":"Atenas","aliança":"Star Alliance"},{"iata":"LO","nome":"LOT Polish Airlines","pais":"PL","hub":"Varsóvia","aliança":"Star Alliance"},{"iata":"OK","nome":"Czech Airlines","pais":"CZ","hub":"Praga","aliança":"SkyTeam"},{"iata":"RO","nome":"TAROM","pais":"RO","hub":"Bucareste","aliança":"SkyTeam"},{"iata":"BT","nome":"airBaltic","pais":"LV","hub":"Riga","aliança":"—"},{"iata":"AA","nome":"American Airlines","pais":"US","hub":"Dallas/Fort Worth","aliança":"Oneworld"},{"iata":"UA","nome":"United Airlines","pais":"US","hub":"Chicago O'Hare","aliança":"Star Alliance"},{"iata":"DL","nome":"Delta Air Lines","pais":"US","hub":"Atlanta","aliança":"SkyTeam"},{"iata":"WN","nome":"Southwest Airlines","pais":"US","hub":"Dallas Love Field","aliança":"—"},{"iata":"B6","nome":"JetBlue Airways","pais":"US","hub":"Nova Iorque JFK","aliança":"—"},{"iata":"AS","nome":"Alaska Airlines","pais":"US","hub":"Seattle","aliança":"Oneworld"},{"iata":"F9","nome":"Frontier Airlines","pais":"US","hub":"Denver","aliança":"—"},{"iata":"NK","nome":"Spirit Airlines","pais":"US","hub":"Miramar FL","aliança":"—"},{"iata":"AC","nome":"Air Canada","pais":"CA","hub":"Toronto","aliança":"Star Alliance"},{"iata":"WS","nome":"WestJet","pais":"CA","hub":"Calgary","aliança":"—"},{"iata":"AM","nome":"Aeroméxico","pais":"MX","hub":"Cidade do México","aliança":"SkyTeam"},{"iata":"LA","nome":"LATAM Airlines","pais":"CL","hub":"Santiago","aliança":"Oneworld"},{"iata":"G3","nome":"Gol Linhas Aéreas","pais":"BR","hub":"São Paulo","aliança":"—"},{"iata":"AD","nome":"Azul Brazilian Airlines","pais":"BR","hub":"Campinas","aliança":"—"},{"iata":"AR","nome":"Aerolíneas Argentinas","pais":"AR","hub":"Buenos Aires","aliança":"SkyTeam"},{"iata":"CM","nome":"Copa Airlines","pais":"PA","hub":"Cidade do Panamá","aliança":"Star Alliance"},{"iata":"AV","nome":"Avianca","pais":"CO","hub":"Bogotá","aliança":"Star Alliance"},{"iata":"EK","nome":"Emirates","pais":"AE","hub":"Dubai DXB","aliança":"—"},{"iata":"EY","nome":"Etihad Airways","pais":"AE","hub":"Abu Dhabi","aliança":"—"},{"iata":"QR","nome":"Qatar Airways","pais":"QA","hub":"Doha","aliança":"Oneworld"},{"iata":"GF","nome":"Gulf Air","pais":"BH","hub":"Barém","aliança":"—"},{"iata":"MS","nome":"EgyptAir","pais":"EG","hub":"Cairo","aliança":"Star Alliance"},{"iata":"RJ","nome":"Royal Jordanian","pais":"JO","hub":"Amã","aliança":"Oneworld"},{"iata":"LY","nome":"El Al Israel Airlines","pais":"IL","hub":"Tel Aviv","aliança":"—"},{"iata":"SV","nome":"Saudia","pais":"SA","hub":"Riade","aliança":"SkyTeam"},{"iata":"ET","nome":"Ethiopian Airlines","pais":"ET","hub":"Adis Abeba","aliança":"Star Alliance"},{"iata":"KQ","nome":"Kenya Airways","pais":"KE","hub":"Nairóbi","aliança":"SkyTeam"},{"iata":"SA","nome":"South African Airways","pais":"ZA","hub":"Joanesburgo","aliança":"Star Alliance"},{"iata":"AT","nome":"Royal Air Maroc","pais":"MA","hub":"Casablanca","aliança":"Oneworld"},{"iata":"MK","nome":"Air Mauritius","pais":"MU","hub":"Maurícias","aliança":"—"},{"iata":"SQ","nome":"Singapore Airlines","pais":"SG","hub":"Singapura","aliança":"Star Alliance"},{"iata":"CX","nome":"Cathay Pacific","pais":"HK","hub":"Hong Kong","aliança":"Oneworld"},{"iata":"NH","nome":"ANA All Nippon Airways","pais":"JP","hub":"Tóquio Haneda","aliança":"Star Alliance"},{"iata":"JL","nome":"Japan Airlines","pais":"JP","hub":"Tóquio Narita","aliança":"Oneworld"},{"iata":"KE","nome":"Korean Air","pais":"KR","hub":"Seul Incheon","aliança":"SkyTeam"},{"iata":"OZ","nome":"Asiana Airlines","pais":"KR","hub":"Seul Incheon","aliança":"Star Alliance"},{"iata":"CI","nome":"China Airlines","pais":"TW","hub":"Taipei","aliança":"SkyTeam"},{"iata":"BR","nome":"EVA Air","pais":"TW","hub":"Taipei","aliança":"Star Alliance"},{"iata":"CA","nome":"Air China","pais":"CN","hub":"Pequim","aliança":"Star Alliance"},{"iata":"MU","nome":"China Eastern","pais":"CN","hub":"Xangai","aliança":"SkyTeam"},{"iata":"CZ","nome":"China Southern","pais":"CN","hub":"Guangzhou","aliança":"SkyTeam"},{"iata":"AI","nome":"Air India","pais":"IN","hub":"Deli","aliança":"Star Alliance"},{"iata":"6E","nome":"IndiGo","pais":"IN","hub":"Deli","aliança":"—"},{"iata":"TG","nome":"Thai Airways","pais":"TH","hub":"Banguecoque","aliança":"Star Alliance"},{"iata":"MH","nome":"Malaysia Airlines","pais":"MY","hub":"Kuala Lumpur","aliança":"Oneworld"},{"iata":"GA","nome":"Garuda Indonesia","pais":"ID","hub":"Jacarta","aliança":"SkyTeam"},{"iata":"PR","nome":"Philippine Airlines","pais":"PH","hub":"Manila","aliança":"—"},{"iata":"VN","nome":"Vietnam Airlines","pais":"VN","hub":"Hanói","aliança":"SkyTeam"},{"iata":"FD","nome":"Thai AirAsia","pais":"TH","hub":"Banguecoque","aliança":"—"},{"iata":"QF","nome":"Qantas","pais":"AU","hub":"Sydney","aliança":"Oneworld"},{"iata":"VA","nome":"Virgin Australia","pais":"AU","hub":"Brisbane","aliança":"—"},{"iata":"NZ","nome":"Air New Zealand","pais":"NZ","hub":"Auckland","aliança":"Star Alliance"}];
+
+
+/* ============ COMPANHIAS AÉREAS ============ */
+
+const AIRLINE_REGION = {"PT": "EU", "IE": "EU", "GB": "EU", "ES": "EU", "FR": "EU", "DE": "EU", "NL": "EU", "IT": "EU", "SE": "EU", "FI": "EU", "CH": "EU", "AT": "EU", "BE": "EU", "TR": "EU", "UA": "EU", "RU": "EU", "GR": "EU", "PL": "EU", "CZ": "EU", "RO": "EU", "LV": "EU", "HU": "EU", "US": "US", "CA": "US", "MX": "US", "CL": "SA", "BR": "SA", "AR": "SA", "PA": "SA", "CO": "SA", "AE": "ME", "QA": "ME", "BH": "ME", "EG": "ME", "JO": "ME", "IL": "ME", "SA": "ME", "ET": "AF", "KE": "AF", "ZA": "AF", "MA": "AF", "MU": "AF", "SG": "AS", "HK": "AS", "JP": "AS", "KR": "AS", "TW": "AS", "CN": "AS", "IN": "AS", "TH": "AS", "MY": "AS", "ID": "AS", "PH": "AS", "VN": "AS", "AU": "AS", "NZ": "AS"};
+
+/* Estado: ud().airlines = {
+  'TP': { voos: [{aeronave:'A320', data:'2023-06-10', rota:'LIS-OPO'}, ...] },
+  'FR': { voos: [] }  // voou mas sem detalhes
+} */
+
+function airlineDe(uid) {
+  const u = udOf(uid);
+  if (!u.airlines) u.airlines = {};
+  return u.airlines;
+}
+
+function getAlUser(){
+  const sel = document.getElementById('alUser');
+  return sel ? sel.value || state.editingUser : state.editingUser;
+}
+
+function renderAirlines(){
+  /* Preencher selector de user */
+  const alUserEl = document.getElementById('alUser');
+  if (alUserEl && alUserEl.options.length <= 1){
+    alUserEl.innerHTML = '';
+    state.users.forEach(u => alUserEl.add(new Option(u.nome, u.id)));
+    alUserEl.value = state.editingUser;
+  }
+
+  const uid = getAlUser();
+  const db = airlineDe(uid);
+  const region = document.getElementById('alRegion')?.value || '';
+  const alianca = document.getElementById('alAlianca')?.value || '';
+  const filtro = document.getElementById('alFilter')?.value || 'todas';
+  const texto = (document.getElementById('alTexto')?.value || '').toLowerCase();
+
+  let lista = AIRLINES_DB.filter(a => {
+    if (region && AIRLINE_REGION[a.pais] !== region) return false;
+    if (alianca && a.alianca !== alianca) return false;
+    if (texto && !a.nome.toLowerCase().includes(texto) && !a.iata.toLowerCase().includes(texto)) return false;
+    const voou = !!db[a.iata];
+    if (filtro === 'voadas' && !voou) return false;
+    if (filtro === 'nao' && voou) return false;
+    return true;
+  });
+
+  /* Stats */
+  const totalVoadas = Object.keys(db).length;
+  const totalVoos = Object.values(db).reduce((t,v)=>t+(v.voos||[]).length, 0);
+  const alStatsEl = document.getElementById('alStats');
+  if (alStatsEl) alStatsEl.innerHTML = `
+    <div class="airline-stat"><b>${totalVoadas}</b>Companhias voadas</div>
+    <div class="airline-stat"><b>${totalVoos}</b>Voos registados</div>
+    <div class="airline-stat"><b>${AIRLINES_DB.length}</b>Total disponíveis</div>
+    <div class="airline-stat"><b>${Math.round(totalVoadas/AIRLINES_DB.length*100)}%</b>Das principais</div>`;
+
+  const grid = document.getElementById('airlinesGrid');
+  if (!grid) return;
+  grid.innerHTML = lista.map(a => renderAirlineCard(a, db, uid)).join('');
+}
+
+function renderAirlineCard(a, db, uid){
+  const entrada = db[a.iata];
+  const voou = !!entrada;
+  const voos = entrada?.voos || [];
+  const aliClass = a.alianca==='Star Alliance'?'star':a.alianca==='SkyTeam'?'sky':a.alianca==='Oneworld'?'one':'';
+  /* Logo via Clearbit (usa código IATA -> domain da companhia) */
+  const logoDomain = AIRLINE_LOGO[a.iata] || '';
+  const logoHtml = logoDomain
+    ? `<img class="ac-logo" src="https://logo.clearbit.com/${logoDomain}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="${a.iata}">`
+    : '';
+  const placeholderHtml = `<div class="ac-logo-placeholder" style="${logoDomain?'display:none':''}">${a.iata}</div>`;
+
+  return `<div class="airline-card ${voou?'voado':''}" id="ac-${a.iata}">
+    ${voou ? `<span class="ac-badge">${voos.length||'✓'}</span>` : ''}
+    <div class="ac-top">
+      ${logoHtml}${placeholderHtml}
+      <div class="ac-info">
+        <div class="ac-nome">${esc(a.nome)}</div>
+        <div class="ac-meta">${a.iata} · ${bandeira(a.pais)} ${esc(a.hub)}</div>
+        <span class="ac-alianca ${aliClass}">${a.alianca}</span>
+      </div>
+      <button class="btn" style="flex:none;padding:4px 10px;font-size:.75rem"
+        onclick="toggleAirline('${a.iata}','${uid}')">${voou?'✓ Voei':'+ Voei'}</button>
+    </div>
+    ${voou ? `
+      <div class="ac-voos" id="voos-${a.iata}">
+        ${voos.map((v,i) => `
+          <div class="ac-voo">
+            <span style="font-size:.9rem">✈️</span>
+            <input type="text" value="${esc(v.aeronave||'')}" placeholder="Aeronave (ex: A320)"
+              onchange="updateVoo('${a.iata}','${uid}',${i},'aeronave',this.value)">
+            <input type="text" value="${esc(v.rota||'')}" placeholder="Rota (ex: LIS-LHR)"
+              onchange="updateVoo('${a.iata}','${uid}',${i},'rota',this.value)" style="max-width:100px">
+            <input type="date" value="${v.data||''}"
+              onchange="updateVoo('${a.iata}','${uid}',${i},'data',this.value)" style="max-width:120px">
+            <button class="ac-voo-del" onclick="delVoo('${a.iata}','${uid}',${i})">✕</button>
+          </div>`).join('')}
+        <button class="ac-add-voo" onclick="addVoo('${a.iata}','${uid}')">+ Registar voo</button>
+      </div>` : ''}
+  </div>`;
+}
+
+/* Domínios para logos (Clearbit) */
+const AIRLINE_LOGO = {
+  'TP':'flytap.com','FR':'ryanair.com','U2':'easyjet.com','VY':'vueling.com',
+  'IB':'iberia.com','BA':'britishairways.com','AF':'airfrance.com','LH':'lufthansa.com',
+  'KL':'klm.com','AZ':'ita-airways.com','SK':'sas.se','AY':'finnair.com',
+  'LX':'swiss.com','OS':'austrian.com','SN':'brusselsairlines.com','W6':'wizzair.com',
+  'TK':'turkishairlines.com','AA':'aa.com','UA':'united.com','DL':'delta.com',
+  'WN':'southwest.com','B6':'jetblue.com','AS':'alaskaair.com','AC':'aircanada.com',
+  'AM':'aeromexico.com','LA':'latam.com','G3':'voegol.com.br','AR':'aerolineas.com.ar',
+  'CM':'copaair.com','AV':'avianca.com','EK':'emirates.com','EY':'etihad.com',
+  'QR':'qatarairways.com','ET':'ethiopianairlines.com','KQ':'kenya-airways.com',
+  'AT':'royalairmaroc.com','SQ':'singaporeair.com','CX':'cathaypacific.com',
+  'NH':'ana.co.jp','JL':'jal.com','KE':'koreanair.com','QF':'qantas.com',
+  'AI':'airindia.in','TG':'thaiairways.com','MH':'malaysiaairlines.com',
+  'NZ':'airnewzealand.co.nz','CA':'airchina.com','MU':'ceair.com','CZ':'csair.com',
+};
+
+window.toggleAirline = (iata, uid) => {
+  const db = airlineDe(uid);
+  if (db[iata]){ delete db[iata]; }
+  else { db[iata] = { voos: [] }; }
+  save(); renderAirlines();
+};
+
+window.addVoo = (iata, uid) => {
+  const db = airlineDe(uid);
+  if (!db[iata]) db[iata] = { voos: [] };
+  if (!db[iata].voos) db[iata].voos = [];
+  db[iata].voos.push({ aeronave:'', rota:'', data:'' });
+  save(); renderAirlines();
+};
+
+window.updateVoo = (iata, uid, idx, campo, val) => {
+  const db = airlineDe(uid);
+  if (db[iata]?.voos?.[idx]) db[iata].voos[idx][campo] = val;
+  save();
+};
+
+window.delVoo = (iata, uid, idx) => {
+  const db = airlineDe(uid);
+  if (db[iata]?.voos) db[iata].voos.splice(idx,1);
+  save(); renderAirlines();
+};
+
+/* Renderizar ao abrir a aba */
+const _showTabOld2 = showTab;
+window.showTab = function(name){
+  _showTabOld2(name);
+  if (name==='airlines') renderAirlines();
+};
 
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
