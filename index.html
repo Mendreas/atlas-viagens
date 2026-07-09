@@ -187,6 +187,16 @@ h2.sec span{color:var(--gold);}
 .airline-stat b{display:block;font-size:1.2rem;color:var(--gold);font-family:ui-monospace,monospace;}
 
 
+
+/* ---------- Limpeza de dados ---------- */
+.danger-zone{border:1px solid var(--coral);border-radius:var(--radius);padding:18px;margin-bottom:16px;}
+.danger-zone h3{font-family:'Fraunces',serif;font-size:1.05rem;color:var(--coral);margin-bottom:12px;}
+.clear-options{display:grid;gap:8px;}
+.clear-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--panel2);border-radius:8px;padding:10px 14px;}
+.clear-row .cr-label{font-size:.88rem;}
+.clear-row .cr-desc{font-size:.75rem;color:var(--muted);margin-top:2px;}
+
 /* ---------- Modal importação Excel ---------- */
 #importModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
   align-items:flex-start;justify-content:center;z-index:200;padding:16px;overflow-y:auto;}
@@ -679,9 +689,43 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   <div class="pref-section">
     <h3>🎨 Cores dos utilizadores no mapa</h3>
     <p style="color:var(--muted);font-size:.85rem;margin-bottom:10px">
-      Quando vês "Ambos" no mapa, cada utilizador tem a sua cor.
+      Quando vês "Todos" no mapa, cada utilizador tem a sua cor.
     </p>
     <div id="prefCores" style="display:flex;gap:12px;flex-wrap:wrap"></div>
+  </div>
+
+  <div class="danger-zone">
+    <h3>🗑 Limpar dados</h3>
+    <div class="clear-options">
+      <div class="clear-row">
+        <div>
+          <div class="cr-label">Limpar diário de viagens</div>
+          <div class="cr-desc">Remove todas as viagens do diário (fotos no IndexedDB também)</div>
+        </div>
+        <button class="btn danger" onclick="limparDados('diario')">Limpar</button>
+      </div>
+      <div class="clear-row">
+        <div>
+          <div class="cr-label">Limpar países e regiões</div>
+          <div class="cr-desc">Remove todos os estados (visitado/planeado), regiões e UNESCO de todos os utilizadores</div>
+        </div>
+        <button class="btn danger" onclick="limparDados('paises')">Limpar</button>
+      </div>
+      <div class="clear-row">
+        <div>
+          <div class="cr-label">Limpar companhias aéreas</div>
+          <div class="cr-desc">Remove o registo de voos de todos os utilizadores</div>
+        </div>
+        <button class="btn danger" onclick="limparDados('airlines')">Limpar</button>
+      </div>
+      <div class="clear-row">
+        <div>
+          <div class="cr-label" style="color:var(--coral)"><b>Apagar TUDO</b></div>
+          <div class="cr-desc">Remove todos os dados — países, regiões, diário, companhias. Os utilizadores ficam.</div>
+        </div>
+        <button class="btn danger" onclick="limparDados('tudo')">Apagar tudo</button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -4155,6 +4199,49 @@ function imConfirmar(){
       Os países foram marcados como visitados para cada utilizador.
     </p>`;
 }
+
+
+/* ============ LIMPEZA DE DADOS ============ */
+window.limparDados = (tipo) => {
+  const msgs = {
+    diario:   'Apagar TODAS as viagens do diário? Esta acção não pode ser desfeita.',
+    paises:   'Limpar TODOS os países visitados/planeados, regiões e UNESCO de todos os utilizadores?',
+    airlines: 'Limpar o registo de companhias aéreas de todos os utilizadores?',
+    tudo:     'Apagar TODOS OS DADOS (países, regiões, diário, companhias)? Esta acção não pode ser desfeita.'
+  };
+  if (!confirm(msgs[tipo])) return;
+
+  if (tipo === 'diario' || tipo === 'tudo'){
+    /* Apagar fotos do IndexedDB */
+    abrirIDB().then(db => {
+      const tx = db.transaction('fotos','readwrite');
+      tx.objectStore('fotos').clear();
+    }).catch(()=>{});
+    state.trips = [];
+  }
+  if (tipo === 'paises' || tipo === 'tudo'){
+    state.users.forEach(u => {
+      const d = udOf(u.id);
+      d.countries  = {};
+      d.regioes    = {};
+      d.planRegioes = {};
+      d.seen       = {};
+      d.planSeen   = {};
+      d.unescoSeen = {};
+      d.planUnesco = {};
+    });
+  }
+  if (tipo === 'airlines' || tipo === 'tudo'){
+    state.users.forEach(u => { udOf(u.id).airlines = {}; });
+  }
+
+  save();
+  refreshStats();
+  renderTrips();
+  paintMap();
+  if (tipo === 'airlines') renderAirlines();
+  toast('Dados apagados ✓');
+};
 
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
