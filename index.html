@@ -488,8 +488,8 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   <button class="tab" data-tab="diario">📔 Diário</button>
   <button class="tab" data-tab="paises">📍 Países</button>
   <button class="tab" data-tab="regioes">🌍 Regiões</button>
-  <button class="tab" data-tab="prefs">⚙️ Preferências</button>
   <button class="tab" data-tab="airlines">✈️ Companhias</button>
+  <button class="tab" data-tab="prefs">⚙️ Preferências</button>
 </nav>
 
 <!-- ============ MAPA ============ -->
@@ -3842,11 +3842,9 @@ function renderAirlineCard(a, db, uid){
   const voos = entrada?.voos || [];
   const aliClass = a.alianca==='Star Alliance'?'star':a.alianca==='SkyTeam'?'sky':a.alianca==='Oneworld'?'one':'';
   /* Logo via Clearbit (usa código IATA -> domain da companhia) */
-  const logoDomain = AIRLINE_LOGO[a.iata] || '';
-  const logoHtml = logoDomain
-    ? `<img class="ac-logo" src="https://logo.clearbit.com/${logoDomain}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="${a.iata}">`
-    : '';
-  const placeholderHtml = `<div class="ac-logo-placeholder" style="${logoDomain?'display:none':''}">${a.iata}</div>`;
+  const logoUrl = `https://content.airhex.com/content/logos/airlines_${a.iata}_100_30_r.png`;
+  const logoHtml = `<img class="ac-logo" src="${logoUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="${a.iata}">`;
+  const placeholderHtml = `<div class="ac-logo-placeholder">${a.iata}</div>`;
 
   return `<div class="airline-card ${voou?'voado':''}" id="ac-${a.iata}">
     ${voou ? `<span class="ac-badge">${voos.length||'✓'}</span>` : ''}
@@ -3878,22 +3876,7 @@ function renderAirlineCard(a, db, uid){
   </div>`;
 }
 
-/* Domínios para logos (Clearbit) */
-const AIRLINE_LOGO = {
-  'TP':'flytap.com','FR':'ryanair.com','U2':'easyjet.com','VY':'vueling.com',
-  'IB':'iberia.com','BA':'britishairways.com','AF':'airfrance.com','LH':'lufthansa.com',
-  'KL':'klm.com','AZ':'ita-airways.com','SK':'sas.se','AY':'finnair.com',
-  'LX':'swiss.com','OS':'austrian.com','SN':'brusselsairlines.com','W6':'wizzair.com',
-  'TK':'turkishairlines.com','AA':'aa.com','UA':'united.com','DL':'delta.com',
-  'WN':'southwest.com','B6':'jetblue.com','AS':'alaskaair.com','AC':'aircanada.com',
-  'AM':'aeromexico.com','LA':'latam.com','G3':'voegol.com.br','AR':'aerolineas.com.ar',
-  'CM':'copaair.com','AV':'avianca.com','EK':'emirates.com','EY':'etihad.com',
-  'QR':'qatarairways.com','ET':'ethiopianairlines.com','KQ':'kenya-airways.com',
-  'AT':'royalairmaroc.com','SQ':'singaporeair.com','CX':'cathaypacific.com',
-  'NH':'ana.co.jp','JL':'jal.com','KE':'koreanair.com','QF':'qantas.com',
-  'AI':'airindia.in','TG':'thaiairways.com','MH':'malaysiaairlines.com',
-  'NZ':'airnewzealand.co.nz','CA':'airchina.com','MU':'ceair.com','CZ':'csair.com',
-};
+/* Logos via airhex.com */
 
 window.toggleAirline = (iata, uid) => {
   const db = airlineDe(uid);
