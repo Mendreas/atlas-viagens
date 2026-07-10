@@ -90,6 +90,22 @@ textarea{resize:vertical; min-height:80px;}
 .trip .flag{font-size:1.3rem; margin-right:6px;}
 .trip p{font-size:.9rem; white-space:pre-wrap;}
 .trip .locais{color:var(--gold); font-size:.85rem; margin-bottom:6px;}
+.trip-row{display:flex; gap:16px; align-items:flex-start; margin-top:2px;}
+.trip-main{flex:1 1 auto; min-width:0;}
+.trip-side{flex:0 1 280px; min-width:0; display:flex; flex-direction:column; gap:5px; padding-top:3px;}
+.trip-airline{display:flex; align-items:center; gap:6px; font-size:.82rem; color:var(--muted);}
+.trip-airline img{max-height:22px; max-width:96px; object-fit:contain;}
+.trip-rota{font-family:ui-monospace,Menlo,monospace; font-size:.74rem; color:var(--muted);}
+.trip-notas-preview{font-size:.85rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
+.trip-thumb{flex:0 0 64px; width:64px; height:64px; border-radius:8px; overflow:hidden;
+  background:var(--panel2); cursor:pointer;}
+.trip-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+@media (max-width:720px){
+  .trip-row{flex-direction:column;}
+  .trip-side{flex-basis:auto; width:100%;}
+  .trip-thumb{align-self:flex-start;}
+}
 .trip-actions{margin-top:10px; display:flex; gap:8px;}
 .trip-actions .btn{padding:4px 12px; font-size:.78rem;}
 .empty{color:var(--muted); text-align:center; padding:30px; border:1px dashed var(--line); border-radius:var(--radius); margin-top:20px;}
@@ -1674,9 +1690,15 @@ function renderTrips(){
     list.innerHTML = '<div class="empty">Nenhuma viagem corresponde aos filtros activos.</div>';
     return;
   }
-  list.innerHTML = trips.map(t=>`
+  list.innerHTML = trips.map(t=>{
+    const airlineObj = t.airline ? AIRLINES_DB.find(a => a.nome === t.airline || a.iata === t.airline) : null;
+    const airlineLogo = airlineObj ? AIRLINE_LOGO_DATA[airlineObj.iata] : null;
+    const temFoto = t.imgNomes && t.imgNomes.length;
+    return `
     <div class="trip ${t.ini > hoje ? 'futura' : ''}" onclick="abrirDiarioModal(${t.id})">
-      <h3><span class="flag">${bandeiraImgHtml(t.pais, 22)}</span>${esc(t.titulo)}${(()=>{
+      <div class="trip-row">
+        <div class="trip-main">
+          <h3><span class="flag">${bandeiraImgHtml(t.pais, 22)}</span>${esc(t.titulo)}${(()=>{
   const ids = t.userIds || (t.userId ? [t.userId] : []);
   if (!ids.length || state.users.length<=1) return '';
   return ids.map(uid=>{
@@ -1684,18 +1706,24 @@ function renderTrips(){
     return u?`<span style="font-size:.7rem;background:${u.cor};color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px;font-family:ui-monospace,monospace;vertical-align:middle">${esc(u.nome)}</span>`:'';
   }).join('');
 })()}</h3>
-      <div class="meta">${(t.paises||[t.pais]).map(a=>bandeiraImgHtml(a,16)+' '+nomePT(a)).join(' · ')} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}${t.airline ? ' · ✈️ '+esc(t.airline) : ''}</div>
-      ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
-      ${t.pernoita ? `<div class="locais" style="color:var(--teal)">🛏 ${esc(t.pernoita)}</div>` : ''}
-      ${t.notas ? `<p>${esc(t.notas)}</p>` : ''}
-      ${t.imgNomes && t.imgNomes.length ? `<div class="trip-gallery" id="gal-${t.id}"></div>` : ''}
+          <div class="meta">${(t.paises||[t.pais]).map(a=>bandeiraImgHtml(a,16)+' '+nomePT(a)).join(' · ')} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}</div>
+          ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
+          ${t.pernoita ? `<div class="locais" style="color:var(--teal)">🛏 ${esc(t.pernoita)}</div>` : ''}
+        </div>
+        <div class="trip-side">
+          ${t.airline ? `<div class="trip-airline">${airlineLogo?`<img src="${airlineLogo}" alt="${esc(t.airline)}">`:'✈️ '+esc(t.airline)}${t.rota?`<span class="trip-rota"> · ${esc(t.rota)}</span>`:''}</div>` : ''}
+          ${t.notas ? `<div class="trip-notas-preview">${esc(t.notas)}</div>` : ''}
+        </div>
+        ${temFoto ? `<div class="trip-thumb" id="thumb-${t.id}" onclick="event.stopPropagation()"></div>` : ''}
+      </div>
       ${t.links && t.links.length ? `<div class="trip-links">${t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label||l.url)}</a>`).join('')}</div>` : ''}
       <div class="trip-actions" onclick="event.stopPropagation()">
         <button class="btn" onclick="document.getElementById('diarioModal').classList.remove('open'); editarTrip(${t.id})">Editar</button>
         <button class="btn danger" onclick="apagarTrip(${t.id})">Apagar</button>
       </div>
-    </div>`).join('');
-  carregarGaleriasTrips(trips);
+    </div>`;
+  }).join('');
+  carregarThumbsTrips(trips);
 }
 
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -3179,16 +3207,14 @@ async function getFotos(tripId, nFotos){
 
 function invalidarCacheFotos(tripId){ delete _fotoCache[tripId]; }
 
-function carregarGaleriasTrips(tripsArr){
+function carregarThumbsTrips(tripsArr){
   tripsArr.forEach(t => {
     if (!t.imgNomes || !t.imgNomes.length) return;
-    getFotos(t.id, t.imgNomes.length).then(fotos => {
-      const gal = document.getElementById('gal-' + t.id);
-      if (!gal || !fotos.length) return;
-      gal.innerHTML = fotos.map((url, i) =>
-        `<img src="${url}" title="${esc(t.imgNomes[i]||'')}"
-          onclick="event.stopPropagation();verImagem('${url}')">`
-      ).join('');
+    getFotos(t.id, 1).then(fotos => {
+      const el = document.getElementById('thumb-' + t.id);
+      if (!el || !fotos.length) return;
+      el.innerHTML = `<img src="${fotos[0]}" title="${esc(t.imgNomes[0]||'')}"
+        onclick="event.stopPropagation();verImagem('${fotos[0]}')">`;
     });
   });
 }
