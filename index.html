@@ -292,21 +292,60 @@ h2.sec span{color:var(--gold);}
 /* Página de carimbos */
 .pp-stamps-header{font-size:.6rem;font-weight:700;letter-spacing:.15em;
   text-transform:uppercase;color:#7a6a4a;margin-bottom:14px;text-align:center;}
-.pp-stamps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.pp-stamp{border:2px solid;border-radius:4px;padding:6px 8px;
-  text-align:center;position:relative;transform:rotate(var(--rot));
-  transition:transform .2s;}
-.pp-stamp:hover{transform:rotate(0deg) scale(1.05);}
-.pp-stamp .ps-flag{font-size:1.2rem;display:block;margin-bottom:2px;}
-.pp-stamp .ps-country{font-size:.6rem;font-weight:700;letter-spacing:.08em;
-  text-transform:uppercase;display:block;}
-.pp-stamp .ps-date{font-size:.55rem;color:inherit;opacity:.7;display:block;margin-top:1px;}
-.pp-stamp .ps-type{font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;
-  opacity:.6;margin-top:2px;display:block;}
-.pp-stamp.entrada{border-color:#2a5a8a;color:#2a5a8a;background:rgba(42,90,138,.06);}
-.pp-stamp.saida{border-color:#8a3a2a;color:#8a3a2a;background:rgba(138,58,42,.06);}
-.pp-stamp.planeado{border-color:#6a8a4a;color:#6a8a4a;background:rgba(106,138,74,.06);
-  border-style:dashed;}
+.pp-stamps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:center;justify-items:center;padding:4px;}
+/* ── Carimbos ── */
+.pp-stamp{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;position:relative;cursor:pointer;
+  transform:rotate(var(--rot,0deg));transition:transform .18s,box-shadow .18s;
+  user-select:none;min-height:82px;}
+.pp-stamp:hover{transform:rotate(0deg) scale(1.06);box-shadow:0 4px 14px rgba(0,0,0,.18);}
+.pp-stamp:active{transform:scale(.97);}
+
+/* Forma: circle */
+.pp-stamp.shape-circle{
+  border-radius:50%;width:90px;height:90px;padding:6px;
+  border:3px double;}
+/* Forma: oval */
+.pp-stamp.shape-oval{
+  border-radius:50%/40%;padding:8px 10px;
+  border:2.5px solid;}
+/* Forma: rect-deco (rectângulo com cantos decorativos) */
+.pp-stamp.shape-rect{
+  border-radius:3px;padding:7px 9px;
+  border:2.5px solid;outline:1px solid;outline-offset:-5px;}
+/* Forma: hex (via clip-path) */
+.pp-stamp.shape-hex{
+  clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+  padding:10px 8px;border:none;
+  width:88px;height:80px;}
+/* Forma: octagon */
+.pp-stamp.shape-oct{
+  clip-path:polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%);
+  padding:8px;border:none;
+  width:88px;height:88px;}
+
+/* Cores por tipo */
+.pp-stamp.entrada{border-color:#1e4d8a;color:#1e4d8a;outline-color:#1e4d8a;background:rgba(30,77,138,.07);}
+.pp-stamp.entrada.shape-hex,.pp-stamp.entrada.shape-oct{background:rgba(30,77,138,.12);color:#1e4d8a;}
+.pp-stamp.saida{border-color:#7a2a1a;color:#7a2a1a;outline-color:#7a2a1a;background:rgba(122,42,26,.07);}
+.pp-stamp.saida.shape-hex,.pp-stamp.saida.shape-oct{background:rgba(122,42,26,.12);color:#7a2a1a;}
+.pp-stamp.planeado{border-color:#4a7a2a;color:#4a7a2a;outline-color:#4a7a2a;background:rgba(74,122,42,.07);border-style:dashed;}
+.pp-stamp.planeado.shape-hex,.pp-stamp.planeado.shape-oct{background:rgba(74,122,42,.12);color:#4a7a2a;}
+
+.pp-stamp .ps-flag{font-size:1.3rem;display:block;margin-bottom:1px;line-height:1;}
+.pp-stamp .ps-country{font-size:.58rem;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;display:block;line-height:1.2;}
+.pp-stamp .ps-date{font-size:.52rem;opacity:.75;display:block;margin-top:2px;line-height:1;}
+.pp-stamp .ps-type{font-size:.46rem;letter-spacing:.12em;text-transform:uppercase;
+  opacity:.6;margin-top:1px;display:block;}
+/* Linha decorativa interior (só para circle/oval/rect) */
+.pp-stamp.shape-circle .ps-line,
+.pp-stamp.shape-oval .ps-line,
+.pp-stamp.shape-rect .ps-line{
+  display:block;width:60%;margin:2px auto;border-top:1px solid currentColor;opacity:.4;}
+.pp-stamp.shape-hex .ps-line,
+.pp-stamp.shape-oct .ps-line{display:none;}
 
 /* Navegação do livro */
 .pp-nav{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:16px;}
@@ -4808,7 +4847,8 @@ function ppRenderStampsPage(uid, pageIdx){
     paises.forEach(a2 => {
       allStamps.push({
         a2, titulo: t.titulo||nomePT(a2),
-        data: t.ini, planeado: t.ini > hoje
+        data: t.ini, planeado: t.ini > hoje,
+        tripId: t.id   /* para abrir o modal ao clicar */
       });
     });
   });
@@ -4818,14 +4858,23 @@ function ppRenderStampsPage(uid, pageIdx){
   const pageNum = (pageIdx + 1) * 2 + 1;
 
   function stampHtml(st, idx){
-    if (!st) return `<div style="height:70px"></div>`;
-    const rots = ['-2deg','1.5deg','-1deg','2deg','-1.5deg','0.8deg'];
-    const rot = rots[idx % rots.length];
-    const cls = st.planeado ? 'planeado' : (idx%2===0 ? 'entrada' : 'saida');
-    const tipo = st.planeado ? 'PLANEADO' : (idx%2===0 ? 'ENTRADA' : 'SAÍDA');
-    return `<div class="pp-stamp ${cls}" style="--rot:${rot}">
+    if (!st) return `<div style="height:82px;width:90px;"></div>`;
+    const SHAPES = ['circle','oval','rect','hex','oct','oval','rect','circle','hex'];
+    const ROTS   = ['-3deg','2deg','-1.5deg','3.5deg','-2.5deg','1deg','-1deg','2.5deg','-2deg'];
+    const shape  = SHAPES[idx % SHAPES.length];
+    const rot    = ROTS[idx % ROTS.length];
+    const cls    = st.planeado ? 'planeado' : (idx%3===0 ? 'entrada' : idx%3===1 ? 'saida' : 'entrada');
+    const tipo   = st.planeado ? 'PLANEADO' : (idx%3===0 ? 'ENTRADA' : 'SAÍDA');
+    /* Nome do país: abreviar se > 9 chars para shapes pequenas */
+    const nome = nomePT(st.a2).toUpperCase();
+    const nomeDisplay = nome.length > 11 ? nome.slice(0,9)+'.' : nome;
+    /* Linha decorativa separadora */
+    const linha = `<span class="ps-line"></span>`;
+    return `<div class="pp-stamp shape-${shape} ${cls}" style="--rot:${rot}"
+      onclick="abrirDiarioModal(${st.tripId})" title="Ver viagem: ${esc(st.titulo||nomePT(st.a2))}">
       <span class="ps-flag">${bandeira(st.a2)}</span>
-      <span class="ps-country">${nomePT(st.a2).toUpperCase().slice(0,10)}</span>
+      ${linha}
+      <span class="ps-country">${nomeDisplay}</span>
       <span class="ps-date">${fmtData(st.data)}</span>
       <span class="ps-type">${tipo}</span>
     </div>`;
