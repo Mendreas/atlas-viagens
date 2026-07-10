@@ -5338,6 +5338,15 @@ window.showTab = function(name){
     ppRenderUserSelector(); ppRenderAlerts(_ppUid); ppRenderPage();
   }
 };
+
+/* ── Render inicial ─────────────────────────────────────────────────────
+   Sem isto, os dados guardados no localStorage só aparecem no ecrã depois
+   de alguma acção (editar/apagar/importar); ao abrir ou actualizar a
+   página, o Diário, a aba Países e os contadores do topo ficavam em branco
+   até essa primeira acção. */
+renderTrips();
+renderPais();
+refreshStats();
 </script>
 </body>
 </html>
