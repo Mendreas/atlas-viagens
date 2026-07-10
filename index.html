@@ -3622,7 +3622,7 @@ function populateFiltroDropdowns(){
   /* Preencher datalist de companhias */ 
   const dlAir = document.getElementById('tAirlineList');
   if (dlAir && typeof AIRLINES_DB !== 'undefined') {
-    const sorted = [...AIRLINES_DB].sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+    const sorted = [{nome:'TAP Air Portugal'}, ...AIRLINES_DB.filter(a=>a.nome!=='TAP Air Portugal').sort((a,b)=>a.nome.localeCompare(b.nome,'pt'))];
     dlAir.innerHTML = sorted.map(a=>`<option value="${esc(a.nome)}">`).join('');
   }
 
@@ -4335,8 +4335,10 @@ function abrirFormModal(titulo){
   }, 50);
   /* Preencher datalist companhias (só se AIRLINES_DB já existir) */
   const dl = document.getElementById('tAirlineList');
-  if (dl && typeof AIRLINES_DB !== 'undefined')
-    dl.innerHTML = AIRLINES_DB.map(a=>`<option value="${esc(a.nome)}">`).join('');
+  if (dl && typeof AIRLINES_DB !== 'undefined') {
+    const tapFirst2 = [{nome:'TAP Air Portugal'}, ...AIRLINES_DB.filter(a=>a.nome!=='TAP Air Portugal').sort((a,b)=>a.nome.localeCompare(b.nome,'pt'))];
+    dl.innerHTML = tapFirst2.map(a=>`<option value="${esc(a.nome)}">`).join('');
+  }
 }
 
 function fecharFormModal(){
