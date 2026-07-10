@@ -377,6 +377,15 @@ h2.sec span{color:var(--gold);}
 .pp-alert.warn{border-color:#c5973a;color:#c5973a;}
 .pp-alert.expired{border-color:var(--coral);color:var(--coral);}
 .pp-alert.trip{border-color:var(--teal);color:var(--teal);}
+.pp-alert.ok{border-color:#2f7a3f;color:#2f7a3f;}
+
+/* Data da viagem planeada (aba Países) */
+.plano-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.plano-row select,.plano-row input{padding:6px 8px;border-radius:6px;
+  border:1px solid #c8bfa8;font-family:'Source Sans 3',sans-serif;font-size:.82rem;}
+.plano-row input{width:130px;}
+#pPlanoWrap:empty{margin:0;}
+#pPlanoWrap{margin-top:4px;}
 
 /* ---------- Modal formulário de viagem ---------- */
 #formModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
@@ -780,6 +789,7 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
         </div>
         <button class="btn-ficha" id="btnFicha">ℹ️ Ficha do país</button>
         <button class="btn-ficha" id="btnPlanear" style="background:var(--teal);color:#062621;border-color:var(--teal)">🗒 Planear visita</button>
+        <div id="pPlanoWrap"></div>
       </div>
     </div>
     <div style="margin-top:16px">
@@ -1436,8 +1446,63 @@ function statusDe(a2){
 }
 function setStatus(a2, st){
   if (st === 'nao') delete ud().countries[a2];
-  else ud().countries[a2] = { status: st };
+  else {
+    const prev = ud().countries[a2] || {};
+    ud().countries[a2] = { status: st, planMes: prev.planMes, planAno: prev.planAno };
+  }
   save();
+}
+
+/* ── Data prevista da viagem planeada + cruzamento com validade do passaporte ── */
+const PT_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function setPlanData(a2, mes, ano){
+  const entry = ud().countries[a2] || {};
+  if (!entry.status || entry.status === 'nao') entry.status = 'planeado';
+  entry.planMes = mes ? Number(mes) : undefined;
+  entry.planAno = ano ? Number(ano) : undefined;
+  ud().countries[a2] = entry;
+  save();
+  if (selPais.value === a2) renderPlanoData(a2);
+  if (_pmA2 === a2){
+    const pmAlerta = document.getElementById('pmPassaporteAlerta');
+    if (pmAlerta) pmAlerta.innerHTML = planPassaporteAlerta(a2);
+  }
+}
+
+function planPassaporteAlerta(a2){
+  const entry = ud().countries[a2] || {};
+  if (!entry.planAno) return '';
+  const mesStr = entry.planMes ? String(entry.planMes).padStart(2,'0') : '12';
+  const diaStr = entry.planMes ? '01' : '31';
+  const dataViagem = `${entry.planAno}-${mesStr}-${diaStr}`;
+  const validade = ppGetData(state.editingUser).validade;
+  if (!validade){
+    return `<div class="pp-alert warn">ℹ️ Define a validade do passaporte na aba Passaporte para verificar se é válido para esta data.</div>`;
+  }
+  const v = ppValidadeStatus(validade, dataViagem);
+  if (!v) return '';
+  const aviso = !entry.planMes ? ` <span style="opacity:.7">(pior caso: fim de ${entry.planAno})</span>` : '';
+  return `<div class="pp-alert ${v.status}">${v.msg}${aviso}</div>`;
+}
+
+function renderPlanoData(a2){
+  const wrap = document.getElementById('pPlanoWrap');
+  if (!wrap) return;
+  const st = statusDe(a2);
+  if (st !== 'planeado'){ wrap.innerHTML=''; return; }
+  const entry = ud().countries[a2] || {};
+  const anoAtual = new Date().getFullYear();
+  const mesOpts = ['<option value="">Mês (opcional)</option>']
+    .concat(PT_MESES.map((m,i)=>`<option value="${i+1}" ${entry.planMes===i+1?'selected':''}>${m}</option>`)).join('');
+  wrap.innerHTML = `
+    <div class="plano-row">
+      <select id="pPlanoMes">${mesOpts}</select>
+      <input type="number" id="pPlanoAno" placeholder="Ano, ex: ${anoAtual+1}" min="${anoAtual}" max="${anoAtual+15}" value="${entry.planAno||''}">
+    </div>
+    <div id="pPlanoAlerta">${planPassaporteAlerta(a2)}</div>`;
+  document.getElementById('pPlanoMes').onchange = () => setPlanData(a2, document.getElementById('pPlanoMes').value, document.getElementById('pPlanoAno').value);
+  document.getElementById('pPlanoAno').onchange = () => setPlanData(a2, document.getElementById('pPlanoMes').value, document.getElementById('pPlanoAno').value);
 }
 
 /* Lista de todos os países (alpha-2) ordenada por nome PT */
@@ -1677,6 +1742,7 @@ function renderPais(){
   const a2 = selPais.value;
   const stActual = statusDe(a2);
   marcarBtns(document.getElementById('pStatus'), stActual);
+  renderPlanoData(a2);
   /* Sincronizar contexto com o estado actual do país */
   if (stActual === 'planeado') paisContexto = 'planeado';
   else if (stActual === 'visitado' || stActual === 'parcial') paisContexto = 'visitado';
@@ -3032,6 +3098,7 @@ const IDB_VER  = 1;
 const IDB_STORE = 'fotos';
 let _idb = null;
 let paisContexto = 'visitado'; /* 'visitado' | 'planeado' | 'por visitar' */
+let _pmA2 = null; /* país actualmente aberto no modal de planeamento */
 
 function abrirIDB(){
   if (_idb) return Promise.resolve(_idb);
@@ -3422,13 +3489,14 @@ const PLUG_SYMBOLS = {
 };
 
 document.getElementById('planModalClose').onclick =
-  () => document.getElementById('planModal').classList.remove('open');
+  () => { document.getElementById('planModal').classList.remove('open'); _pmA2 = null; };
 document.getElementById('planModal').addEventListener('click', ev => {
-  if (ev.target.id === 'planModal') ev.target.classList.remove('open');
+  if (ev.target.id === 'planModal'){ ev.target.classList.remove('open'); _pmA2 = null; }
 });
 document.getElementById('btnPlanear').onclick = () => abrirPlaneamento(selPais.value);
 
 function abrirPlaneamento(a2){
+  _pmA2 = a2;
   const nome = nomePT(a2);
   document.getElementById('pmFlag').textContent = bandeira(a2);
   document.getElementById('pmNome').textContent = 'Planear: ' + nome;
@@ -3456,7 +3524,21 @@ function abrirPlaneamento(a2){
 
   const checkedIds = new Set(marcados.map((_,i)=>i));
 
+  const entryPlano = ud().countries[a2] || {};
+  const anoAtualPlano = new Date().getFullYear();
+  const pmMesOpts = ['<option value="">Mês (opcional)</option>']
+    .concat(PT_MESES.map((m,i)=>`<option value="${i+1}" ${entryPlano.planMes===i+1?'selected':''}>${m}</option>`)).join('');
+
   document.getElementById('pmBody').innerHTML = `
+    <div class="pm-section">
+      <h3>🗓 Quando pretendes viajar</h3>
+      <div class="plano-row">
+        <select id="pmMes">${pmMesOpts}</select>
+        <input type="number" id="pmAno" placeholder="Ano, ex: ${anoAtualPlano+1}" min="${anoAtualPlano}" max="${anoAtualPlano+15}" value="${entryPlano.planAno||''}">
+      </div>
+      <div id="pmPassaporteAlerta">${planPassaporteAlerta(a2)}</div>
+    </div>
+
     <div class="pm-section">
       <h3>⚡ Electricidade & Adaptador</h3>
       <div class="pm-cards">
@@ -3505,6 +3587,10 @@ function abrirPlaneamento(a2){
 
   /* PDF */
   document.getElementById('btnPlanPDF').onclick = () => exportarPlanPDF(a2, nome, marcados, plugHtml, plug);
+
+  /* Data prevista da viagem */
+  document.getElementById('pmMes').onchange = () => setPlanData(a2, document.getElementById('pmMes').value, document.getElementById('pmAno').value);
+  document.getElementById('pmAno').onchange = () => setPlanData(a2, document.getElementById('pmMes').value, document.getElementById('pmAno').value);
 }
 
 window.togglePmCheck = (i) => {
