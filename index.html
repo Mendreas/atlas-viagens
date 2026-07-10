@@ -292,7 +292,11 @@ h2.sec span{color:var(--gold);}
 /* Página de carimbos */
 .pp-stamps-header{font-size:.6rem;font-weight:700;letter-spacing:.15em;
   text-transform:uppercase;color:#7a6a4a;margin-bottom:14px;text-align:center;}
-.pp-stamps-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px 10px;align-items:center;justify-items:center;padding:8px 4px;}
+.pp-stamps-free{position:relative;width:100%;height:440px;}
+.pp-stamp-free{position:absolute;transition:filter .18s;cursor:pointer;}
+.pp-stamp-free:hover{z-index:10;filter:drop-shadow(0 4px 12px rgba(0,0,0,.25));}
+/* manter .pp-stamps-grid para compatibilidade */
+.pp-stamps-grid{display:block;}
 /* ── Carimbos SVG ── */
 .pp-stamps-grid{display:grid;grid-template-columns:repeat(3,1fr);
   gap:8px 4px;align-items:center;justify-items:center;padding:10px 4px;
@@ -4985,51 +4989,147 @@ function stampHtml(st, idx){
 }
 
 
+
+function stampHtmlSmall(st, idx){
+  if (!st) return '';
+  const seed = (st.tripId||1)*31 + idx*17;
+  const r3=seededRand(seed+13), r4=seededRand(seed+19), r5=seededRand(seed+23), r6=seededRand(seed+29);
+  const PALETTES=[
+    {stroke:'#1a3a7a',text:'#1a3a7a',fill:'rgba(26,58,122,.09)'},
+    {stroke:'#7a1a1a',text:'#7a1a1a',fill:'rgba(122,26,26,.09)'},
+    {stroke:'#1a5a1a',text:'#1a5a1a',fill:'rgba(26,90,26,.09)'},
+    {stroke:'#4a1a7a',text:'#4a1a7a',fill:'rgba(74,26,122,.09)'},
+    {stroke:'#7a5a1a',text:'#7a5a1a',fill:'rgba(122,90,26,.09)'},
+    {stroke:'#1a6a7a',text:'#1a6a7a',fill:'rgba(26,106,122,.09)'},
+  ];
+  const plColor={stroke:'#2a6a1a',text:'#2a6a1a',fill:'rgba(42,106,26,.09)'};
+  const c = st.planeado ? plColor : PALETTES[Math.floor(r3*PALETTES.length)];
+  const SHAPES=['oval-s','rect-s','circle-s'];
+  const shape = SHAPES[Math.floor(r4*SHAPES.length)];
+  const LABELS=["IMMIGRATION","ARRIVAL","CUSTOMS","DEPARTURE","BORDER"];
+  const label = LABELS[Math.floor(r5*LABELS.length)];
+  const tipo  = st.planeado?'PLANEADO':(Math.floor(r6*3)===0?'ADMITTED':'DEPARTED');
+  const nome=nomePT(st.a2).toUpperCase();
+  const data=fmtData(st.data);
+  const flag=bandeira(st.a2);
+  const W=110,H=72,cx=55,cy=36;
+  let shapeEl='',contentEl='';
+  const line=(y)=>`<line x1="${W*0.1}" y1="${y}" x2="${W*0.9}" y2="${y}" stroke="${c.stroke}" stroke-width=".6" opacity=".5"/>`;
+
+  if(shape==='oval-s'){
+    shapeEl=`<ellipse cx="${cx}" cy="${cy}" rx="52" ry="32" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2"/><ellipse cx="${cx}" cy="${cy}" rx="45" ry="25" fill="none" stroke="${c.stroke}" stroke-width=".6" opacity=".5"/>`;
+    contentEl=`<text x="${cx}" y="16" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}" opacity=".8">${label}</text>${line(20)}<text x="${cx}" y="35" text-anchor="middle" font-size="10" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>${line(42)}<text x="${cx}" y="53" text-anchor="middle" font-size="8" font-weight="700" fill="${c.text}">${data}</text><text x="${cx}" y="63" text-anchor="middle" font-size="5" letter-spacing="2" fill="${c.text}" opacity=".7">${tipo}</text>`;
+  } else if(shape==='circle-s'){
+    shapeEl=`<circle cx="${cx}" cy="${cy}" r="32" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="26" fill="none" stroke="${c.stroke}" stroke-width=".6" stroke-dasharray="2,2" opacity=".5"/>`;
+    contentEl=`<text x="${cx}" y="16" text-anchor="middle" font-size="5" font-weight="700" letter-spacing="1.5" fill="${c.text}" opacity=".8">${label}</text><text x="${cx}" y="33" text-anchor="middle" font-size="9.5" font-weight="900" fill="${c.text}">${nome.slice(0,10)}</text><text x="${cx}" y="47" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text><text x="${cx}" y="58" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}" opacity=".7">${tipo}</text>`;
+  } else {
+    shapeEl=`<rect x="3" y="4" width="${W-6}" height="${H-8}" rx="8" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2"/><rect x="8" y="9" width="${W-16}" height="${H-18}" rx="5" fill="none" stroke="${c.stroke}" stroke-width=".6" opacity=".5"/>`;
+    contentEl=`<text x="${cx}" y="20" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}" opacity=".8">${label}</text>${line(24)}<text x="${cx}" y="40" text-anchor="middle" font-size="10" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>${line(46)}<text x="${cx}" y="57" text-anchor="middle" font-size="8" font-weight="700" fill="${c.text}">${data}</text>`;
+  }
+  const filterId=`inks${idx}t${st.tripId||0}`;
+  const filterEl=`<filter id="${filterId}"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="${seed}" result="n"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.8 2.2" in="n" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter>`;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Arial,Helvetica,sans-serif" filter="url(#${filterId})"><defs>${filterEl}</defs>${shapeEl}${contentEl}<text x="${W-4}" y="12" text-anchor="end" font-size="9">${flag}</text></svg>`;
+  const planCls = st.planeado?'planeado':'';
+  return `<div class="pp-stamp-wrap ${planCls}" onclick="fecharDiarioModal&&fecharDiarioModal();showTab('diario');setTimeout(()=>abrirDiarioModal(${st.tripId}),80)" title="${esc(st.titulo||nomePT(st.a2))}">${svg}</div>`;
+}
+
 /* ── Página de carimbos ── */
 function ppRenderStampsPage(uid, pageIdx){
-  const STAMPS_PER_PAGE = 4;
-  const start = pageIdx * STAMPS_PER_PAGE * 2;
   const hoje = new Date().toISOString().slice(0,10);
   const userTrips = state.trips
     .filter(t => (t.userIds||[t.userId]).includes(uid))
     .sort((a,b) => (a.ini||'').localeCompare(b.ini||''));
+
+  /* 1 carimbo por país por viagem — deduplicar */
   const allStamps = [];
   userTrips.forEach(t => {
     const paises = t.paises || [t.pais];
+    const seen = new Set();
     paises.forEach(a2 => {
-      allStamps.push({a2, titulo:t.titulo||nomePT(a2), data:t.ini,
-        planeado:t.ini>hoje, tripId:t.id});
+      const key = a2; /* 1 carimbo por país, independente de quantas viagens */
+      if (!seen.has(key)){
+        seen.add(key);
+        allStamps.push({a2, titulo:t.titulo||nomePT(a2), data:t.ini,
+          planeado:t.ini>hoje, tripId:t.id});
+      }
     });
   });
-  const leftStamps  = allStamps.slice(start, start + STAMPS_PER_PAGE);
-  const rightStamps = allStamps.slice(start + STAMPS_PER_PAGE, start + STAMPS_PER_PAGE*2);
-  const pageNum = (pageIdx+1)*2+1;
-  const leftPage = `
-    <div class="pp-page left">
+
+  /* Carimbos por página: 2, 3 ou 4 — determinístico por página */
+  function pageCount(pi){
+    const r = seededRand(pi*31+uid.charCodeAt(0)*7);
+    return r < 0.3 ? 2 : r < 0.7 ? 3 : 4;
+  }
+
+  /* Calcular offset de início para esta página */
+  let startIdx = 0;
+  for(let i=0; i<pageIdx; i++) startIdx += pageCount(i);
+  const count = pageCount(pageIdx);
+  const pageStamps = allStamps.slice(startIdx, startIdx + count);
+
+  const pageNum = pageIdx*2 + 3;
+  const W_PAGE = 380, H_PAGE = 480; /* dimensões internas da página em px lógicos */
+
+  /* Gerar posições aleatórias sem sobreposição */
+  function positionStamps(stamps){
+    const placed = [];
+    stamps.forEach((st, i) => {
+      const seed = (st.tripId||1)*13 + i*29 + pageIdx*7;
+      const r1 = seededRand(seed+1), r2 = seededRand(seed+2);
+      const isLarge = seededRand(seed+3) > 0.5;
+      const sw = isLarge ? 180 : 110, sh = isLarge ? 110 : 80;
+      const rot = (seededRand(seed+4)-0.5)*24;
+
+      /* Posição: margem para não sair da página */
+      const margin = 30;
+      const x = margin + r1 * (W_PAGE - sw - margin*2);
+      const y = 40 + r2 * (H_PAGE - sh - 60); /* deixar espaço para cabeçalho */
+
+      placed.push({st, i: startIdx+i, x, y, sw, sh, rot, isLarge});
+    });
+    return placed;
+  }
+
+  function renderPage(side, stampList){
+    const positions = positionStamps(stampList);
+    const stamps = positions.map(({st, i, x, y, rot, isLarge}) => {
+      const html = isLarge ? stampHtml(st, i) : stampHtmlSmall(st, i);
+      return `<div class="pp-stamp-free" style="left:${x.toFixed(0)}px;top:${y.toFixed(0)}px;transform:rotate(${rot.toFixed(1)}deg);">${html}</div>`;
+    }).join('');
+
+    const pn = side==='left' ? pageNum : pageNum+1;
+    return `<div class="pp-page ${side}">
       <div class="pp-watermark">VISTOS</div>
       <div class="pp-stamps-header">Vistos e Carimbos / Visas and Stamps</div>
-      <div class="pp-stamps-grid">
-        ${leftStamps.length ? leftStamps.map((st,i)=>stampHtml(st,i)).join('') : '<div style="grid-column:1/-1;text-align:center;color:#9a8a6a;font-size:.75rem;padding:30px 0">Ainda sem carimbos</div>'}
-      </div>
-      <span class="pp-page-num">${pageNum}</span>
+      <div class="pp-stamps-free">${stamps}</div>
+      <span class="pp-page-num">${pn}</span>
     </div>`;
-  const rightPage = `
-    <div class="pp-page right">
-      <div class="pp-watermark">VISTOS</div>
-      <div class="pp-stamps-header">Vistos e Carimbos / Visas and Stamps</div>
-      <div class="pp-stamps-grid">
-        ${rightStamps.map((st,i)=>stampHtml(st,i+STAMPS_PER_PAGE)).join('')}
-      </div>
-      <span class="pp-page-num">${pageNum+1}</span>
-    </div>`;
+  }
+
+  /* Dividir carimbos entre as duas páginas */
+  const half = Math.ceil(pageStamps.length / 2);
+  const leftStamps  = pageStamps.slice(0, half);
+  const rightStamps = pageStamps.slice(half);
+
+  const leftPage  = renderPage('left',  leftStamps);
+  const rightPage = renderPage('right', rightStamps.length ? rightStamps : []);
   return leftPage + rightPage;
 }
 
 function ppTotalPages(uid){
-  const hoje = new Date().toISOString().slice(0,10);
+  /* Contar carimbos únicos por país */
   const userTrips = state.trips.filter(t=>(t.userIds||[t.userId]).includes(uid));
-  const totalStamps = userTrips.reduce((acc,t)=>acc+(t.paises||[t.pais]).length,0);
-  return Math.max(1, Math.ceil(totalStamps/12));
+  let total = 0;
+  userTrips.forEach(t => { total += (t.paises||[t.pais]).length; });
+
+  /* Calcular páginas necessárias baseado em pageCount */
+  function pageCount(pi){
+    const r = seededRand(pi*31+(uid.charCodeAt(0))*7);
+    return r < 0.3 ? 2 : r < 0.7 ? 3 : 4;
+  }
+  let pages = 0, counted = 0;
+  while(counted < total){ counted += pageCount(pages); pages++; }
+  return Math.max(1, pages);
 }
 
 function ppRenderPage(){
