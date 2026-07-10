@@ -1443,6 +1443,18 @@ function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); refreshSta
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2200); }
 function nomePT(a2){ try { return dn.of(a2) || a2; } catch(e){ return a2; } }
 function bandeira(a2){ if(!/^[A-Z]{2}$/.test(a2)) return '🏳'; return String.fromCodePoint(...[...a2].map(c=>0x1F1E6 + c.charCodeAt(0) - 65)); }
+/* Bandeira como imagem real (o Windows não desenha os emojis de bandeira — mostra as duas letras).
+   Usa flagcdn.com; se a imagem falhar, cai para o emoji/letras normais. */
+function bandeiraImgHtml(a2, w){
+  w = w || 20;
+  const valido = /^[A-Z]{2}$/.test(a2) && a2 !== 'XX';
+  if (!valido) return `<span class="flag-emoji">${bandeira(a2)}</span>`;
+  const h = Math.round(w*0.75);
+  const fallback = bandeira(a2);
+  return `<img src="https://flagcdn.com/${a2.toLowerCase()}.svg" alt="${a2}" class="flag-img"
+    style="width:${w}px;height:${h}px;object-fit:cover;border-radius:2px;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,.15)"
+    onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'flag-emoji',textContent:'${fallback}'}))">`;
+}
 function statusDe(a2){
   /* Estado manual tem prioridade absoluta */
   const manual = ud().countries[a2] && ud().countries[a2].status;
@@ -1664,7 +1676,7 @@ function renderTrips(){
   }
   list.innerHTML = trips.map(t=>`
     <div class="trip ${t.ini > hoje ? 'futura' : ''}" onclick="abrirDiarioModal(${t.id})">
-      <h3><span class="flag">${bandeira(t.pais)}</span>${esc(t.titulo)}${(()=>{
+      <h3><span class="flag">${bandeiraImgHtml(t.pais, 22)}</span>${esc(t.titulo)}${(()=>{
   const ids = t.userIds || (t.userId ? [t.userId] : []);
   if (!ids.length || state.users.length<=1) return '';
   return ids.map(uid=>{
@@ -1672,7 +1684,7 @@ function renderTrips(){
     return u?`<span style="font-size:.7rem;background:${u.cor};color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px;font-family:ui-monospace,monospace;vertical-align:middle">${esc(u.nome)}</span>`:'';
   }).join('');
 })()}</h3>
-      <div class="meta">${(t.paises||[t.pais]).map(a=>bandeira(a)+' '+nomePT(a)).join(' · ')} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}${t.airline ? ' · ✈️ '+esc(t.airline) : ''}</div>
+      <div class="meta">${(t.paises||[t.pais]).map(a=>bandeiraImgHtml(a,16)+' '+nomePT(a)).join(' · ')} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}${t.airline ? ' · ✈️ '+esc(t.airline) : ''}</div>
       ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
       ${t.pernoita ? `<div class="locais" style="color:var(--teal)">🛏 ${esc(t.pernoita)}</div>` : ''}
       ${t.notas ? `<p>${esc(t.notas)}</p>` : ''}
