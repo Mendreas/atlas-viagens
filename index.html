@@ -5033,27 +5033,31 @@ function stampHtmlSmall(st, idx){
   return `<div class="pp-stamp-wrap ${planCls}" onclick="fecharDiarioModal&&fecharDiarioModal();showTab('diario');setTimeout(()=>abrirDiarioModal(${st.tripId}),80)" title="${esc(st.titulo||nomePT(st.a2))}">${svg}</div>`;
 }
 
-/* ── Página de carimbos ── */
-function ppRenderStampsPage(uid, pageIdx){
+/* ── Carimbos: 1 por país por viagem (revisitar o país noutra viagem = novo carimbo) ── */
+function ppGetAllStamps(uid){
   const hoje = new Date().toISOString().slice(0,10);
   const userTrips = state.trips
     .filter(t => (t.userIds||[t.userId]).includes(uid))
     .sort((a,b) => (a.ini||'').localeCompare(b.ini||''));
 
-  /* 1 carimbo por país por viagem — deduplicar */
   const allStamps = [];
   userTrips.forEach(t => {
     const paises = t.paises || [t.pais];
     const seen = new Set();
     paises.forEach(a2 => {
-      const key = a2; /* 1 carimbo por país, independente de quantas viagens */
-      if (!seen.has(key)){
-        seen.add(key);
+      if (!seen.has(a2)){
+        seen.add(a2);
         allStamps.push({a2, titulo:t.titulo||nomePT(a2), data:t.ini,
           planeado:t.ini>hoje, tripId:t.id});
       }
     });
   });
+  return allStamps;
+}
+
+/* ── Página de carimbos ── */
+function ppRenderStampsPage(uid, pageIdx){
+  const allStamps = ppGetAllStamps(uid);
 
   /* Carimbos por página: 2, 3 ou 4 — determinístico por página */
   function pageCount(pi){
@@ -5071,19 +5075,28 @@ function ppRenderStampsPage(uid, pageIdx){
   const W_PAGE = 380, H_PAGE = 480; /* dimensões internas da página em px lógicos */
 
   /* Gerar posições aleatórias sem sobreposição */
+  function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh, pad){
+    return !(ax+aw+pad < bx || bx+bw+pad < ax || ay+ah+pad < by || by+bh+pad < ay);
+  }
   function positionStamps(stamps){
     const placed = [];
+    const margin = 30;
     stamps.forEach((st, i) => {
       const seed = (st.tripId||1)*13 + i*29 + pageIdx*7;
-      const r1 = seededRand(seed+1), r2 = seededRand(seed+2);
       const isLarge = seededRand(seed+3) > 0.5;
       const sw = isLarge ? 180 : 110, sh = isLarge ? 110 : 80;
       const rot = (seededRand(seed+4)-0.5)*24;
 
-      /* Posição: margem para não sair da página */
-      const margin = 30;
-      const x = margin + r1 * (W_PAGE - sw - margin*2);
-      const y = 40 + r2 * (H_PAGE - sh - 60); /* deixar espaço para cabeçalho */
+      /* Tentar posições aleatórias até não colidir com nenhum carimbo já colocado */
+      let x, y, tries = 0, fits = false;
+      while (!fits && tries < 60){
+        const r1 = seededRand(seed + tries*41 + 1);
+        const r2 = seededRand(seed + tries*41 + 2);
+        x = margin + r1 * (W_PAGE - sw - margin*2);
+        y = 40 + r2 * (H_PAGE - sh - 60); /* deixar espaço para cabeçalho */
+        fits = !placed.some(p => rectsOverlap(x,y,sw,sh, p.x,p.y,p.sw,p.sh, 10));
+        tries++;
+      }
 
       placed.push({st, i: startIdx+i, x, y, sw, sh, rot, isLarge});
     });
@@ -5117,10 +5130,8 @@ function ppRenderStampsPage(uid, pageIdx){
 }
 
 function ppTotalPages(uid){
-  /* Contar carimbos únicos por país */
-  const userTrips = state.trips.filter(t=>(t.userIds||[t.userId]).includes(uid));
-  let total = 0;
-  userTrips.forEach(t => { total += (t.paises||[t.pais]).length; });
+  /* Total de carimbos reais (mesma dedução usada na renderização) */
+  const total = ppGetAllStamps(uid).length;
 
   /* Calcular páginas necessárias baseado em pageCount */
   function pageCount(pi){
