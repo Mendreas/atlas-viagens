@@ -902,6 +902,13 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     <div class="clear-options">
       <div class="clear-row">
         <div>
+          <div class="cr-label">Remover viagens duplicadas</div>
+          <div class="cr-desc">Procura viagens repetidas (mesmo país, data e utilizador) e mantém só uma de cada — útil se importaste o mesmo Excel mais do que uma vez</div>
+        </div>
+        <button class="btn gold" onclick="removerViagensDuplicadas()">Verificar e remover</button>
+      </div>
+      <div class="clear-row">
+        <div>
           <div class="cr-label">Limpar diário de viagens</div>
           <div class="cr-desc">Remove todas as viagens do diário (fotos no IndexedDB também)</div>
         </div>
@@ -1110,6 +1117,7 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
       <div class="im-step" id="imStep3">
         <div class="im-stats" id="imStats"></div>
         <div id="imNoUserSection"></div>
+        <div id="imDupSection"></div>
         <div style="margin-bottom:10px;font-size:.85rem;color:var(--muted)">
           Pré-visualização das entradas a importar (podes corrigir o país antes de confirmar):
         </div>
@@ -4407,6 +4415,16 @@ function imProcessar(){
 
 /* Decisão para linhas sem utilizador: 'skip' | 'u1' | 'u2' | 'ambos' */
 let _imDecisaoSemUser = 'skip';
+let _imDecisaoDuplicados = 'skip'; /* 'skip' | 'substituir' | 'duplicar' */
+
+function chaveViagem(pais, ini, userIds){
+  const uids = (userIds||[]).slice().sort().join(',');
+  return (pais||'') + '|' + (ini||'') + '|' + uids;
+}
+function chaveViagemDeTrip(t){
+  const pais = (t.paises && t.paises.length ? t.paises.slice().sort().join(',') : (t.pais||''));
+  return chaveViagem(pais, t.ini, t.userIds||[t.userId]);
+}
 
 function imRenderPreview(){
   /* Stats */
@@ -4453,6 +4471,37 @@ function imRenderTableRows(){
     });
   }
 
+  /* Detectar linhas que já existem no diário (mesmo país + ano + utilizador) */
+  const existentes = new Map();
+  state.trips.forEach(t => existentes.set(chaveViagemDeTrip(t), t.id));
+  let nDuplicados = 0;
+  todasLinhas.forEach(l => {
+    const ini = l.ano ? l.ano + '-01-01' : '';
+    const chave = chaveViagem(l.a2 || 'XX', ini, l.userIds);
+    const idExistente = existentes.get(chave);
+    l.duplicada = !!idExistente;
+    l.duplicadaId = idExistente || null;
+    if (l.duplicada) nDuplicados++;
+  });
+
+  /* Secção de decisão para duplicados */
+  const dupSec = document.getElementById('imDupSection');
+  if (nDuplicados){
+    dupSec.innerHTML = `
+      <div class="im-no-user">
+        <span style="font-size:1.2rem">🔁</span>
+        <div style="flex:1">
+          <b>${nDuplicados}</b> linha(s) parecem já existir no diário (mesmo país, ano e utilizador). O que fazer?
+          <select id="imDecisaoDup" onchange="_imDecisaoDuplicados=this.value;imRenderTableRows()"
+            style="margin-left:10px" class="im-country-select">
+            <option value="skip" ${_imDecisaoDuplicados==='skip'?'selected':''}>Ignorar estas linhas</option>
+            <option value="substituir" ${_imDecisaoDuplicados==='substituir'?'selected':''}>Substituir as existentes</option>
+            <option value="duplicar" ${_imDecisaoDuplicados==='duplicar'?'selected':''}>Importar mesmo assim (duplicar)</option>
+          </select>
+        </div>
+      </div>`;
+  } else { dupSec.innerHTML = ''; }
+
   const tbody = document.getElementById('imPreviewBody');
   tbody.innerHTML = todasLinhas.map((l,i) => {
     const users = l.userIds.map(uid=>{
@@ -4470,20 +4519,24 @@ function imRenderTableRows(){
     const estadoBadge = l.semUser
       ? '<span class="im-badge skip">ignorar</span>'
       : (l.a2?'<span class="im-badge ok">✓</span>':'<span class="im-badge warn">sem ISO</span>');
+    const dupBadge = l.duplicada
+      ? ` <span class="im-badge warn">${_imDecisaoDuplicados==='skip'?'já existe · ignorada':(_imDecisaoDuplicados==='substituir'?'já existe · substitui':'já existe · duplica')}</span>`
+      : '';
     return `<tr>
       <td>${paisLabel}</td>
       <td>${esc(l.ano)}</td>
       <td>${users}</td>
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.locais)}</td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${esc(l.notas)}</td>
-      <td>${estadoBadge}</td>
+      <td>${estadoBadge}${dupBadge}</td>
     </tr>`;
   }).join('');
 
   /* Guardar referência para confirmar */
   window._imTodasLinhas = todasLinhas;
+  const aImportar = todasLinhas.filter(l=>!l.semUser && !(l.duplicada && _imDecisaoDuplicados==='skip')).length;
   document.getElementById('btnImportarConfirm').textContent =
-    `✓ Importar ${todasLinhas.filter(l=>!l.semUser).length} entradas`;
+    `✓ Importar ${aImportar} entradas`;
 }
 
 window.imCorrigirPais = (rowIdx, a2) => {
@@ -4497,22 +4550,29 @@ function imConfirmar(){
   const linhas = (window._imTodasLinhas||[]).filter(l=>!l.semUser);
   if(!linhas.length){ alert('Nenhuma linha para importar.'); return; }
 
-  let importadas = 0, semIso = 0;
+  let importadas = 0, semIso = 0, substituidas = 0, ignoradas = 0;
   linhas.forEach(l => {
+    if (l.duplicada && _imDecisaoDuplicados === 'skip'){ ignoradas++; return; }
+
     const pais = l.a2 || 'XX'; /* XX para países não reconhecidos */
     const ini = l.ano ? l.ano + '-01-01' : '';
-    const trip = {
-      id: Date.now() + Math.random(),
-      pais,
-      ini,
-      fim: ini,
+    const dadosTrip = {
+      pais, ini, fim: ini,
       titulo: l.locais ? l.locais.split('·')[0].trim() : (nomePT(pais)||l.paisNome||'Viagem'),
       locais: l.locais,
       notas: l.notas,
-      imgNomes: [],
-      links: [],
       userIds: l.userIds,
     };
+
+    if (l.duplicada && _imDecisaoDuplicados === 'substituir' && l.duplicadaId){
+      const existente = state.trips.find(t => t.id === l.duplicadaId);
+      if (existente){ Object.assign(existente, dadosTrip); substituidas++; }
+      else { state.trips.push({ id: Date.now()+Math.random(), imgNomes:[], links:[], ...dadosTrip }); importadas++; }
+    } else {
+      state.trips.push({ id: Date.now()+Math.random(), imgNomes:[], links:[], ...dadosTrip });
+      importadas++;
+    }
+
     /* Marcar país como visitado para os utilizadores correspondentes */
     l.userIds.forEach(uid => {
       const saved = state.editingUser;
@@ -4520,9 +4580,7 @@ function imConfirmar(){
       if(l.a2) setStatus(l.a2, 'visitado');
       state.editingUser = saved;
     });
-    state.trips.push(trip);
     if(!l.a2) semIso++;
-    importadas++;
   });
 
   save(); refreshStats(); renderTrips();
@@ -4533,11 +4591,42 @@ function imConfirmar(){
     <h3 style="font-family:'Fraunces',serif;font-size:1.4rem;margin-bottom:8px">
       ${importadas} entradas importadas!
     </h3>
+    ${substituidas?`<p style="color:var(--muted);font-size:.85rem">🔁 ${substituidas} entrada(s) já existente(s) foram substituídas.</p>`:''}
+    ${ignoradas?`<p style="color:var(--muted);font-size:.85rem">⏭ ${ignoradas} entrada(s) ignorada(s) por já existirem.</p>`:''}
     ${semIso?`<p style="color:var(--muted);font-size:.85rem">⚠️ ${semIso} entrada(s) sem código ISO — aparecem com país "XX" no diário. Podes editar cada uma manualmente.</p>`:''}
     <p style="color:var(--muted);font-size:.82rem;margin-top:8px">
       Os países foram marcados como visitados para cada utilizador.
     </p>`;
 }
+
+
+/* ============ REMOVER VIAGENS DUPLICADAS ============ */
+function encontrarViagensDuplicadas(){
+  const vistos = new Map();
+  const dups = [];
+  state.trips.forEach(t=>{
+    const chave = chaveViagemDeTrip(t);
+    if (vistos.has(chave)) dups.push(t.id);
+    else vistos.set(chave, t.id);
+  });
+  return dups;
+}
+window.removerViagensDuplicadas = () => {
+  const dupIds = encontrarViagensDuplicadas();
+  if (!dupIds.length){ toast('Não há viagens duplicadas 🎉'); return; }
+  if (!confirm(`Encontrei ${dupIds.length} viagem(ns) duplicada(s) — mesmo país, data e utilizador(es). Fica só uma cópia de cada, as restantes são apagadas. Continuar?`)) return;
+  const dupSet = new Set(dupIds);
+  dupIds.forEach(id=>{
+    const t = state.trips.find(x=>x.id===id);
+    if (t && t.imgNomes && t.imgNomes.length){
+      apagarFotosIDB(id, t.imgNomes.length);
+      invalidarCacheFotos(id);
+    }
+  });
+  state.trips = state.trips.filter(t=>!dupSet.has(t.id));
+  save(); refreshStats(); renderTrips();
+  toast(`${dupIds.length} viagem(ns) duplicada(s) removida(s) ✓`);
+};
 
 
 /* ============ LIMPEZA DE DADOS ============ */
