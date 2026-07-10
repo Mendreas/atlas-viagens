@@ -294,15 +294,17 @@ h2.sec span{color:var(--gold);}
   text-transform:uppercase;color:#7a6a4a;margin-bottom:14px;text-align:center;}
 .pp-stamps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:center;justify-items:center;padding:4px;}
 /* ── Carimbos SVG ── */
-.pp-stamps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
-  align-items:center;justify-items:center;padding:6px;}
+.pp-stamps-grid{display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px 4px;align-items:center;justify-items:center;padding:10px 4px;
+  row-gap:18px;}
 .pp-stamp-wrap{
-  cursor:pointer;transform:rotate(var(--rot,0deg));
-  transition:transform .18s,filter .18s;filter:drop-shadow(0 1px 2px rgba(0,0,0,.1));
-  display:flex;align-items:center;justify-content:center;}
-.pp-stamp-wrap:hover{transform:rotate(0deg) scale(1.08);filter:drop-shadow(0 3px 8px rgba(0,0,0,.25));}
-.pp-stamp-wrap:active{transform:scale(.96);}
-.pp-stamp-wrap.planeado{opacity:.7;}
+  cursor:pointer;transition:filter .18s;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.12));
+  display:flex;align-items:center;justify-content:center;
+  will-change:transform;}
+.pp-stamp-wrap:hover{filter:drop-shadow(0 4px 10px rgba(0,0,0,.28)) brightness(1.04);}
+.pp-stamp-wrap:active{filter:drop-shadow(0 1px 2px rgba(0,0,0,.1)) brightness(.96);}
+.pp-stamp-wrap.planeado{opacity:.65;}
 /* ── Carimbos ── */
 .pp-stamp{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -4867,286 +4869,175 @@ function ppRenderStampsPage(uid, pageIdx){
   const rightStamps = allStamps.slice(start + STAMPS_PER_PAGE, start + STAMPS_PER_PAGE * 2);
   const pageNum = (pageIdx + 1) * 2 + 1;
 
-  /* ── Gerar carimbo SVG realista ── */
+  /* ── Gerar carimbo SVG realista — tamanho e rotação aleatórios ── */
+  function seededRand(seed){
+    /* LCG simples para números "aleatórios" determinísticos por semente */
+    let s = (seed * 1664525 + 1013904223) & 0xffffffff;
+    return ((s >>> 0) % 1000) / 1000;
+  }
+
   function stampSVG(st, idx){
-    /* Paleta de cores "tinta" — desbotadas como carimbos reais */
+    const seed = (st.tripId||1)*31 + idx*17;
+    const r1 = seededRand(seed);
+    const r2 = seededRand(seed+7);
+    const r3 = seededRand(seed+13);
+    const r4 = seededRand(seed+19);
+    const r5 = seededRand(seed+23);
+
+    /* Tamanho variável: escala entre 0.72 e 1.22 */
+    const scale = 0.72 + r1 * 0.50;
+
+    /* Rotação: -18° a +18°, mais extrema que antes */
+    const rot = (r2 - 0.5) * 36;
+
+    /* Paleta de cores tinta */
     const PALETTES = [
-      {stroke:'#1a3a6b',fill:'rgba(26,58,107,.08)',text:'#1a3a6b'},  /* azul escuro */
-      {stroke:'#6b1a1a',fill:'rgba(107,26,26,.08)',text:'#6b1a1a'},  /* vermelho escuro */
-      {stroke:'#1a5a2a',fill:'rgba(26,90,42,.08)', text:'#1a5a2a'},  /* verde escuro */
-      {stroke:'#4a1a6b',fill:'rgba(74,26,107,.08)',text:'#4a1a6b'},  /* roxo */
-      {stroke:'#6b4a1a',fill:'rgba(107,74,26,.08)',text:'#6b4a1a'},  /* castanho */
-      {stroke:'#1a5a6b',fill:'rgba(26,90,107,.08)',text:'#1a5a6b'},  /* teal escuro */
+      {stroke:'#1a3a6b',fill:'rgba(26,58,107,.09)',text:'#1a3a6b'},
+      {stroke:'#6b1a1a',fill:'rgba(107,26,26,.09)',text:'#6b1a1a'},
+      {stroke:'#1a5a2a',fill:'rgba(26,90,42,.09)', text:'#1a5a2a'},
+      {stroke:'#4a1a6b',fill:'rgba(74,26,107,.09)',text:'#4a1a6b'},
+      {stroke:'#6b4a1a',fill:'rgba(107,74,26,.09)',text:'#6b4a1a'},
+      {stroke:'#1a5a6b',fill:'rgba(26,90,107,.09)',text:'#1a5a6b'},
+      {stroke:'#3a1a6b',fill:'rgba(58,26,107,.09)',text:'#3a1a6b'},
     ];
-    const pal = PALETTES[idx % PALETTES.length];
-    const plColor = {stroke:'#2a6b1a',fill:'rgba(42,107,26,.08)',text:'#2a6b1a'};
-    const c = st.planeado ? plColor : pal;
+    const plColor = {stroke:'#2a6b1a',fill:'rgba(42,107,26,.09)',text:'#2a6b1a'};
+    const palIdx = Math.floor(r3 * PALETTES.length);
+    const c = st.planeado ? plColor : PALETTES[palIdx];
 
-    /* Formas que rodam */
-    const SHAPES = ['oval','rect','round-rect','circle','diamond-rect','wide-oval'];
-    const shape  = st.planeado ? 'round-rect' : SHAPES[idx % SHAPES.length];
+    /* Formas */
+    const SHAPES = ['oval','rect','round-rect','circle','diamond-rect','wide-oval','triangle-rect'];
+    const shapeIdx = Math.floor(r4 * SHAPES.length);
+    const shape = st.planeado ? 'round-rect' : SHAPES[shapeIdx];
 
-    /* Aeroporto fictício mas plausível */
+    /* Aeroporto */
     const AIRPORTS = ['INT\'L AIRPORT','IMMIGRATION','BORDER CONTROL',
-                      'ARRIVAL','CUSTOMS','DEPARTURE','AIRPORT'];
-    const airport = AIRPORTS[idx % AIRPORTS.length];
+                      'ARRIVAL','CUSTOMS','DEPARTURE','AIRPORT AUTH.',
+                      'PASSPORT CTRL','PORT OF ENTRY'];
+    const airport = AIRPORTS[Math.floor(r5 * AIRPORTS.length)];
 
     const nome = nomePT(st.a2).toUpperCase();
-    const data = fmtData(st.data);           /* dd/mm/aaaa */
+    const data = fmtData(st.data);
     const flag = bandeira(st.a2);
-    const tipo = st.planeado ? 'PLANEADO' : (idx%2===0 ? 'ENTERED':'DEPARTED');
+    const tipo = st.planeado ? 'PLANEADO' : (Math.floor(r2*3)===0 ? 'ENTERED' : Math.floor(r2*3)===1 ? 'DEPARTED' : 'ADMITTED');
+    const serial = String(Math.abs((st.tripId||idx)*7+idx*13+Math.floor(r1*100)) % 9000 + 1000);
 
-    /* Número de série fictício */
-    const serial = String(Math.abs((st.tripId||idx)*7+idx*13) % 9000 + 1000);
-
-    /* Gerar SVG baseado na forma */
+    /* Dimensões base do SVG — todas as formas cabem em 110×80 */
     const W = 110, H = 80;
     let shapeEl = '';
     let layout  = '';
 
     if (shape === 'circle'){
-      const R = 44;
+      const R = 42;
       shapeEl = `
         <circle cx="55" cy="40" r="${R}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
-        <circle cx="55" cy="40" r="${R-6}" fill="none" stroke="${c.stroke}" stroke-width=".8" stroke-dasharray="3,2"/>`;
+        <circle cx="55" cy="40" r="${R-6}" fill="none" stroke="${c.stroke}" stroke-width=".7" stroke-dasharray="2.5,2"/>`;
       layout = `
-        <text x="55" y="20" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
-        <text x="55" y="32" text-anchor="middle" font-size="8.5" font-weight="900" letter-spacing="1" fill="${c.text}">${nome.slice(0,12)}</text>
-        ${nome.length>12?`<text x="55" y="41" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(12,20)}</text>`:''}
-        <text x="55" y="52" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>
-        <text x="55" y="63" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+        <text x="55" y="19" text-anchor="middle" font-size="5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="31" text-anchor="middle" font-size="8.5" font-weight="900" fill="${c.text}">${nome.slice(0,11)}</text>
+        ${nome.length>11?`<text x="55" y="40" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(11,20)}</text>`:''}
+        <text x="55" y="51" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>
+        <text x="55" y="61" text-anchor="middle" font-size="4.5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
     } else if (shape === 'oval'){
       shapeEl = `
-        <ellipse cx="55" cy="40" rx="52" ry="37" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
-        <ellipse cx="55" cy="40" rx="46" ry="31" fill="none" stroke="${c.stroke}" stroke-width=".8"/>`;
+        <ellipse cx="55" cy="40" rx="52" ry="36" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <ellipse cx="55" cy="40" rx="46" ry="30" fill="none" stroke="${c.stroke}" stroke-width=".7"/>`;
       layout = `
-        <text x="55" y="19" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
-        <text x="55" y="31" text-anchor="middle" font-size="9" font-weight="900" letter-spacing="1" fill="${c.text}">${nome.slice(0,13)}</text>
-        ${nome.length>13?`<text x="55" y="41" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(13,22)}</text>`:''}
+        <text x="55" y="18" text-anchor="middle" font-size="5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="30" text-anchor="middle" font-size="9" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>
+        ${nome.length>12?`<text x="55" y="40" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(12,22)}</text>`:''}
         <text x="55" y="52" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>
-        <text x="55" y="62" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+        <text x="55" y="62" text-anchor="middle" font-size="4.5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
     } else if (shape === 'rect'){
       shapeEl = `
-        <rect x="3" y="4" width="104" height="72" rx="2" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
-        <rect x="8" y="9" width="94" height="62" rx="1" fill="none" stroke="${c.stroke}" stroke-width=".8"/>`;
+        <rect x="3" y="5" width="104" height="70" rx="1" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <rect x="8" y="10" width="94" height="60" rx="0" fill="none" stroke="${c.stroke}" stroke-width=".7"/>`;
       layout = `
-        <text x="55" y="22" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
-        <line x1="15" y1="25" x2="95" y2="25" stroke="${c.stroke}" stroke-width=".6"/>
-        <text x="55" y="36" text-anchor="middle" font-size="9.5" font-weight="900" letter-spacing=".5" fill="${c.text}">${nome.slice(0,12)}</text>
-        ${nome.length>12?`<text x="55" y="46" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${nome.slice(12,22)}</text>`:''}
-        <line x1="15" y1="51" x2="95" y2="51" stroke="${c.stroke}" stroke-width=".6"/>
-        <text x="20" y="62" font-size="7" font-weight="700" fill="${c.text}">${data}</text>
-        <text x="90" y="62" text-anchor="end" font-size="5.5" letter-spacing="1" fill="${c.text}">${tipo}</text>`;
+        <text x="55" y="22" text-anchor="middle" font-size="5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <line x1="14" y1="25" x2="96" y2="25" stroke="${c.stroke}" stroke-width=".6"/>
+        <text x="55" y="37" text-anchor="middle" font-size="9.5" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>
+        ${nome.length>12?`<text x="55" y="47" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${nome.slice(12,22)}</text>`:''}
+        <line x1="14" y1="52" x2="96" y2="52" stroke="${c.stroke}" stroke-width=".6"/>
+        <text x="18" y="63" font-size="7" font-weight="700" fill="${c.text}">${data}</text>
+        <text x="92" y="63" text-anchor="end" font-size="5" letter-spacing="1" fill="${c.text}">${tipo}</text>`;
     } else if (shape === 'round-rect'){
       shapeEl = `
         <rect x="3" y="5" width="104" height="70" rx="12" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
-        <rect x="9" y="11" width="92" height="58" rx="8" fill="none" stroke="${c.stroke}" stroke-width=".8"/>`;
+        <rect x="9" y="11" width="92" height="58" rx="8" fill="none" stroke="${c.stroke}" stroke-width=".7"/>`;
       layout = `
-        <text x="55" y="23" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="23" text-anchor="middle" font-size="5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
         <text x="55" y="36" text-anchor="middle" font-size="9.5" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>
         ${nome.length>12?`<text x="55" y="46" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(12,22)}</text>`:''}
         <text x="55" y="57" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>
-        <text x="55" y="67" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+        <text x="55" y="67" text-anchor="middle" font-size="4.5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
     } else if (shape === 'diamond-rect'){
-      /* Rectângulo com cortes nos cantos estilo losango */
       const cut = 12;
-      const path = `M ${3+cut},5 L ${107-cut},5 L 107,${5+cut} L 107,${75-cut} L ${107-cut},75 L ${3+cut},75 L 3,${75-cut} L 3,${5+cut} Z`;
-      shapeEl = `
-        <path d="${path}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
-        <path d="M ${9+cut},11 L ${101-cut},11 L 101,${11+cut} L 101,${69-cut} L ${101-cut},69 L ${9+cut},69 L 9,${69-cut} L 9,${11+cut} Z" fill="none" stroke="${c.stroke}" stroke-width=".8"/>`;
+      const p1 = `M ${3+cut},5 L ${107-cut},5 L 107,${5+cut} L 107,${75-cut} L ${107-cut},75 L ${3+cut},75 L 3,${75-cut} L 3,${5+cut} Z`;
+      const p2 = `M ${9+cut},11 L ${101-cut},11 L 101,${11+cut} L 101,${69-cut} L ${101-cut},69 L ${9+cut},69 L 9,${69-cut} L 9,${11+cut} Z`;
+      shapeEl = `<path d="${p1}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <path d="${p2}" fill="none" stroke="${c.stroke}" stroke-width=".7"/>`;
       layout = `
-        <text x="55" y="24" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="24" text-anchor="middle" font-size="5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
         <text x="55" y="37" text-anchor="middle" font-size="9" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>
         ${nome.length>12?`<text x="55" y="47" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(12,22)}</text>`:''}
         <text x="55" y="58" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>
-        <text x="55" y="68" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+        <text x="55" y="68" text-anchor="middle" font-size="4.5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+    } else if (shape === 'triangle-rect'){
+      /* Rectângulo com pico triangular no topo */
+      shapeEl = `
+        <polygon points="55,4 103,20 103,75 7,75 7,20" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <polygon points="55,11 97,24 97,69 13,69 13,24" fill="none" stroke="${c.stroke}" stroke-width=".7"/>`;
+      layout = `
+        <text x="55" y="28" text-anchor="middle" font-size="5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="41" text-anchor="middle" font-size="9" font-weight="900" fill="${c.text}">${nome.slice(0,11)}</text>
+        ${nome.length>11?`<text x="55" y="51" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(11,20)}</text>`:''}
+        <text x="55" y="62" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>`;
     } else { /* wide-oval */
       shapeEl = `
-        <ellipse cx="55" cy="40" rx="52" ry="34" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
-        <ellipse cx="55" cy="40" rx="46" ry="28" fill="none" stroke="${c.stroke}" stroke-width=".8"/>
-        <line x1="9" y1="40" x2="101" y2="40" stroke="${c.stroke}" stroke-width=".5" stroke-dasharray="2,3"/>`;
+        <ellipse cx="55" cy="40" rx="52" ry="33" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <ellipse cx="55" cy="40" rx="46" ry="27" fill="none" stroke="${c.stroke}" stroke-width=".7"/>
+        <line x1="10" y1="40" x2="100" y2="40" stroke="${c.stroke}" stroke-width=".5" stroke-dasharray="2,3"/>`;
       layout = `
-        <text x="55" y="23" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
-        <text x="55" y="34" text-anchor="middle" font-size="9" font-weight="900" fill="${c.text}">${nome.slice(0,13)}</text>
-        ${nome.length>13?`<text x="55" y="44" text-anchor="middle" font-size="7" fill="${c.text}">${nome.slice(13,22)}</text>`:'<text x="55" y="44" text-anchor="middle" font-size="7.5" font-weight="700" fill="'+c.text+'">'+ data +'</text>'}
-        ${nome.length>13?`<text x="55" y="55" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>`:''}
-        <text x="55" y="62" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+        <text x="55" y="23" text-anchor="middle" font-size="5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="34" text-anchor="middle" font-size="9" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>
+        ${nome.length>12?`<text x="55" y="44" text-anchor="middle" font-size="7" fill="${c.text}">${nome.slice(12,22)}</text>`:''}
+        <text x="55" y="${nome.length>12?55:47}" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>
+        <text x="55" y="63" text-anchor="middle" font-size="4.5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
     }
 
-    /* Número de série no canto */
-    const serialEl = `<text x="5" y="${H-3}" font-size="4.5" fill="${c.text}" opacity=".5">${serial}</text>`;
-    /* Bandeira pequena */
-    const flagEl = `<text x="${W-6}" y="12" text-anchor="end" font-size="10">${flag}</text>`;
-    /* Efeito de tinta: noise filter */
-    const filterId = `ink${idx}`;
-    const filterEl = `<filter id="${filterId}" x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch" result="noise"/>
-      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2 2.5" in="noise" result="mask"/>
+    const serialEl = `<text x="5" y="${H-3}" font-size="4" fill="${c.text}" opacity=".45">${serial}</text>`;
+    const flagEl   = `<text x="${W-5}" y="12" text-anchor="end" font-size="10">${flag}</text>`;
+    const filterId = `ink${idx}x${st.tripId||0}`;
+    /* Filtro de tinta: irregular + ligeiramente desbotado */
+    const filterEl = `<filter id="${filterId}" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" seed="${seed}" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 2.8" in="noise" result="mask"/>
       <feComposite in="SourceGraphic" in2="mask" operator="in"/>
     </filter>`;
-
     const planeadoNote = st.planeado
-      ? `<text x="55" y="${H-3}" text-anchor="middle" font-size="4.5" fill="${c.text}" opacity=".6">✦ PLANEADO ✦</text>`
+      ? `<text x="55" y="${H-2}" text-anchor="middle" font-size="4" fill="${c.text}" opacity=".55">✦ PLANEADO ✦</text>`
       : '';
 
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
-      style="overflow:visible" filter="url(#${filterId})">
-      <defs>${filterEl}</defs>
-      ${shapeEl}
-      ${layout}
-      ${serialEl}
-      ${flagEl}
-      ${planeadoNote}
-    </svg>`;
+    return {
+      svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="visible" filter="url(#${filterId})">
+        <defs>${filterEl}</defs>
+        ${shapeEl}${layout}${serialEl}${flagEl}${planeadoNote}
+      </svg>`,
+      scale,
+      rot
+    };
   }
 
   function stampHtml(st, idx){
     if (!st) return `<div style="width:110px;height:80px;"></div>`;
-    const ROTS = ['-3deg','2.5deg','-1.5deg','3deg','-2deg','1.5deg','-2.5deg','1deg','3.5deg','-1deg'];
-    const rot  = ROTS[idx % ROTS.length];
+    const { svg, scale, rot } = stampSVG(st, idx);
     const planCls = st.planeado ? 'planeado' : '';
-    return `<div class="pp-stamp-wrap ${planCls}" style="--rot:${rot}"
+    /* Tamanho e rotação no próprio wrapper */
+    return `<div class="pp-stamp-wrap ${planCls}"
+      style="transform:rotate(${rot}deg) scale(${scale.toFixed(3)});
+             transform-origin:center;margin:${Math.round((1-scale)*20)}px auto;"
       onclick="fecharDiarioModal&&fecharDiarioModal(); showTab('diario'); setTimeout(()=>abrirDiarioModal(${st.tripId}),80)"
-      title="Ver viagem: ${esc(st.titulo||nomePT(st.a2))} (${fmtData(st.data)})">
-      ${stampSVG(st, idx)}
+      title="${esc(st.titulo||nomePT(st.a2))} · ${fmtData(st.data)}">
+      ${svg}
     </div>`;
   }
 
-
-  const leftPage = `
-    <div class="pp-page left">
-      <div class="pp-watermark">VISTOS</div>
-      <div class="pp-stamps-header">Vistos e Carimbos / Visas and Stamps</div>
-      <div class="pp-stamps-grid">
-        ${leftStamps.length ? leftStamps.map((st,i)=>stampHtml(st,i)).join('') : '<div style="grid-column:1/-1;text-align:center;color:#9a8a6a;font-size:.75rem;padding:30px 0">Ainda sem carimbos</div>'}
-      </div>
-      <span class="pp-page-num">${pageNum}</span>
-    </div>`;
-
-  const rightPage = `
-    <div class="pp-page right">
-      <div class="pp-watermark">VISTOS</div>
-      <div class="pp-stamps-header">Vistos e Carimbos / Visas and Stamps</div>
-      <div class="pp-stamps-grid">
-        ${rightStamps.length ? rightStamps.map((st,i)=>stampHtml(st,i+STAMPS_PER_PAGE)).join('') : ''}
-      </div>
-      <span class="pp-page-num">${pageNum+1}</span>
-    </div>`;
-
-  return leftPage + rightPage;
-}
-
-/* Total de páginas */
-function ppTotalPages(uid){
-  const hoje = new Date().toISOString().slice(0,10);
-  const userTrips = state.trips.filter(t=>(t.userIds||[t.userId]).includes(uid));
-  const totalStamps = userTrips.reduce((acc,t)=>{
-    return acc + (t.paises||[t.pais]).length;
-  }, 0);
-  const stampPages = Math.max(1, Math.ceil(totalStamps / 12));
-  return stampPages; /* 0=cover, 1..n=stamps */
-}
-
-/* Renderizar página actual */
-function ppRenderPage(){
-  const spread = document.getElementById('ppSpread');
-  const info   = document.getElementById('ppPageInfo');
-  if (!spread || !_ppUid) return;
-
-  const total = ppTotalPages(_ppUid);
-
-  if (_ppPage === 0){
-    spread.innerHTML = ppRenderCover(_ppUid);
-    /* Listener da foto */
-    const photoBtn = document.getElementById('ppPhotoBtn');
-    const photoInput = document.getElementById('ppPhotoInput');
-    if (photoBtn && photoInput){
-      photoBtn.onclick = () => photoInput.click();
-      photoInput.onchange = (e) => {
-        const file = e.target.files[0]; if(!file) return;
-        const r = new FileReader();
-        r.onload = ev => {
-          ppSave(_ppUid, {fotoB64: ev.target.result});
-          ppRenderPage();
-        };
-        r.readAsDataURL(file);
-      };
-    }
-    if(info) info.textContent = `Página 1-2 de ${(total+1)*2}`;
-  } else {
-    spread.innerHTML = ppRenderStampsPage(_ppUid, _ppPage - 1);
-    if(info) info.textContent = `Página ${_ppPage*2+1}-${_ppPage*2+2} de ${(total+1)*2}`;
-  }
-
-  document.getElementById('ppPrev').disabled = (_ppPage === 0);
-  document.getElementById('ppNext').disabled = (_ppPage >= total);
-}
-
-/* Renderizar selector de utilizadores */
-function ppRenderUserSelector(){
-  const cont = document.getElementById('ppUserSelector');
-  if (!cont) return;
-  cont.innerHTML = state.users.map(u => `
-    <button class="pp-user-btn ${u.id===_ppUid?'active':''}"
-      style="border-color:${u.id===_ppUid?u.cor:''}; color:${u.id===_ppUid?u.cor:''}"
-      onclick="ppSelectUser('${u.id}')">
-      ${esc(u.nome||'Utilizador')}
-    </button>`).join('');
-}
-
-window.ppSelectUser = (uid) => {
-  _ppUid = uid; _ppPage = 0;
-  ppRenderUserSelector();
-  ppRenderAlerts(uid);
-  ppRenderPage();
-};
-
-/* Navegação */
-document.getElementById('ppPrev')?.addEventListener('click', () => {
-  if (_ppPage > 0){ _ppPage--; ppRenderPage(); }
-});
-document.getElementById('ppNext')?.addEventListener('click', () => {
-  if (_ppPage < ppTotalPages(_ppUid)){ _ppPage++; ppRenderPage(); }
-});
-
-/* Inicializar quando a aba abre */
-const _showTabPassOld = window.showTab || showTab;
-window.showTab = function(tab){
-  _showTabPassOld(tab);
-  if (tab === 'passaporte'){
-    if (!_ppUid) _ppUid = state.editingUser;
-    ppRenderUserSelector();
-    ppRenderAlerts(_ppUid);
-    ppRenderPage();
-  }
-};
-
-/* ============ ARRANQUE ============ */
-refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
-renderUserToggle(); renderTUserSelector([state.editingUser]);
-
-/* Aviso de configuração inicial */
-if (state.users.length === 1 && !state.users[0].nome) {
-  setTimeout(() => {
-    const banner = document.createElement('div');
-    banner.id = 'setupBanner';
-    banner.innerHTML = `
-      <div style="background:var(--gold);color:#1d1607;padding:10px 18px;display:flex;
-        align-items:center;gap:12px;font-size:.88rem;font-weight:600;">
-        👋 Bem-vindo ao Atlas de Viagens!
-        <span style="font-weight:400">Começa por definir o teu nome na aba</span>
-        <button onclick="showTab('prefs');document.getElementById('setupBanner').remove()"
-          style="background:#1d1607;color:#fff;border:none;border-radius:5px;
-          padding:4px 12px;cursor:pointer;font-weight:700;font-family:inherit">
-          ⚙️ Preferências →
-        </button>
-        <button onclick="document.getElementById('setupBanner').remove()"
-          style="background:none;border:none;cursor:pointer;color:#1d1607;
-          font-size:1.1rem;margin-left:auto">✕</button>
-      </div>`;
-    const tabsEl = document.querySelector('.tabs') || document.querySelector('nav') || document.querySelector('.tab'); if(tabsEl) tabsEl.parentElement.insertBefore(banner, tabsEl);
-  }, 800);
-}
-</script>
-</body>
-</html>
