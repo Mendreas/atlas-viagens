@@ -1035,20 +1035,16 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
         <label>Título</label>
         <input type="text" id="tTitulo" placeholder="Ex.: Lua de mel na Toscânia">
       </div>
-      <div class="grid c2" style="margin-top:10px">
-        <div><label>Cidades visitadas</label><input type="text" id="tLocais" placeholder="Ex.: Florença, Siena, Pisa"></div>
-        <div><label>Locais de pernoita</label><input type="text" id="tPernoita" placeholder="Ex.: Hotel Roma, B&amp;B Florença"></div>
+      <div class="form-section" style="margin-top:10px">
+        <label class="sec-title">🏙️ Cidades visitadas</label>
+        <div id="tCidadesContainer"></div>
+        <button class="btn" id="btnAddCidade" type="button">+ Nova cidade</button>
       </div>
-      <div class="grid c2" style="margin-top:10px">
-        <div>
-          <label>Companhia aérea</label>
-          <input type="text" id="tAirline" placeholder="Ex.: TAP, Ryanair, Emirates…" list="tAirlineList" autocomplete="off">
-          <datalist id="tAirlineList"></datalist>
-        </div>
-        <div>
-          <label>Voo / Rota</label>
-          <input type="text" id="tRota" placeholder="Ex.: TP1234  ou  LIS-LHR">
-        </div>
+      <div class="form-section" style="margin-top:10px">
+        <label class="sec-title">✈️ Voos</label>
+        <div id="tVoosContainer"></div>
+        <button class="btn" id="btnAddVoo" type="button">+ Novo voo</button>
+        <datalist id="tAirlineList"></datalist>
       </div>
       <div style="margin-top:14px"><label>Notas / diário</label><textarea id="tNotas" placeholder="O que viste, comeste, sentiste…"></textarea></div>
 
@@ -1658,12 +1654,9 @@ if(document.getElementById('tPais')) document.getElementById('tPais').value = 'P
 let editId = null;
 /* btnSaveTrip e limparForm geridos pelo modal de formulário abaixo */
 function limparForm(){
-  ['tIni','tFim','tTitulo','tLocais','tNotas'].forEach(id=>{
+  ['tIni','tFim','tTitulo','tNotas'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.value='';
   });
-  const tAirline = document.getElementById('tAirline'); if(tAirline) tAirline.value='';
-  const tRota = document.getElementById('tRota'); if(tRota) tRota.value='';
-  const tPernoita = document.getElementById('tPernoita'); if(tPernoita) tPernoita.value='';
   _formPaises = []; renderPaisesChips();
   editId = null;
   const btnC = document.getElementById('btnCancelEdit'); if(btnC) btnC.style.display='none';
@@ -2751,6 +2744,8 @@ function desenharZonaExtraNoMapa(cont, a2, zona, r, W, H){
    Ao sair da entrada do diário, os ObjectURLs são revogados e a memória libertada. */
 let formImgs = [];   // [{name, objUrl, file}] temporário durante edição
 let formLinks = [];  // [{url, label}] temporário durante edição
+let formCidades = []; // [{nome, pernoita, dia}] temporário durante edição
+let formVoos = [];    // [{companhia, rota}] temporário durante edição
 /* Mapa id_viagem → [{name, objUrl}] para fotos carregadas nesta sessão */
 const sessFotos = {};
 
@@ -2844,15 +2839,48 @@ function renderFormLinks(){
     </div>`).join('');
 }
 
-/* Limpar form também limpa imagens e links */
+/* Cidades visitadas */
+document.getElementById('btnAddCidade').onclick = () => { formCidades.push({nome:'',pernoita:'',dia:''}); renderFormCidades(); };
+
+function renderFormCidades(){
+  const cont = document.getElementById('tCidadesContainer');
+  cont.innerHTML = formCidades.map((c, i) => `
+    <div class="link-row cidade-row">
+      <input type="text" placeholder="Cidade (ex.: Florença)" value="${esc(c.nome)}"
+        oninput="formCidades[${i}].nome=this.value">
+      <input type="text" placeholder="Local de pernoita (ex.: Hotel Roma)" value="${esc(c.pernoita)}"
+        oninput="formCidades[${i}].pernoita=this.value">
+      <input type="date" value="${c.dia||''}" style="flex:none;width:150px"
+        oninput="formCidades[${i}].dia=this.value">
+      <button class="btn danger" type="button" onclick="formCidades.splice(${i},1); renderFormCidades()">✕</button>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:.82rem;margin:4px 0">Ainda não adicionaste nenhuma cidade.</p>';
+}
+
+/* Voos */
+document.getElementById('btnAddVoo').onclick = () => { formVoos.push({companhia:'',rota:''}); renderFormVoos(); };
+
+function renderFormVoos(){
+  const cont = document.getElementById('tVoosContainer');
+  cont.innerHTML = formVoos.map((v, i) => `
+    <div class="link-row voo-row">
+      <input type="text" placeholder="Companhia (ex.: TAP)" value="${esc(v.companhia)}" list="tAirlineList" autocomplete="off"
+        oninput="formVoos[${i}].companhia=this.value">
+      <input type="text" placeholder="Voo / Rota (ex.: TP1234 ou LIS-LHR)" value="${esc(v.rota)}"
+        oninput="formVoos[${i}].rota=this.value">
+      <button class="btn danger" type="button" onclick="formVoos.splice(${i},1); renderFormVoos()">✕</button>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:.82rem;margin:4px 0">Ainda não adicionaste nenhum voo.</p>';
+}
+
+/* Limpar form também limpa imagens, links, cidades e voos */
 const _limparFormOld = limparForm;
 limparForm = function(){
   _limparFormOld();
   formImgs = []; formLinks = [];
+  formCidades = []; formVoos = [];
   _formPaises = [];
   renderPaisesChips();
   renderTUserSelector([state.editingUser]);
-  renderFormImgs(); renderFormLinks();
+  renderFormImgs(); renderFormLinks(); renderFormCidades(); renderFormVoos();
 };
 
 /* Guardar viagem: incluir imagens e links */
@@ -4765,19 +4793,24 @@ document.getElementById('btnSaveTrip').addEventListener('click', function(){
   if (!_formPaises.length){ toast('Adiciona pelo menos um país'); return; }
 
   const paisPrimario = _formPaises[0];
+  const cidadesValidas = formCidades.filter(c => c.nome.trim());
+  const voosValidos = formVoos.filter(v => v.companhia.trim() || v.rota.trim());
   const trip = {
     id: editId || Date.now(),
     pais: paisPrimario,
     paises: [..._formPaises],
     ini, fim,
     titulo: titulo || ('Viagem a ' + _formPaises.map(a=>nomePT(a)).join(', ')),
-    locais:   document.getElementById('tLocais')?.value.trim()   || '',
-    pernoita: document.getElementById('tPernoita')?.value.trim() || '',
+    cidades: cidadesValidas,
+    voos:    voosValidos,
+    /* Campos derivados — mantêm compatibilidade com cartões, carimbos, PDF, etc. */
+    locais:   cidadesValidas.map(c=>c.nome.trim()).filter(Boolean).join(', '),
+    pernoita: cidadesValidas.map(c=>c.pernoita.trim()).filter(Boolean).join(', '),
+    airline:  voosValidos[0]?.companhia.trim() || '',
+    rota:     voosValidos.map(v=>v.rota.trim()).filter(Boolean).join(', '),
     notas:    document.getElementById('tNotas')?.value.trim()    || '',
     imgNomes: formImgs.map(f=>f.name),
     links:    formLinks.filter(l=>l.url.trim()),
-    airline:  document.getElementById('tAirline')?.value.trim()  || '',
-    rota:     document.getElementById('tRota')?.value.trim()     || '',
     userIds:  getTUserSelected(),
   };
 
@@ -4830,11 +4863,14 @@ window.editarTrip = (id) => {
   if(document.getElementById('tIni'))      document.getElementById('tIni').value      = t.ini||'';
   if(document.getElementById('tFim'))      document.getElementById('tFim').value      = t.fim||'';
   if(document.getElementById('tTitulo'))   document.getElementById('tTitulo').value   = t.titulo||'';
-  if(document.getElementById('tLocais'))   document.getElementById('tLocais').value   = t.locais||'';
-  if(document.getElementById('tPernoita')) document.getElementById('tPernoita').value = t.pernoita||'';
   if(document.getElementById('tNotas'))    document.getElementById('tNotas').value    = t.notas||'';
-  if(document.getElementById('tAirline'))  document.getElementById('tAirline').value  = t.airline||'';
-  if(document.getElementById('tRota'))     document.getElementById('tRota').value     = t.rota||'';
+
+  /* Cidades e voos — usa os dados estruturados se existirem, senão migra os campos antigos (texto livre) para uma primeira linha */
+  formCidades = (t.cidades && t.cidades.length) ? t.cidades.map(c=>({...c}))
+    : (t.locais ? [{nome:t.locais, pernoita:t.pernoita||'', dia:''}] : []);
+  formVoos = (t.voos && t.voos.length) ? t.voos.map(v=>({...v}))
+    : ((t.airline || t.rota) ? [{companhia:t.airline||'', rota:t.rota||''}] : []);
+  renderFormCidades(); renderFormVoos();
 
   /* Preencher utilizadores */
   const tripUserIds = t.userIds || (t.userId ? [t.userId] : [state.editingUser]);
