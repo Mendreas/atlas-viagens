@@ -3678,7 +3678,8 @@ function getFiltroActivo(){
     cont:   document.getElementById('fCont')?.value   || '',
     anoMin: parseInt(document.getElementById('fAnoMin')?.value) || 0,
     anoMax: parseInt(document.getElementById('fAnoMax')?.value) || 9999,
-    texto:  (document.getElementById('fTexto')?.value || '').toLowerCase().trim()
+    texto:  (document.getElementById('fTexto')?.value || '').toLowerCase().trim(),
+    airline: document.getElementById('fAirline')?.value || ''
   };
 }
 
@@ -3706,7 +3707,7 @@ function filtrarTrips(trips){
 }
 
 /* Ligar os filtros ao renderTrips */
-['fUser','fPais','fCont','fAnoMin','fAnoMax','fTexto'].forEach(id => {
+['fUser','fPais','fCont','fAnoMin','fAnoMax','fTexto','fAirline'].forEach(id => {
   document.getElementById(id)?.addEventListener('input', ()=>renderTrips());
   document.getElementById(id)?.addEventListener('change', ()=>renderTrips());
 });
