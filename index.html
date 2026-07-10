@@ -111,6 +111,8 @@ textarea{resize:vertical; min-height:80px;}
 }
 .trip-actions{margin-top:10px; display:flex; gap:8px;}
 .trip-actions .btn{padding:4px 12px; font-size:.78rem;}
+.pin{transition:r .15s; cursor:pointer;}
+.pin:hover{r:7.5;}
 .empty{color:var(--muted); text-align:center; padding:30px; border:1px dashed var(--line); border-radius:var(--radius); margin-top:20px;}
 
 /* ---------- Países ---------- */
@@ -823,6 +825,11 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     <div class="prog-label" id="regProgLbl" style="margin-top:8px">—</div>
     <div id="regLista" class="chips"></div>
     <div style="margin-top:12px"><button class="btn danger" id="btnLimparReg">Limpar regiões deste país</button></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h2 class="sec" style="margin-top:0">📍 Cidades visitadas</h2>
+    <p class="reg-hint" id="regPinsInfo">—</p>
+    <div id="regPinsMapa"></div>
   </div>
   <div id="pUnesco"></div>
   <h2 class="sec">O que <span id="queVerLabel">ver</span></h2>
@@ -2293,6 +2300,133 @@ function desenharRegioes(a2, gj){
 
   renderChips(a2, gj);
   atualizarRegProg(a2);
+  desenharPinsCidades(a2);
+}
+
+/* ── Cidades visitadas com coordenadas conhecidas, para este país ── */
+function cidadesDoPais(a2){
+  const trips = state.trips.filter(t =>
+    (t.userIds||[t.userId]).includes(state.editingUser) &&
+    (t.paises||[t.pais]).includes(a2) && t.cidades && t.cidades.length);
+  const out = [];
+  trips.forEach(t => t.cidades.forEach(c => {
+    if (c.nome && c.nome.trim() && c.lat != null && c.lon != null){
+      out.push({nome: c.nome.trim(), lat: c.lat, lon: c.lon, tripId: t.id});
+    }
+  }));
+  return out;
+}
+
+/* ── Mapa de alfinetes por baixo do mapa de regiões ── */
+function desenharPinsCidades(a2){
+  const cont = document.getElementById('regPinsMapa');
+  const info = document.getElementById('regPinsInfo');
+  if (!cont) return;
+  const gj = REG_CACHE[a2];
+  if (!gj){ cont.innerHTML = ''; if(info) info.textContent = '—'; return; }
+
+  let cidades = cidadesDoPais(a2);
+  if (gj.features.length){
+    cidades = cidades.filter(c => {
+      try { return d3.geoContains({type:'FeatureCollection', features:gj.features}, [c.lon, c.lat]); }
+      catch(e){ return true; }
+    });
+  }
+
+  if (!cidades.length){
+    cont.innerHTML = '';
+    if (info) info.textContent = 'Ainda não há cidades geolocalizadas para este país. Adiciona cidades a uma viagem (aba Diário) — a localização é calculada automaticamente ao gravar (pode demorar uns segundos).';
+    return;
+  }
+  if (info) info.textContent = `${cidades.length} cidade${cidades.length!==1?'s':''} visitada${cidades.length!==1?'s':''} — passa o rato por cima do alfinete para ver o nome.`;
+
+  const W = 760, H = 420;
+  const proj = gj.features.length
+    ? d3.geoMercator().fitExtent([[8,8],[W-8,H-8]], gj)
+    : d3.geoMercator().fitExtent([[8,8],[W-8,H-8]],
+        {type:'FeatureCollection', features: cidades.map(c=>({type:'Feature',geometry:{type:'Point',coordinates:[c.lon,c.lat]}}))});
+  const path = d3.geoPath(proj);
+  cont.innerHTML = '';
+  const svg = d3.select(cont).append('svg').attr('viewBox', `0 0 ${W} ${H}`);
+
+  if (gj.features.length){
+    svg.selectAll('path.region-ctx').data(gj.features).join('path')
+      .attr('class','region-ctx').attr('d', path)
+      .attr('fill', 'var(--land)').attr('stroke', 'var(--panel)').attr('stroke-width', 0.6);
+  }
+
+  const tip = document.getElementById('tooltip');
+  svg.selectAll('circle.pin').data(cidades).join('circle')
+    .attr('class','pin')
+    .attr('cx', d => proj([d.lon,d.lat])[0])
+    .attr('cy', d => proj([d.lon,d.lat])[1])
+    .attr('r', 5.5)
+    .attr('fill', 'var(--coral)')
+    .attr('stroke', '#fff').attr('stroke-width', 1.5)
+    .on('mousemove', (ev,d) => {
+      tip.textContent = d.nome;
+      tip.style.left = ev.clientX+'px'; tip.style.top = ev.clientY+'px'; tip.style.opacity = 1;
+    })
+    .on('mouseleave', () => { tip.style.opacity = 0; })
+    .on('click', (ev,d) => {
+      ev.stopPropagation();
+      if (typeof fecharDiarioModal === 'function') fecharDiarioModal();
+      showTab('diario');
+      setTimeout(()=>abrirDiarioModal(d.tripId), 80);
+    });
+}
+
+/* ── Geocodificação de cidades (OpenStreetMap / Nominatim, gratuito) ──
+   Converte o nome de uma cidade em latitude/longitude, para poder desenhar
+   o alfinete no mapa. Feito em fila, uma pesquisa de cada vez com um
+   pequeno intervalo, para respeitar o serviço gratuito. */
+const _geocodeCache = {}; /* "cidade|codigos" → {lat,lon} | null */
+let _geocodeQueue = Promise.resolve();
+
+function geocodarCidade(nome, paises){
+  const codes = (paises||[]).filter(Boolean).map(a=>a.toLowerCase()).join(',');
+  const key = nome.trim().toLowerCase() + '|' + codes;
+  if (_geocodeCache[key] !== undefined) return Promise.resolve(_geocodeCache[key]);
+  const p = _geocodeQueue
+    .then(() => new Promise(res => setTimeout(res, 1100)))
+    .then(() => fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1'
+      + (codes ? '&countrycodes=' + encodeURIComponent(codes) : '')
+      + '&q=' + encodeURIComponent(nome)))
+    .then(r => r.json())
+    .then(res => {
+      const coord = (res && res[0]) ? {lat: parseFloat(res[0].lat), lon: parseFloat(res[0].lon)} : null;
+      _geocodeCache[key] = coord;
+      return coord;
+    })
+    .catch(() => { _geocodeCache[key] = null; return null; });
+  _geocodeQueue = p.catch(()=>{});
+  return p;
+}
+
+async function geocodarCidadesTrip(trip){
+  if (!trip || !trip.cidades || !trip.cidades.length) return;
+  let mudou = false;
+  for (const c of trip.cidades){
+    if (!c.nome || !c.nome.trim()) continue;
+    if (c.lat != null && c.lon != null) continue;
+    const coord = await geocodarCidade(c.nome, trip.paises || [trip.pais]);
+    if (coord){ c.lat = coord.lat; c.lon = coord.lon; mudou = true; }
+  }
+  if (mudou){
+    save();
+    const paisActual = selPais && selPais.value;
+    if (paisActual && (trip.paises||[trip.pais]).includes(paisActual) && document.getElementById('regPinsMapa')){
+      desenharPinsCidades(paisActual);
+    }
+  }
+}
+
+function geocodarTodasCidadesPendentes(){
+  state.trips.forEach(t => {
+    if (t.cidades && t.cidades.some(c => c.nome && c.nome.trim() && (c.lat==null || c.lon==null))){
+      geocodarCidadesTrip(t);
+    }
+  });
 }
 
 function renderChips(a2, gj){
@@ -4847,6 +4981,7 @@ document.getElementById('btnSaveTrip').addEventListener('click', function(){
   limparForm(); save(); renderTrips(); refreshStats();
   fecharFormModal();
   toast('Viagem guardada ✓');
+  geocodarCidadesTrip(trip); /* em segundo plano — não bloqueia */
 });
 
 /* Cancelar edição */
@@ -5430,6 +5565,7 @@ window.showTab = function(name){
 renderTrips();
 renderPais();
 refreshStats();
+geocodarTodasCidadesPendentes();
 </script>
 </body>
 </html>
