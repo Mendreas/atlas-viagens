@@ -5041,3 +5041,189 @@ function ppRenderStampsPage(uid, pageIdx){
     </div>`;
   }
 
+
+/* ── Página de rosto ── */
+function ppRenderCover(uid){
+  const d = ppGetData(uid);
+  const val = ppValidadeStatus(d.validade, null);
+  const valClass = val ? val.status : '';
+  const valMsg   = val ? val.msg : '—';
+  const nomeUser = state.users.find(u=>u.id===uid)?.nome || 'Utilizador';
+  const fotoHtml = d.fotoB64
+    ? `<img src="${d.fotoB64}" alt="foto">`
+    : `<span>👤</span>`;
+  const leftPage = `
+    <div class="pp-page left">
+      <div class="pp-watermark">PORTUGAL</div>
+      <div class="pp-cover-header">
+        <div class="pp-country-name">República Portuguesa</div>
+        <div class="pp-title">PASSAPORTE</div>
+        <div class="pp-subtitle">PASSPORT · PASSEPORT</div>
+      </div>
+      <hr class="pp-divider">
+      <div class="pp-coat">🇵🇹</div>
+      <hr class="pp-divider">
+      <div style="text-align:center;font-size:.62rem;color:#7a6a4a;letter-spacing:.08em;margin-top:8px">
+        ATLAS DE VIAGENS · PASSAPORTE DIGITAL
+      </div>
+      <span class="pp-page-num">1</span>
+    </div>`;
+  const rightPage = `
+    <div class="pp-page right">
+      <div class="pp-watermark">PT</div>
+      <div class="pp-photo-area">
+        <div class="pp-photo" id="ppPhotoBtn" title="Clica para adicionar foto">
+          ${fotoHtml}
+          <div class="pp-photo-hint">Alterar foto</div>
+          <input type="file" id="ppPhotoInput" accept="image/*" style="display:none">
+        </div>
+        <div class="pp-fields">
+          <div class="pp-field">
+            <label>Apelido / Surname</label>
+            <input type="text" id="ppApelido" value="${esc(d.apelido||nomeUser.split(' ').slice(-1)[0]||'')}" placeholder="SILVA" oninput="ppSave('${uid}',{apelido:this.value})">
+          </div>
+          <div class="pp-field">
+            <label>Nome(s) / Given names</label>
+            <input type="text" id="ppNome" value="${esc(d.nome||nomeUser.split(' ')[0]||'')}" placeholder="PAULO" oninput="ppSave('${uid}',{nome:this.value})">
+          </div>
+          <div class="pp-field">
+            <label>Nacionalidade / Nationality</label>
+            <input type="text" id="ppNac" value="${esc(d.nacionalidade||'PORTUGUESA')}" oninput="ppSave('${uid}',{nacionalidade:this.value})">
+          </div>
+          <div class="pp-field">
+            <label>Data de nascimento / Date of birth</label>
+            <input type="date" id="ppNasc" value="${d.nascimento||''}" oninput="ppSave('${uid}',{nascimento:this.value})">
+          </div>
+        </div>
+      </div>
+      <div class="pp-fields" style="margin-top:8px">
+        <div class="pp-field">
+          <label>N.º Passaporte / Passport No.</label>
+          <input type="text" id="ppNum" value="${esc(d.numero||'')}" placeholder="AA000000" oninput="ppSave('${uid}',{numero:this.value})">
+        </div>
+        <div class="pp-field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label>Emissão / Date of issue</label>
+            <input type="date" id="ppEmissao" value="${d.emissao||''}" oninput="ppSave('${uid}',{emissao:this.value})">
+          </div>
+          <div>
+            <label>Validade / Expiry date</label>
+            <input type="date" id="ppValidade" value="${d.validade||''}" oninput="ppSave('${uid}',{validade:this.value});ppRenderAlerts('${uid}')">
+          </div>
+        </div>
+      </div>
+      <div class="pp-validity ${valClass}" style="margin-top:12px">${valMsg}</div>
+      <span class="pp-page-num">2</span>
+    </div>`;
+  return leftPage + rightPage;
+}
+
+/* ── Página de carimbos ── */
+function ppRenderStampsPage(uid, pageIdx){
+  const STAMPS_PER_PAGE = 6;
+  const start = pageIdx * STAMPS_PER_PAGE * 2;
+  const hoje = new Date().toISOString().slice(0,10);
+  const userTrips = state.trips
+    .filter(t => (t.userIds||[t.userId]).includes(uid))
+    .sort((a,b) => (a.ini||'').localeCompare(b.ini||''));
+  const allStamps = [];
+  userTrips.forEach(t => {
+    const paises = t.paises || [t.pais];
+    paises.forEach(a2 => {
+      allStamps.push({a2, titulo:t.titulo||nomePT(a2), data:t.ini,
+        planeado:t.ini>hoje, tripId:t.id});
+    });
+  });
+  const leftStamps  = allStamps.slice(start, start + STAMPS_PER_PAGE);
+  const rightStamps = allStamps.slice(start + STAMPS_PER_PAGE, start + STAMPS_PER_PAGE*2);
+  const pageNum = (pageIdx+1)*2+1;
+  const leftPage = `
+    <div class="pp-page left">
+      <div class="pp-watermark">VISTOS</div>
+      <div class="pp-stamps-header">Vistos e Carimbos / Visas and Stamps</div>
+      <div class="pp-stamps-grid">
+        ${leftStamps.length ? leftStamps.map((st,i)=>stampHtml(st,i)).join('') : '<div style="grid-column:1/-1;text-align:center;color:#9a8a6a;font-size:.75rem;padding:30px 0">Ainda sem carimbos</div>'}
+      </div>
+      <span class="pp-page-num">${pageNum}</span>
+    </div>`;
+  const rightPage = `
+    <div class="pp-page right">
+      <div class="pp-watermark">VISTOS</div>
+      <div class="pp-stamps-header">Vistos e Carimbos / Visas and Stamps</div>
+      <div class="pp-stamps-grid">
+        ${rightStamps.map((st,i)=>stampHtml(st,i+STAMPS_PER_PAGE)).join('')}
+      </div>
+      <span class="pp-page-num">${pageNum+1}</span>
+    </div>`;
+  return leftPage + rightPage;
+}
+
+function ppTotalPages(uid){
+  const hoje = new Date().toISOString().slice(0,10);
+  const userTrips = state.trips.filter(t=>(t.userIds||[t.userId]).includes(uid));
+  const totalStamps = userTrips.reduce((acc,t)=>acc+(t.paises||[t.pais]).length,0);
+  return Math.max(1, Math.ceil(totalStamps/12));
+}
+
+function ppRenderPage(){
+  const spread = document.getElementById('ppSpread');
+  const info   = document.getElementById('ppPageInfo');
+  if (!spread || !_ppUid) return;
+  const total = ppTotalPages(_ppUid);
+  if (_ppPage === 0){
+    spread.innerHTML = ppRenderCover(_ppUid);
+    const photoBtn   = document.getElementById('ppPhotoBtn');
+    const photoInput = document.getElementById('ppPhotoInput');
+    if (photoBtn && photoInput){
+      photoBtn.onclick = () => photoInput.click();
+      photoInput.onchange = (e) => {
+        const file = e.target.files[0]; if(!file) return;
+        const r = new FileReader();
+        r.onload = ev => { ppSave(_ppUid,{fotoB64:ev.target.result}); ppRenderPage(); };
+        r.readAsDataURL(file);
+      };
+    }
+    if(info) info.textContent = `Página 1-2 de ${(total+1)*2}`;
+  } else {
+    spread.innerHTML = ppRenderStampsPage(_ppUid, _ppPage-1);
+    if(info) info.textContent = `Página ${_ppPage*2+1}-${_ppPage*2+2} de ${(total+1)*2}`;
+  }
+  const btnPrev = document.getElementById('ppPrev');
+  const btnNext = document.getElementById('ppNext');
+  if(btnPrev) btnPrev.disabled = (_ppPage===0);
+  if(btnNext) btnNext.disabled = (_ppPage>=total);
+}
+
+function ppRenderUserSelector(){
+  const cont = document.getElementById('ppUserSelector');
+  if(!cont) return;
+  cont.innerHTML = state.users.map(u=>`
+    <button class="pp-user-btn ${u.id===_ppUid?'active':''}"
+      style="${u.id===_ppUid?`border-color:${u.cor};color:${u.cor}`:''}"
+      onclick="ppSelectUser('${u.id}')">
+      ${esc(u.nome||'Utilizador')}
+    </button>`).join('');
+}
+
+window.ppSelectUser = (uid) => {
+  _ppUid=uid; _ppPage=0;
+  ppRenderUserSelector(); ppRenderAlerts(uid); ppRenderPage();
+};
+
+document.getElementById('ppPrev')?.addEventListener('click',()=>{
+  if(_ppPage>0){_ppPage--;ppRenderPage();}
+});
+document.getElementById('ppNext')?.addEventListener('click',()=>{
+  if(_ppPage<ppTotalPages(_ppUid)){_ppPage++;ppRenderPage();}
+});
+
+/* Override showTab para inicializar o passaporte */
+const _showTabPassOld = window.showTab || showTab;
+window.showTab = function(name){
+  _showTabPassOld(name);
+  if(name==='passaporte'){
+    if(!_ppUid) _ppUid = state.editingUser;
+    ppRenderUserSelector(); ppRenderAlerts(_ppUid); ppRenderPage();
+  }
+};
+
