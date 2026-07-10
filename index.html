@@ -83,28 +83,31 @@ textarea{resize:vertical; min-height:80px;}
 
 /* ---------- Diário ---------- */
 #tripList{margin-top:20px; display:grid; gap:12px;}
-.trip{background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:var(--radius); padding:14px 18px;}
+.trip{background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:var(--radius);
+  padding:14px 18px; display:flex; gap:16px; align-items:stretch;}
 .trip.futura{border-left-color:var(--teal);}
+.trip-body{flex:1 1 auto; min-width:0;}
 .trip h3{font-family:'Fraunces',serif; font-size:1.15rem;}
 .trip .meta{font-family:ui-monospace,Menlo,monospace; color:var(--muted); font-size:.78rem; margin:4px 0 8px;}
 .trip .flag{font-size:1.3rem; margin-right:6px;}
 .trip p{font-size:.9rem; white-space:pre-wrap;}
 .trip .locais{color:var(--gold); font-size:.85rem; margin-bottom:6px;}
-.trip-row{display:flex; gap:16px; align-items:flex-start; margin-top:2px;}
+.trip-row{display:flex; gap:20px; align-items:flex-start; margin-top:2px;}
 .trip-main{flex:1 1 auto; min-width:0;}
-.trip-side{flex:0 1 280px; min-width:0; display:flex; flex-direction:column; gap:5px; padding-top:3px;}
+.trip-side{flex:1 1 380px; min-width:0; max-width:440px; display:flex; flex-direction:column; gap:6px; padding-top:3px;}
 .trip-airline{display:flex; align-items:center; gap:6px; font-size:.82rem; color:var(--muted);}
 .trip-airline img{max-height:22px; max-width:96px; object-fit:contain;}
 .trip-rota{font-family:ui-monospace,Menlo,monospace; font-size:.74rem; color:var(--muted);}
 .trip-notas-preview{font-size:.85rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
-.trip-thumb{flex:0 0 64px; width:64px; height:64px; border-radius:8px; overflow:hidden;
-  background:var(--panel2); cursor:pointer;}
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical;}
+.trip-thumb{flex:0 0 130px; width:130px; border-radius:10px; overflow:hidden;
+  background:var(--panel2); cursor:pointer; align-self:stretch;}
 .trip-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
 @media (max-width:720px){
+  .trip{flex-direction:column;}
   .trip-row{flex-direction:column;}
-  .trip-side{flex-basis:auto; width:100%;}
-  .trip-thumb{align-self:flex-start;}
+  .trip-side{flex-basis:auto; width:100%; max-width:none;}
+  .trip-thumb{align-self:stretch; width:auto; height:160px;}
 }
 .trip-actions{margin-top:10px; display:flex; gap:8px;}
 .trip-actions .btn{padding:4px 12px; font-size:.78rem;}
@@ -1684,14 +1687,14 @@ function renderTrips(){
     return;
   }
   list.innerHTML = trips.map(t=>{
-    const airlineObj = t.airline ? AIRLINES_DB.find(a => a.nome === t.airline || a.iata === t.airline) : null;
-    const airlineLogo = airlineObj ? AIRLINE_LOGO_DATA[airlineObj.iata] : null;
+    const voosParaMostrar = (t.voos && t.voos.length) ? t.voos : (t.airline ? [{companhia:t.airline, rota:t.rota}] : []);
     const temFoto = t.imgNomes && t.imgNomes.length;
     return `
     <div class="trip ${t.ini > hoje ? 'futura' : ''}" onclick="abrirDiarioModal(${t.id})">
-      <div class="trip-row">
-        <div class="trip-main">
-          <h3><span class="flag">${bandeiraImgHtml(t.pais, 22)}</span>${esc(t.titulo)}${(()=>{
+      <div class="trip-body">
+        <div class="trip-row">
+          <div class="trip-main">
+            <h3><span class="flag">${bandeiraImgHtml(t.pais, 22)}</span>${esc(t.titulo)}${(()=>{
   const ids = t.userIds || (t.userId ? [t.userId] : []);
   if (!ids.length || state.users.length<=1) return '';
   return ids.map(uid=>{
@@ -1699,21 +1702,27 @@ function renderTrips(){
     return u?`<span style="font-size:.7rem;background:${u.cor};color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px;font-family:ui-monospace,monospace;vertical-align:middle">${esc(u.nome)}</span>`:'';
   }).join('');
 })()}</h3>
-          <div class="meta">${(t.paises||[t.pais]).map(a=>bandeiraImgHtml(a,16)+' '+nomePT(a)).join(' · ')} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}</div>
-          ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
-          ${t.pernoita ? `<div class="locais" style="color:var(--teal)">🛏 ${esc(t.pernoita)}</div>` : ''}
+            <div class="meta">${(t.paises||[t.pais]).map(a=>bandeiraImgHtml(a,16)+' '+nomePT(a)).join(' · ')} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}</div>
+            ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
+            ${t.pernoita ? `<div class="locais" style="color:var(--teal)">🛏 ${esc(t.pernoita)}</div>` : ''}
+          </div>
+          <div class="trip-side">
+            ${voosParaMostrar.map(v => {
+              const obj = v.companhia ? AIRLINES_DB.find(a => a.nome === v.companhia || a.iata === v.companhia) : null;
+              const logo = obj ? AIRLINE_LOGO_DATA[obj.iata] : null;
+              if (!v.companhia && !v.rota) return '';
+              return `<div class="trip-airline">${logo?`<img src="${logo}" alt="${esc(v.companhia)}">`:(v.companhia?'✈️ '+esc(v.companhia):'✈️')}${v.rota?`<span class="trip-rota"> · ${esc(v.rota)}</span>`:''}</div>`;
+            }).join('')}
+            ${t.notas ? `<div class="trip-notas-preview">${esc(t.notas)}</div>` : ''}
+          </div>
         </div>
-        <div class="trip-side">
-          ${t.airline ? `<div class="trip-airline">${airlineLogo?`<img src="${airlineLogo}" alt="${esc(t.airline)}">`:'✈️ '+esc(t.airline)}${t.rota?`<span class="trip-rota"> · ${esc(t.rota)}</span>`:''}</div>` : ''}
-          ${t.notas ? `<div class="trip-notas-preview">${esc(t.notas)}</div>` : ''}
+        ${t.links && t.links.length ? `<div class="trip-links">${t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label||l.url)}</a>`).join('')}</div>` : ''}
+        <div class="trip-actions" onclick="event.stopPropagation()">
+          <button class="btn" onclick="document.getElementById('diarioModal').classList.remove('open'); editarTrip(${t.id})">Editar</button>
+          <button class="btn danger" onclick="apagarTrip(${t.id})">Apagar</button>
         </div>
-        ${temFoto ? `<div class="trip-thumb" id="thumb-${t.id}" onclick="event.stopPropagation()"></div>` : ''}
       </div>
-      ${t.links && t.links.length ? `<div class="trip-links">${t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label||l.url)}</a>`).join('')}</div>` : ''}
-      <div class="trip-actions" onclick="event.stopPropagation()">
-        <button class="btn" onclick="document.getElementById('diarioModal').classList.remove('open'); editarTrip(${t.id})">Editar</button>
-        <button class="btn danger" onclick="apagarTrip(${t.id})">Apagar</button>
-      </div>
+      ${temFoto ? `<div class="trip-thumb" id="thumb-${t.id}" onclick="event.stopPropagation()"></div>` : ''}
     </div>`;
   }).join('');
   carregarThumbsTrips(trips);
