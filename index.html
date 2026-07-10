@@ -2595,8 +2595,11 @@ function desenharMapaContinente(cid){
 
   cont.innerHTML = '';
   const svg = d3.select(cont).append('svg').attr('viewBox', `0 0 ${W} ${H}`);
+  const gZoom = svg.append('g');
+  const zoomBehCont = d3.zoom().scaleExtent([1,10]).on('zoom', ev => gZoom.attr('transform', ev.transform));
+  svg.call(zoomBehCont);
 
-  svg.selectAll('path.cont-country').data(paisesFeatures).join('path')
+  gZoom.selectAll('path.cont-country').data(paisesFeatures).join('path')
     .attr('class','cont-country').attr('d', path)
     .attr('fill', d => {
       const a2 = N2A[String(+d.id)];
@@ -2609,7 +2612,7 @@ function desenharMapaContinente(cid){
     .append('title').text(d => { const a2=N2A[String(+d.id)]; return a2 ? nomePT(a2) : ''; });
 
   const tip = document.getElementById('tooltip');
-  svg.selectAll('circle.pin').data(cidades).join('circle')
+  gZoom.selectAll('circle.pin').data(cidades).join('circle')
     .attr('class','pin')
     .attr('cx', d => proj([d.lon,d.lat])[0])
     .attr('cy', d => proj([d.lon,d.lat])[1])
