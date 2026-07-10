@@ -293,6 +293,16 @@ h2.sec span{color:var(--gold);}
 .pp-stamps-header{font-size:.6rem;font-weight:700;letter-spacing:.15em;
   text-transform:uppercase;color:#7a6a4a;margin-bottom:14px;text-align:center;}
 .pp-stamps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:center;justify-items:center;padding:4px;}
+/* ── Carimbos SVG ── */
+.pp-stamps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+  align-items:center;justify-items:center;padding:6px;}
+.pp-stamp-wrap{
+  cursor:pointer;transform:rotate(var(--rot,0deg));
+  transition:transform .18s,filter .18s;filter:drop-shadow(0 1px 2px rgba(0,0,0,.1));
+  display:flex;align-items:center;justify-content:center;}
+.pp-stamp-wrap:hover{transform:rotate(0deg) scale(1.08);filter:drop-shadow(0 3px 8px rgba(0,0,0,.25));}
+.pp-stamp-wrap:active{transform:scale(.96);}
+.pp-stamp-wrap.planeado{opacity:.7;}
 /* ── Carimbos ── */
 .pp-stamp{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -4857,28 +4867,151 @@ function ppRenderStampsPage(uid, pageIdx){
   const rightStamps = allStamps.slice(start + STAMPS_PER_PAGE, start + STAMPS_PER_PAGE * 2);
   const pageNum = (pageIdx + 1) * 2 + 1;
 
-  function stampHtml(st, idx){
-    if (!st) return `<div style="height:82px;width:90px;"></div>`;
-    const SHAPES = ['circle','oval','rect','hex','oct','oval','rect','circle','hex'];
-    const ROTS   = ['-3deg','2deg','-1.5deg','3.5deg','-2.5deg','1deg','-1deg','2.5deg','-2deg'];
-    const shape  = SHAPES[idx % SHAPES.length];
-    const rot    = ROTS[idx % ROTS.length];
-    const cls    = st.planeado ? 'planeado' : (idx%3===0 ? 'entrada' : idx%3===1 ? 'saida' : 'entrada');
-    const tipo   = st.planeado ? 'PLANEADO' : (idx%3===0 ? 'ENTRADA' : 'SAÍDA');
-    /* Nome do país: abreviar se > 9 chars para shapes pequenas */
+  /* ── Gerar carimbo SVG realista ── */
+  function stampSVG(st, idx){
+    /* Paleta de cores "tinta" — desbotadas como carimbos reais */
+    const PALETTES = [
+      {stroke:'#1a3a6b',fill:'rgba(26,58,107,.08)',text:'#1a3a6b'},  /* azul escuro */
+      {stroke:'#6b1a1a',fill:'rgba(107,26,26,.08)',text:'#6b1a1a'},  /* vermelho escuro */
+      {stroke:'#1a5a2a',fill:'rgba(26,90,42,.08)', text:'#1a5a2a'},  /* verde escuro */
+      {stroke:'#4a1a6b',fill:'rgba(74,26,107,.08)',text:'#4a1a6b'},  /* roxo */
+      {stroke:'#6b4a1a',fill:'rgba(107,74,26,.08)',text:'#6b4a1a'},  /* castanho */
+      {stroke:'#1a5a6b',fill:'rgba(26,90,107,.08)',text:'#1a5a6b'},  /* teal escuro */
+    ];
+    const pal = PALETTES[idx % PALETTES.length];
+    const plColor = {stroke:'#2a6b1a',fill:'rgba(42,107,26,.08)',text:'#2a6b1a'};
+    const c = st.planeado ? plColor : pal;
+
+    /* Formas que rodam */
+    const SHAPES = ['oval','rect','round-rect','circle','diamond-rect','wide-oval'];
+    const shape  = st.planeado ? 'round-rect' : SHAPES[idx % SHAPES.length];
+
+    /* Aeroporto fictício mas plausível */
+    const AIRPORTS = ['INT\'L AIRPORT','IMMIGRATION','BORDER CONTROL',
+                      'ARRIVAL','CUSTOMS','DEPARTURE','AIRPORT'];
+    const airport = AIRPORTS[idx % AIRPORTS.length];
+
     const nome = nomePT(st.a2).toUpperCase();
-    const nomeDisplay = nome.length > 11 ? nome.slice(0,9)+'.' : nome;
-    /* Linha decorativa separadora */
-    const linha = `<span class="ps-line"></span>`;
-    return `<div class="pp-stamp shape-${shape} ${cls}" style="--rot:${rot}"
-      onclick="abrirDiarioModal(${st.tripId})" title="Ver viagem: ${esc(st.titulo||nomePT(st.a2))}">
-      <span class="ps-flag">${bandeira(st.a2)}</span>
-      ${linha}
-      <span class="ps-country">${nomeDisplay}</span>
-      <span class="ps-date">${fmtData(st.data)}</span>
-      <span class="ps-type">${tipo}</span>
+    const data = fmtData(st.data);           /* dd/mm/aaaa */
+    const flag = bandeira(st.a2);
+    const tipo = st.planeado ? 'PLANEADO' : (idx%2===0 ? 'ENTERED':'DEPARTED');
+
+    /* Número de série fictício */
+    const serial = String(Math.abs((st.tripId||idx)*7+idx*13) % 9000 + 1000);
+
+    /* Gerar SVG baseado na forma */
+    const W = 110, H = 80;
+    let shapeEl = '';
+    let layout  = '';
+
+    if (shape === 'circle'){
+      const R = 44;
+      shapeEl = `
+        <circle cx="55" cy="40" r="${R}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <circle cx="55" cy="40" r="${R-6}" fill="none" stroke="${c.stroke}" stroke-width=".8" stroke-dasharray="3,2"/>`;
+      layout = `
+        <text x="55" y="20" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="32" text-anchor="middle" font-size="8.5" font-weight="900" letter-spacing="1" fill="${c.text}">${nome.slice(0,12)}</text>
+        ${nome.length>12?`<text x="55" y="41" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(12,20)}</text>`:''}
+        <text x="55" y="52" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>
+        <text x="55" y="63" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+    } else if (shape === 'oval'){
+      shapeEl = `
+        <ellipse cx="55" cy="40" rx="52" ry="37" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <ellipse cx="55" cy="40" rx="46" ry="31" fill="none" stroke="${c.stroke}" stroke-width=".8"/>`;
+      layout = `
+        <text x="55" y="19" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="31" text-anchor="middle" font-size="9" font-weight="900" letter-spacing="1" fill="${c.text}">${nome.slice(0,13)}</text>
+        ${nome.length>13?`<text x="55" y="41" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(13,22)}</text>`:''}
+        <text x="55" y="52" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>
+        <text x="55" y="62" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+    } else if (shape === 'rect'){
+      shapeEl = `
+        <rect x="3" y="4" width="104" height="72" rx="2" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <rect x="8" y="9" width="94" height="62" rx="1" fill="none" stroke="${c.stroke}" stroke-width=".8"/>`;
+      layout = `
+        <text x="55" y="22" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <line x1="15" y1="25" x2="95" y2="25" stroke="${c.stroke}" stroke-width=".6"/>
+        <text x="55" y="36" text-anchor="middle" font-size="9.5" font-weight="900" letter-spacing=".5" fill="${c.text}">${nome.slice(0,12)}</text>
+        ${nome.length>12?`<text x="55" y="46" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${nome.slice(12,22)}</text>`:''}
+        <line x1="15" y1="51" x2="95" y2="51" stroke="${c.stroke}" stroke-width=".6"/>
+        <text x="20" y="62" font-size="7" font-weight="700" fill="${c.text}">${data}</text>
+        <text x="90" y="62" text-anchor="end" font-size="5.5" letter-spacing="1" fill="${c.text}">${tipo}</text>`;
+    } else if (shape === 'round-rect'){
+      shapeEl = `
+        <rect x="3" y="5" width="104" height="70" rx="12" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <rect x="9" y="11" width="92" height="58" rx="8" fill="none" stroke="${c.stroke}" stroke-width=".8"/>`;
+      layout = `
+        <text x="55" y="23" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="36" text-anchor="middle" font-size="9.5" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>
+        ${nome.length>12?`<text x="55" y="46" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(12,22)}</text>`:''}
+        <text x="55" y="57" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>
+        <text x="55" y="67" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+    } else if (shape === 'diamond-rect'){
+      /* Rectângulo com cortes nos cantos estilo losango */
+      const cut = 12;
+      const path = `M ${3+cut},5 L ${107-cut},5 L 107,${5+cut} L 107,${75-cut} L ${107-cut},75 L ${3+cut},75 L 3,${75-cut} L 3,${5+cut} Z`;
+      shapeEl = `
+        <path d="${path}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <path d="M ${9+cut},11 L ${101-cut},11 L 101,${11+cut} L 101,${69-cut} L ${101-cut},69 L ${9+cut},69 L 9,${69-cut} L 9,${11+cut} Z" fill="none" stroke="${c.stroke}" stroke-width=".8"/>`;
+      layout = `
+        <text x="55" y="24" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="37" text-anchor="middle" font-size="9" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>
+        ${nome.length>12?`<text x="55" y="47" text-anchor="middle" font-size="7" font-weight="700" fill="${c.text}">${nome.slice(12,22)}</text>`:''}
+        <text x="55" y="58" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>
+        <text x="55" y="68" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+    } else { /* wide-oval */
+      shapeEl = `
+        <ellipse cx="55" cy="40" rx="52" ry="34" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2.5"/>
+        <ellipse cx="55" cy="40" rx="46" ry="28" fill="none" stroke="${c.stroke}" stroke-width=".8"/>
+        <line x1="9" y1="40" x2="101" y2="40" stroke="${c.stroke}" stroke-width=".5" stroke-dasharray="2,3"/>`;
+      layout = `
+        <text x="55" y="23" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}">${airport}</text>
+        <text x="55" y="34" text-anchor="middle" font-size="9" font-weight="900" fill="${c.text}">${nome.slice(0,13)}</text>
+        ${nome.length>13?`<text x="55" y="44" text-anchor="middle" font-size="7" fill="${c.text}">${nome.slice(13,22)}</text>`:'<text x="55" y="44" text-anchor="middle" font-size="7.5" font-weight="700" fill="'+c.text+'">'+ data +'</text>'}
+        ${nome.length>13?`<text x="55" y="55" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text>`:''}
+        <text x="55" y="62" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}">${tipo}</text>`;
+    }
+
+    /* Número de série no canto */
+    const serialEl = `<text x="5" y="${H-3}" font-size="4.5" fill="${c.text}" opacity=".5">${serial}</text>`;
+    /* Bandeira pequena */
+    const flagEl = `<text x="${W-6}" y="12" text-anchor="end" font-size="10">${flag}</text>`;
+    /* Efeito de tinta: noise filter */
+    const filterId = `ink${idx}`;
+    const filterEl = `<filter id="${filterId}" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2 2.5" in="noise" result="mask"/>
+      <feComposite in="SourceGraphic" in2="mask" operator="in"/>
+    </filter>`;
+
+    const planeadoNote = st.planeado
+      ? `<text x="55" y="${H-3}" text-anchor="middle" font-size="4.5" fill="${c.text}" opacity=".6">✦ PLANEADO ✦</text>`
+      : '';
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
+      style="overflow:visible" filter="url(#${filterId})">
+      <defs>${filterEl}</defs>
+      ${shapeEl}
+      ${layout}
+      ${serialEl}
+      ${flagEl}
+      ${planeadoNote}
+    </svg>`;
+  }
+
+  function stampHtml(st, idx){
+    if (!st) return `<div style="width:110px;height:80px;"></div>`;
+    const ROTS = ['-3deg','2.5deg','-1.5deg','3deg','-2deg','1.5deg','-2.5deg','1deg','3.5deg','-1deg'];
+    const rot  = ROTS[idx % ROTS.length];
+    const planCls = st.planeado ? 'planeado' : '';
+    return `<div class="pp-stamp-wrap ${planCls}" style="--rot:${rot}"
+      onclick="fecharDiarioModal&&fecharDiarioModal(); showTab('diario'); setTimeout(()=>abrirDiarioModal(${st.tripId}),80)"
+      title="Ver viagem: ${esc(st.titulo||nomePT(st.a2))} (${fmtData(st.data)})">
+      ${stampSVG(st, idx)}
     </div>`;
   }
+
 
   const leftPage = `
     <div class="pp-page left">
