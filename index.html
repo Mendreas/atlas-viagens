@@ -1188,15 +1188,13 @@ const dn = new Intl.DisplayNames(['pt'], {type:'region'});
 const TOTAL_PAISES = 195; // países reconhecidos pela ONU (referência para %)
 
 let state = {
-  users: [{id:'u1', nome:'Utilizador 1', cor:'#d9a441'},
-          {id:'u2', nome:'Utilizador 2', cor:'#45b0a4'}],
+  users: [{id:'u1', nome:'', cor:'#d9a441'}],
   byUser: {
-    u1: {countries:{}, regioes:{}, seen:{}, unescoSeen:{}},
-    u2: {countries:{}, regioes:{}, seen:{}, unescoSeen:{}}
+    u1: {countries:{}, regioes:{}, seen:{}, unescoSeen:{}}
   },
   trips: [],
-  activeUsers: ['u1','u2'],   /* users visíveis no mapa */
-  editingUser: 'u1'           /* user activo para editar */
+  activeUsers: ['u1'],
+  editingUser: 'u1'
 };
 /* Atalhos dinâmicos — sempre apontam para o user em edição */
 function udOf(uid){
@@ -1423,7 +1421,7 @@ function renderTrips(){
       ${t.imgNomes && t.imgNomes.length ? `<div class="trip-gallery" id="gal-${t.id}"></div>` : ''}
       ${t.links && t.links.length ? `<div class="trip-links">${t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label||l.url)}</a>`).join('')}</div>` : ''}
       <div class="trip-actions" onclick="event.stopPropagation()">
-        <button class="btn" onclick="editarTrip(${t.id})">Editar</button>
+        <button class="btn" onclick="document.getElementById('diarioModal').classList.remove('open'); editarTrip(${t.id})">Editar</button>
         <button class="btn danger" onclick="apagarTrip(${t.id})">Apagar</button>
       </div>
     </div>`).join('');
@@ -2830,10 +2828,9 @@ document.getElementById('diarioModal').addEventListener('click', ev => {
 });
 
 document.getElementById('dmEditar').onclick = () => {
+  const idToEdit = _dmTripId;
   fecharDiarioModal();
-  editarTrip(_dmTripId);
-  showTab('diario');
-  window.scrollTo({top:0, behavior:'smooth'});
+  setTimeout(() => { showTab('diario'); editarTrip(idToEdit); }, 100);
 };
 document.getElementById('dmApagar').onclick = () => {
   if (!confirm('Apagar esta viagem do diário?')) return;
@@ -4421,41 +4418,39 @@ const _editarTripModalOld = window.editarTrip;
 window.editarTrip = (id) => {
   const t = state.trips.find(x=>x.id===id); if(!t) return;
 
-  /* Fechar o modal do diário se estiver aberto */
+  /* Fechar modal de detalhe se aberto */
   document.getElementById('diarioModal')?.classList.remove('open');
 
   editId = id;
-  document.getElementById('tPais').value = t.pais;
-  document.getElementById('tIni').value  = t.ini||'';
-  document.getElementById('tFim').value  = t.fim||'';
-  document.getElementById('tTitulo').value = t.titulo;
-  document.getElementById('tLocais').value = t.locais||'';
-  document.getElementById('tNotas').value  = t.notas||'';
-  if(document.getElementById('tAirline')) document.getElementById('tAirline').value = t.airline||'';
-  if(document.getElementById('tRota'))   document.getElementById('tRota').value   = t.rota||'';
-
-  formLinks = t.links ? [...t.links] : [];
-  formImgs  = [];
-  renderFormImgs(); renderFormLinks();
-  /* Pré-preencher países */
+  /* Preencher países */
   _formPaises = t.paises || (t.pais ? [t.pais] : []);
-  renderPaisesChips();
-  /* Pré-preencher pernoita */
-  if(document.getElementById('tPernoita')) document.getElementById('tPernoita').value = t.pernoita||'';
 
+  /* Preencher campos */
+  if(document.getElementById('tIni'))      document.getElementById('tIni').value      = t.ini||'';
+  if(document.getElementById('tFim'))      document.getElementById('tFim').value      = t.fim||'';
+  if(document.getElementById('tTitulo'))   document.getElementById('tTitulo').value   = t.titulo||'';
+  if(document.getElementById('tLocais'))   document.getElementById('tLocais').value   = t.locais||'';
+  if(document.getElementById('tPernoita')) document.getElementById('tPernoita').value = t.pernoita||'';
+  if(document.getElementById('tNotas'))    document.getElementById('tNotas').value    = t.notas||'';
+  if(document.getElementById('tAirline'))  document.getElementById('tAirline').value  = t.airline||'';
+  if(document.getElementById('tRota'))     document.getElementById('tRota').value     = t.rota||'';
+
+  /* Preencher utilizadores */
   const tripUserIds = t.userIds || (t.userId ? [t.userId] : [state.editingUser]);
   renderTUserSelector(tripUserIds);
 
+  /* Carregar fotos existentes */
+  formLinks = t.links ? [...t.links] : [];
+  formImgs = [];
+  renderFormImgs(); renderFormLinks();
   if(t.imgNomes && t.imgNomes.length){
-    document.getElementById('tImgsPreview').innerHTML =
-      `<p style="color:var(--muted);font-size:.8rem">A carregar fotos existentes…</p>`;
     getFotos(t.id, t.imgNomes.length).then(fotos => {
       formImgs = fotos.map((url,i) => ({name: t.imgNomes[i]||'foto.jpg', dataUrl: url}));
       renderFormImgs();
     });
   }
 
-  document.getElementById('btnCancelEdit').style.display='inline-flex';
+  /* Abrir modal de edição */
   abrirFormModal('Editar <span style="color:var(--gold)">viagem</span>');
 };
 
@@ -4516,6 +4511,29 @@ window.removerPaisForm = (a2) => {
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
 renderUserToggle(); renderTUserSelector([state.editingUser]);
+
+/* Aviso de configuração inicial */
+if (state.users.length === 1 && !state.users[0].nome) {
+  setTimeout(() => {
+    const banner = document.createElement('div');
+    banner.id = 'setupBanner';
+    banner.innerHTML = `
+      <div style="background:var(--gold);color:#1d1607;padding:10px 18px;display:flex;
+        align-items:center;gap:12px;font-size:.88rem;font-weight:600;">
+        👋 Bem-vindo ao Atlas de Viagens!
+        <span style="font-weight:400">Começa por definir o teu nome na aba</span>
+        <button onclick="showTab('prefs');document.getElementById('setupBanner').remove()"
+          style="background:#1d1607;color:#fff;border:none;border-radius:5px;
+          padding:4px 12px;cursor:pointer;font-weight:700;font-family:inherit">
+          ⚙️ Preferências →
+        </button>
+        <button onclick="document.getElementById('setupBanner').remove()"
+          style="background:none;border:none;cursor:pointer;color:#1d1607;
+          font-size:1.1rem;margin-left:auto">✕</button>
+      </div>`;
+    const tabsEl = document.querySelector('.tabs') || document.querySelector('nav') || document.querySelector('.tab'); if(tabsEl) tabsEl.parentElement.insertBefore(banner, tabsEl);
+  }, 800);
+}
 </script>
 </body>
 </html>
