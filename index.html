@@ -4937,7 +4937,8 @@ function seededRand(seed){
   return ((s2 >>> 0) % 1000) / 1000;
 }
 
-function stampSVG(st, idx){
+function stampSVG(st, idx, scale){
+  scale = scale || 1;
   const seed = (st.tripId||1)*31 + idx*17;
   const r1=seededRand(seed), r2=seededRand(seed+7), r3=seededRand(seed+13),
         r4=seededRand(seed+19), r5=seededRand(seed+23), r6=seededRand(seed+29);
@@ -5053,7 +5054,7 @@ function stampSVG(st, idx){
   </filter>`;
 
   return {
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(W*scale)}" height="${Math.round(H*scale)}" viewBox="0 0 ${W} ${H}"
       font-family="Arial,Helvetica,sans-serif" filter="url(#${filterId})">
       <defs>${filterEl}</defs>
       ${shapeEl}${contentEl}${extras}
@@ -5062,9 +5063,10 @@ function stampSVG(st, idx){
   };
 }
 
-function stampHtml(st, idx){
-  if (!st) return `<div style="width:180px;height:110px;"></div>`;
-  const { svg, rot } = stampSVG(st, idx);
+function stampHtml(st, idx, scale){
+  scale = scale || 1;
+  if (!st) return `<div style="width:${Math.round(180*scale)}px;height:${Math.round(110*scale)}px;"></div>`;
+  const { svg, rot } = stampSVG(st, idx, scale);
   const planCls = st.planeado ? 'planeado' : '';
   return `<div class="pp-stamp-wrap ${planCls}"
     style="transform:rotate(${rot.toFixed(1)}deg);transform-origin:center;"
@@ -5072,51 +5074,6 @@ function stampHtml(st, idx){
     title="${esc(st.titulo||nomePT(st.a2))} · ${fmtData(st.data)}">
     ${svg}
   </div>`;
-}
-
-
-
-function stampHtmlSmall(st, idx){
-  if (!st) return '';
-  const seed = (st.tripId||1)*31 + idx*17;
-  const r3=seededRand(seed+13), r4=seededRand(seed+19), r5=seededRand(seed+23), r6=seededRand(seed+29);
-  const PALETTES=[
-    {stroke:'#1a3a7a',text:'#1a3a7a',fill:'rgba(26,58,122,.09)'},
-    {stroke:'#7a1a1a',text:'#7a1a1a',fill:'rgba(122,26,26,.09)'},
-    {stroke:'#1a5a1a',text:'#1a5a1a',fill:'rgba(26,90,26,.09)'},
-    {stroke:'#4a1a7a',text:'#4a1a7a',fill:'rgba(74,26,122,.09)'},
-    {stroke:'#7a5a1a',text:'#7a5a1a',fill:'rgba(122,90,26,.09)'},
-    {stroke:'#1a6a7a',text:'#1a6a7a',fill:'rgba(26,106,122,.09)'},
-  ];
-  const plColor={stroke:'#2a6a1a',text:'#2a6a1a',fill:'rgba(42,106,26,.09)'};
-  const c = st.planeado ? plColor : PALETTES[Math.floor(r3*PALETTES.length)];
-  const SHAPES=['oval-s','rect-s','circle-s'];
-  const shape = SHAPES[Math.floor(r4*SHAPES.length)];
-  const LABELS=["IMMIGRATION","ARRIVAL","CUSTOMS","DEPARTURE","BORDER"];
-  const label = LABELS[Math.floor(r5*LABELS.length)];
-  const tipo  = st.planeado?'PLANEADO':(Math.floor(r6*3)===0?'ADMITTED':'DEPARTED');
-  const nome=nomePT(st.a2).toUpperCase();
-  const data=fmtData(st.data);
-  const flag=bandeira(st.a2);
-  const W=110,H=72,cx=55,cy=36;
-  let shapeEl='',contentEl='';
-  const line=(y)=>`<line x1="${W*0.1}" y1="${y}" x2="${W*0.9}" y2="${y}" stroke="${c.stroke}" stroke-width=".6" opacity=".5"/>`;
-
-  if(shape==='oval-s'){
-    shapeEl=`<ellipse cx="${cx}" cy="${cy}" rx="52" ry="32" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2"/><ellipse cx="${cx}" cy="${cy}" rx="45" ry="25" fill="none" stroke="${c.stroke}" stroke-width=".6" opacity=".5"/>`;
-    contentEl=`<text x="${cx}" y="16" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}" opacity=".8">${label}</text>${line(20)}<text x="${cx}" y="35" text-anchor="middle" font-size="10" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>${line(42)}<text x="${cx}" y="53" text-anchor="middle" font-size="8" font-weight="700" fill="${c.text}">${data}</text><text x="${cx}" y="63" text-anchor="middle" font-size="5" letter-spacing="2" fill="${c.text}" opacity=".7">${tipo}</text>`;
-  } else if(shape==='circle-s'){
-    shapeEl=`<circle cx="${cx}" cy="${cy}" r="32" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="26" fill="none" stroke="${c.stroke}" stroke-width=".6" stroke-dasharray="2,2" opacity=".5"/>`;
-    contentEl=`<text x="${cx}" y="16" text-anchor="middle" font-size="5" font-weight="700" letter-spacing="1.5" fill="${c.text}" opacity=".8">${label}</text><text x="${cx}" y="33" text-anchor="middle" font-size="9.5" font-weight="900" fill="${c.text}">${nome.slice(0,10)}</text><text x="${cx}" y="47" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text><text x="${cx}" y="58" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}" opacity=".7">${tipo}</text>`;
-  } else {
-    shapeEl=`<rect x="3" y="4" width="${W-6}" height="${H-8}" rx="8" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2"/><rect x="8" y="9" width="${W-16}" height="${H-18}" rx="5" fill="none" stroke="${c.stroke}" stroke-width=".6" opacity=".5"/>`;
-    contentEl=`<text x="${cx}" y="20" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}" opacity=".8">${label}</text>${line(24)}<text x="${cx}" y="40" text-anchor="middle" font-size="10" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>${line(46)}<text x="${cx}" y="57" text-anchor="middle" font-size="8" font-weight="700" fill="${c.text}">${data}</text>`;
-  }
-  const filterId=`inks${idx}t${st.tripId||0}`;
-  const filterEl=`<filter id="${filterId}"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="${seed}" result="n"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.8 2.2" in="n" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter>`;
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Arial,Helvetica,sans-serif" filter="url(#${filterId})"><defs>${filterEl}</defs>${shapeEl}${contentEl}<text x="${W-4}" y="12" text-anchor="end" font-size="9">${flag}</text></svg>`;
-  const planCls = st.planeado?'planeado':'';
-  return `<div class="pp-stamp-wrap ${planCls}" onclick="fecharDiarioModal&&fecharDiarioModal();showTab('diario');setTimeout(()=>abrirDiarioModal(${st.tripId}),80)" title="${esc(st.titulo||nomePT(st.a2))}">${svg}</div>`;
 }
 
 /* ── Carimbos: 1 por país por viagem (revisitar o país noutra viagem = novo carimbo) ── */
@@ -5169,8 +5126,8 @@ function ppRenderStampsPage(uid, pageIdx){
     const margin = 30;
     stamps.forEach((st, i) => {
       const seed = (st.tripId||1)*13 + i*29 + pageIdx*7;
-      const isLarge = seededRand(seed+3) > 0.5;
-      const sw = isLarge ? 180 : 110, sh = isLarge ? 110 : 80;
+      const isBig = seededRand(seed+3) > 0.5;
+      const sw = isBig ? 252 : 180, sh = isBig ? 154 : 110;
       const rot = (seededRand(seed+4)-0.5)*24;
 
       /* Tentar posições aleatórias até não colidir com nenhum carimbo já colocado */
@@ -5184,15 +5141,15 @@ function ppRenderStampsPage(uid, pageIdx){
         tries++;
       }
 
-      placed.push({st, i: startIdx+i, x, y, sw, sh, rot, isLarge});
+      placed.push({st, i: startIdx+i, x, y, sw, sh, rot, isBig});
     });
     return placed;
   }
 
   function renderPage(side, stampList){
     const positions = positionStamps(stampList);
-    const stamps = positions.map(({st, i, x, y, rot, isLarge}) => {
-      const html = isLarge ? stampHtml(st, i) : stampHtmlSmall(st, i);
+    const stamps = positions.map(({st, i, x, y, rot, isBig}) => {
+      const html = stampHtml(st, i, isBig ? 1.4 : 1);
       return `<div class="pp-stamp-free" style="left:${x.toFixed(0)}px;top:${y.toFixed(0)}px;transform:rotate(${rot.toFixed(1)}deg);">${html}</div>`;
     }).join('');
 
