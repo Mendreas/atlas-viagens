@@ -826,11 +826,6 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     <div id="regLista" class="chips"></div>
     <div style="margin-top:12px"><button class="btn danger" id="btnLimparReg">Limpar regiões deste país</button></div>
   </div>
-  <div class="card" style="margin-top:14px">
-    <h2 class="sec" style="margin-top:0">📍 Cidades visitadas</h2>
-    <p class="reg-hint" id="regPinsInfo">—</p>
-    <div id="regPinsMapa"></div>
-  </div>
   <div id="pUnesco"></div>
   <h2 class="sec">O que <span id="queVerLabel">ver</span></h2>
   <div id="pRegioes"></div>
@@ -851,6 +846,11 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     <button class="cont-back" id="backCont">← Voltar aos continentes</button>
     <h2 class="sec" id="contTitulo"></h2>
     <div class="country-grid" id="countryGrid"></div>
+    <div class="card" style="margin-top:16px">
+      <h2 class="sec" style="margin-top:0">📍 Cidades visitadas neste continente</h2>
+      <p class="reg-hint" id="contMapaInfo">—</p>
+      <div id="contMapa"></div>
+    </div>
   </div>
 </section>
 
@@ -2300,80 +2300,6 @@ function desenharRegioes(a2, gj){
 
   renderChips(a2, gj);
   atualizarRegProg(a2);
-  desenharPinsCidades(a2);
-}
-
-/* ── Cidades visitadas com coordenadas conhecidas, para este país ── */
-function cidadesDoPais(a2){
-  const trips = state.trips.filter(t =>
-    (t.userIds||[t.userId]).includes(state.editingUser) &&
-    (t.paises||[t.pais]).includes(a2) && t.cidades && t.cidades.length);
-  const out = [];
-  trips.forEach(t => t.cidades.forEach(c => {
-    if (c.nome && c.nome.trim() && c.lat != null && c.lon != null){
-      out.push({nome: c.nome.trim(), lat: c.lat, lon: c.lon, tripId: t.id});
-    }
-  }));
-  return out;
-}
-
-/* ── Mapa de alfinetes por baixo do mapa de regiões ── */
-function desenharPinsCidades(a2){
-  const cont = document.getElementById('regPinsMapa');
-  const info = document.getElementById('regPinsInfo');
-  if (!cont) return;
-  const gj = REG_CACHE[a2];
-  if (!gj){ cont.innerHTML = ''; if(info) info.textContent = '—'; return; }
-
-  let cidades = cidadesDoPais(a2);
-  if (gj.features.length){
-    cidades = cidades.filter(c => {
-      try { return d3.geoContains({type:'FeatureCollection', features:gj.features}, [c.lon, c.lat]); }
-      catch(e){ return true; }
-    });
-  }
-
-  if (!cidades.length){
-    cont.innerHTML = '';
-    if (info) info.textContent = 'Ainda não há cidades geolocalizadas para este país. Adiciona cidades a uma viagem (aba Diário) — a localização é calculada automaticamente ao gravar (pode demorar uns segundos).';
-    return;
-  }
-  if (info) info.textContent = `${cidades.length} cidade${cidades.length!==1?'s':''} visitada${cidades.length!==1?'s':''} — passa o rato por cima do alfinete para ver o nome.`;
-
-  const W = 760, H = 420;
-  const proj = gj.features.length
-    ? d3.geoMercator().fitExtent([[8,8],[W-8,H-8]], gj)
-    : d3.geoMercator().fitExtent([[8,8],[W-8,H-8]],
-        {type:'FeatureCollection', features: cidades.map(c=>({type:'Feature',geometry:{type:'Point',coordinates:[c.lon,c.lat]}}))});
-  const path = d3.geoPath(proj);
-  cont.innerHTML = '';
-  const svg = d3.select(cont).append('svg').attr('viewBox', `0 0 ${W} ${H}`);
-
-  if (gj.features.length){
-    svg.selectAll('path.region-ctx').data(gj.features).join('path')
-      .attr('class','region-ctx').attr('d', path)
-      .attr('fill', 'var(--land)').attr('stroke', 'var(--panel)').attr('stroke-width', 0.6);
-  }
-
-  const tip = document.getElementById('tooltip');
-  svg.selectAll('circle.pin').data(cidades).join('circle')
-    .attr('class','pin')
-    .attr('cx', d => proj([d.lon,d.lat])[0])
-    .attr('cy', d => proj([d.lon,d.lat])[1])
-    .attr('r', 5.5)
-    .attr('fill', 'var(--coral)')
-    .attr('stroke', '#fff').attr('stroke-width', 1.5)
-    .on('mousemove', (ev,d) => {
-      tip.textContent = d.nome;
-      tip.style.left = ev.clientX+'px'; tip.style.top = ev.clientY+'px'; tip.style.opacity = 1;
-    })
-    .on('mouseleave', () => { tip.style.opacity = 0; })
-    .on('click', (ev,d) => {
-      ev.stopPropagation();
-      if (typeof fecharDiarioModal === 'function') fecharDiarioModal();
-      showTab('diario');
-      setTimeout(()=>abrirDiarioModal(d.tripId), 80);
-    });
 }
 
 /* ── Geocodificação de cidades (OpenStreetMap / Nominatim, gratuito) ──
@@ -2414,9 +2340,10 @@ async function geocodarCidadesTrip(trip){
   }
   if (mudou){
     save();
-    const paisActual = selPais && selPais.value;
-    if (paisActual && (trip.paises||[trip.pais]).includes(paisActual) && document.getElementById('regPinsMapa')){
-      desenharPinsCidades(paisActual);
+    /* Se a aba Regiões estiver aberta num continente que inclua algum destes países, actualizar o mapa */
+    if (_contAtivo && document.getElementById('contMapa')){
+      const c = CONTINENTES.find(x=>x.id===_contAtivo);
+      if (c && (trip.paises||[trip.pais]).some(a2=>c.paises.includes(a2))) desenharMapaContinente(_contAtivo);
     }
   }
 }
@@ -2594,8 +2521,10 @@ function renderContinentes(){
   }).join('');
   /* carregar fotos é feito via lista2.forEach abaixo */
 }
+let _contAtivo = null;
 function abrirContinente(id){
   const c = CONTINENTES.find(x=>x.id===id);
+  _contAtivo = id;
   document.getElementById('reg-continentes').style.display='none';
   document.getElementById('reg-paises').style.display='block';
   document.getElementById('contTitulo').innerHTML = c.emoji + ' <span>' + c.nome + '</span>';
@@ -2607,11 +2536,102 @@ function abrirContinente(id){
       <span class="cbflag">${bandeira(a2)}</span>${nomePT(a2)}
     </button>`;
   }).join('');
+  desenharMapaContinente(id);
 }
 document.getElementById('backCont').onclick = ()=>{
+  _contAtivo = null;
   document.getElementById('reg-continentes').style.display='block';
   document.getElementById('reg-paises').style.display='none';
 };
+
+/* ── Cidades visitadas (com coordenadas) em qualquer país deste continente ── */
+function cidadesDoContinente(c){
+  const trips = state.trips.filter(t =>
+    (t.userIds||[t.userId]).includes(state.editingUser) &&
+    (t.paises||[t.pais]).some(a2 => c.paises.includes(a2)) &&
+    t.cidades && t.cidades.length);
+  const out = [];
+  trips.forEach(t => t.cidades.forEach(ci => {
+    if (ci.nome && ci.nome.trim() && ci.lat != null && ci.lon != null){
+      out.push({nome: ci.nome.trim(), lat: ci.lat, lon: ci.lon, tripId: t.id});
+    }
+  }));
+  return out;
+}
+
+/* ── Mapa do continente com um alfinete por cidade visitada ── */
+function desenharMapaContinente(cid){
+  const cont = document.getElementById('contMapa');
+  const info = document.getElementById('contMapaInfo');
+  if (!cont) return;
+  const c = CONTINENTES.find(x=>x.id===cid);
+  if (!c) return;
+
+  if (!gPaises){
+    cont.innerHTML = '';
+    if (info) info.textContent = 'Mapa não disponível (sem ligação à internet ao carregar a página — actualiza a página).';
+    return;
+  }
+
+  const paisesFeatures = gPaises.data().filter(d => {
+    const a2 = N2A[String(+d.id)];
+    return a2 && c.paises.includes(a2);
+  });
+  const cidades = cidadesDoContinente(c);
+
+  if (!paisesFeatures.length && !cidades.length){
+    cont.innerHTML = '';
+    if (info) info.textContent = '—';
+    return;
+  }
+
+  const W = 760, H = 420;
+  const gj = {type:'FeatureCollection', features: paisesFeatures};
+  const proj = paisesFeatures.length
+    ? d3.geoMercator().fitExtent([[8,8],[W-8,H-8]], gj)
+    : d3.geoMercator().fitExtent([[8,8],[W-8,H-8]],
+        {type:'FeatureCollection', features: cidades.map(ci=>({type:'Feature',geometry:{type:'Point',coordinates:[ci.lon,ci.lat]}}))});
+  const path = d3.geoPath(proj);
+
+  cont.innerHTML = '';
+  const svg = d3.select(cont).append('svg').attr('viewBox', `0 0 ${W} ${H}`);
+
+  svg.selectAll('path.cont-country').data(paisesFeatures).join('path')
+    .attr('class','cont-country').attr('d', path)
+    .attr('fill', d => {
+      const a2 = N2A[String(+d.id)];
+      const st = a2 && statusDe(a2);
+      return (st==='visitado' || st==='parcial') ? 'var(--gold)' : 'var(--land)';
+    })
+    .attr('stroke','var(--panel)').attr('stroke-width',0.6)
+    .style('cursor','pointer')
+    .on('click', (ev,d) => { const a2=N2A[String(+d.id)]; if(a2) irParaPais(a2); })
+    .append('title').text(d => { const a2=N2A[String(+d.id)]; return a2 ? nomePT(a2) : ''; });
+
+  const tip = document.getElementById('tooltip');
+  svg.selectAll('circle.pin').data(cidades).join('circle')
+    .attr('class','pin')
+    .attr('cx', d => proj([d.lon,d.lat])[0])
+    .attr('cy', d => proj([d.lon,d.lat])[1])
+    .attr('r', 4.5)
+    .attr('fill', 'var(--coral)')
+    .attr('stroke', '#fff').attr('stroke-width', 1.2)
+    .on('mousemove', (ev,d) => {
+      tip.textContent = d.nome;
+      tip.style.left = ev.clientX+'px'; tip.style.top = ev.clientY+'px'; tip.style.opacity = 1;
+    })
+    .on('mouseleave', () => { tip.style.opacity = 0; })
+    .on('click', (ev,d) => {
+      ev.stopPropagation();
+      if (typeof fecharDiarioModal === 'function') fecharDiarioModal();
+      showTab('diario');
+      setTimeout(()=>abrirDiarioModal(d.tripId), 80);
+    });
+
+  if (info) info.textContent = cidades.length
+    ? `${cidades.length} cidade${cidades.length!==1?'s':''} visitada${cidades.length!==1?'s':''} — passa o rato por cima do alfinete para ver o nome, clica para abrir a viagem.`
+    : 'Ainda não há cidades geolocalizadas neste continente. Adiciona cidades a uma viagem (aba Diário) — a localização é calculada automaticamente ao gravar.';
+}
 window.irParaPais = a2 => {
   document.getElementById('pSel').value = a2;
   renderPais(); carregarRegioes(a2);
