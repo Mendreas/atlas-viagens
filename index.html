@@ -2595,11 +2595,10 @@ function desenharMapaContinente(cid){
 
   cont.innerHTML = '';
   const svg = d3.select(cont).append('svg').attr('viewBox', `0 0 ${W} ${H}`);
-  const gZoom = svg.append('g');
-  const zoomBehCont = d3.zoom().scaleExtent([1,10]).on('zoom', ev => gZoom.attr('transform', ev.transform));
-  svg.call(zoomBehCont);
+  const gMap = svg.append('g');   /* países — faz zoom/pan normalmente */
+  const gPins = svg.append('g');  /* alfinetes — só mudam de posição, tamanho fixo */
 
-  gZoom.selectAll('path.cont-country').data(paisesFeatures).join('path')
+  gMap.selectAll('path.cont-country').data(paisesFeatures).join('path')
     .attr('class','cont-country').attr('d', path)
     .attr('fill', d => {
       const a2 = N2A[String(+d.id)];
@@ -2612,7 +2611,7 @@ function desenharMapaContinente(cid){
     .append('title').text(d => { const a2=N2A[String(+d.id)]; return a2 ? nomePT(a2) : ''; });
 
   const tip = document.getElementById('tooltip');
-  gZoom.selectAll('circle.pin').data(cidades).join('circle')
+  const pinSel = gPins.selectAll('circle.pin').data(cidades).join('circle')
     .attr('class','pin')
     .attr('cx', d => proj([d.lon,d.lat])[0])
     .attr('cy', d => proj([d.lon,d.lat])[1])
@@ -2630,6 +2629,15 @@ function desenharMapaContinente(cid){
       showTab('diario');
       setTimeout(()=>abrirDiarioModal(d.tripId), 80);
     });
+
+  /* Zoom: o mapa escala normalmente, os alfinetes só reposicionam (tamanho fixo) */
+  const zoomBehCont = d3.zoom().scaleExtent([1,10]).on('zoom', ev => {
+    gMap.attr('transform', ev.transform);
+    pinSel
+      .attr('cx', d => ev.transform.apply(proj([d.lon,d.lat]))[0])
+      .attr('cy', d => ev.transform.apply(proj([d.lon,d.lat]))[1]);
+  });
+  svg.call(zoomBehCont);
 
   if (info) info.textContent = cidades.length
     ? `${cidades.length} cidade${cidades.length!==1?'s':''} visitada${cidades.length!==1?'s':''} — passa o rato por cima do alfinete para ver o nome, clica para abrir a viagem.`
