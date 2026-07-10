@@ -150,19 +150,25 @@ h2.sec span{color:var(--gold);}
 .airline-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
 .airline-filters select,.airline-filters input{padding:7px 10px;font-size:.85rem;}
 .airline-filters label{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
-.airlines-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;}
-.airline-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;
-  position:relative;transition:border-color .12s;}
+.airlines-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.airline-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  overflow:hidden;position:relative;transition:border-color .12s;
+  display:flex;flex-direction:column;height:150px;}
 .airline-card.voado{border-color:var(--gold);}
 .airline-card.voado .ac-nome{color:var(--gold);}
-.ac-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
-.ac-logo{width:140px;height:50px;object-fit:contain;border-radius:6px;background:#fff;padding:4px;}
-.ac-logo-placeholder{width:140px;height:50px;background:var(--panel2);border-radius:6px;
-  display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:var(--muted);}
-.ac-info{flex:1;}
-.ac-nome{font-weight:700;font-size:.92rem;}
-.ac-meta{font-size:.72rem;color:var(--muted);margin-top:1px;}
-.ac-alianca{font-size:.68rem;border:1px solid var(--line);border-radius:3px;padding:1px 5px;
+/* Linha de cima: logo a toda a largura */
+.ac-logo-wrap{flex:1;background:#fff;display:flex;align-items:center;justify-content:center;
+  padding:10px 14px;min-height:0;overflow:hidden;}
+.ac-logo{width:100%;height:100%;object-fit:contain;display:block;}
+.ac-logo-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;font-weight:700;color:var(--muted);background:var(--panel2);}
+/* Linha de baixo: info + botão */
+.ac-bottom{display:flex;align-items:center;gap:6px;padding:7px 10px;
+  border-top:1px solid var(--line);background:var(--panel);flex:none;}
+.ac-info{flex:1;min-width:0;}
+.ac-nome{font-weight:700;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ac-meta{font-size:.68rem;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ac-alianca{font-size:.62rem;border:1px solid var(--line);border-radius:3px;padding:1px 4px;
   color:var(--muted);display:inline-block;margin-top:2px;}
 .ac-alianca.star{color:#4a90d9;border-color:#4a90d9;}
 .ac-alianca.sky{color:#c0392b;border-color:#c0392b;}
@@ -179,7 +185,7 @@ h2.sec span{color:var(--gold);}
   padding:4px 10px;font-size:.78rem;color:var(--muted);cursor:pointer;width:100%;
   margin-top:4px;text-align:left;}
 .ac-add-voo:hover{border-color:var(--gold);color:var(--gold);}
-.ac-badge{position:absolute;top:10px;right:10px;font-size:.7rem;font-weight:700;
+.ac-badge{position:absolute;top:6px;right:6px;font-size:.7rem;font-weight:700;z-index:2;
   background:var(--gold);color:#1d1607;border-radius:3px;padding:1px 5px;}
 .airline-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
 .airline-stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;
