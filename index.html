@@ -83,36 +83,15 @@ textarea{resize:vertical; min-height:80px;}
 
 /* ---------- Diário ---------- */
 #tripList{margin-top:20px; display:grid; gap:12px;}
-.trip{background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:var(--radius);
-  padding:14px 18px; display:flex; gap:16px; align-items:stretch;}
+.trip{background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:var(--radius); padding:14px 18px;}
 .trip.futura{border-left-color:var(--teal);}
-.trip-body{flex:1 1 auto; min-width:0;}
 .trip h3{font-family:'Fraunces',serif; font-size:1.15rem;}
 .trip .meta{font-family:ui-monospace,Menlo,monospace; color:var(--muted); font-size:.78rem; margin:4px 0 8px;}
 .trip .flag{font-size:1.3rem; margin-right:6px;}
 .trip p{font-size:.9rem; white-space:pre-wrap;}
 .trip .locais{color:var(--gold); font-size:.85rem; margin-bottom:6px;}
-.trip-row{display:flex; gap:20px; align-items:flex-start; margin-top:2px;}
-.trip-main{flex:1 1 auto; min-width:0;}
-.trip-side{flex:1 1 380px; min-width:0; max-width:440px; display:flex; flex-direction:column; gap:6px; padding-top:3px;}
-.trip-airline{display:flex; align-items:center; gap:6px; font-size:.82rem; color:var(--muted);}
-.trip-airline img{max-height:22px; max-width:96px; object-fit:contain;}
-.trip-rota{font-family:ui-monospace,Menlo,monospace; font-size:.74rem; color:var(--muted);}
-.trip-notas-preview{font-size:.85rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis;
-  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical;}
-.trip-thumb{flex:0 0 130px; width:130px; border-radius:10px; overflow:hidden;
-  background:var(--panel2); cursor:pointer; align-self:stretch;}
-.trip-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
-@media (max-width:720px){
-  .trip{flex-direction:column;}
-  .trip-row{flex-direction:column;}
-  .trip-side{flex-basis:auto; width:100%; max-width:none;}
-  .trip-thumb{align-self:stretch; width:auto; height:160px;}
-}
 .trip-actions{margin-top:10px; display:flex; gap:8px;}
 .trip-actions .btn{padding:4px 12px; font-size:.78rem;}
-.pin{transition:r .15s; cursor:pointer;}
-.pin:hover{r:7.5;}
 .empty{color:var(--muted); text-align:center; padding:30px; border:1px dashed var(--line); border-radius:var(--radius); margin-top:20px;}
 
 /* ---------- Países ---------- */
@@ -398,15 +377,6 @@ h2.sec span{color:var(--gold);}
 .pp-alert.warn{border-color:#c5973a;color:#c5973a;}
 .pp-alert.expired{border-color:var(--coral);color:var(--coral);}
 .pp-alert.trip{border-color:var(--teal);color:var(--teal);}
-.pp-alert.ok{border-color:#2f7a3f;color:#2f7a3f;}
-
-/* Data da viagem planeada (aba Países) */
-.plano-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
-.plano-row select,.plano-row input{padding:6px 8px;border-radius:6px;
-  border:1px solid #c8bfa8;font-family:'Source Sans 3',sans-serif;font-size:.82rem;}
-.plano-row input{width:130px;}
-#pPlanoWrap:empty{margin:0;}
-#pPlanoWrap{margin-top:4px;}
 
 /* ---------- Modal formulário de viagem ---------- */
 #formModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
@@ -785,7 +755,8 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   <div class="filtros-resumo">
     <span class="f-count" id="fCount"><b>0</b> viagens</span>
     <button class="btn-limpar-filtros" id="btnLimparFiltros">✕ Limpar filtros</button>
-    <button class="btn" id="btnExportDiario" style="margin-left:auto;padding:5px 12px;font-size:.82rem">⬇ Exportar HTML</button>
+    <button class="btn" id="btnExportDiario" style="padding:5px 12px;font-size:.82rem">⬇ HTML</button>
+    <button class="btn" onclick="exportarDiarioExcel()" style="margin-left:4px;padding:5px 12px;font-size:.82rem;background:var(--teal);color:#fff">📊 Exportar Excel</button>
   </div>
   <div style="text-align:center;padding:14px 0 4px">
     <button class="btn gold" id="btnNovaViagem" style="padding:10px 28px;font-size:1rem;border-radius:8px">
@@ -810,7 +781,6 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
         </div>
         <button class="btn-ficha" id="btnFicha">ℹ️ Ficha do país</button>
         <button class="btn-ficha" id="btnPlanear" style="background:var(--teal);color:#062621;border-color:var(--teal)">🗒 Planear visita</button>
-        <div id="pPlanoWrap"></div>
       </div>
     </div>
     <div style="margin-top:16px">
@@ -846,11 +816,6 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     <button class="cont-back" id="backCont">← Voltar aos continentes</button>
     <h2 class="sec" id="contTitulo"></h2>
     <div class="country-grid" id="countryGrid"></div>
-    <div class="card" style="margin-top:16px">
-      <h2 class="sec" style="margin-top:0">📍 Cidades visitadas neste continente</h2>
-      <p class="reg-hint" id="contMapaInfo">—</p>
-      <div id="contMapa"></div>
-    </div>
   </div>
 </section>
 
@@ -926,13 +891,6 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   <div class="danger-zone">
     <h3>🗑 Limpar dados</h3>
     <div class="clear-options">
-      <div class="clear-row">
-        <div>
-          <div class="cr-label">Remover viagens duplicadas</div>
-          <div class="cr-desc">Procura viagens repetidas (mesmo país, data e utilizador) e mantém só uma de cada — útil se importaste o mesmo Excel mais do que uma vez</div>
-        </div>
-        <button class="btn gold" onclick="removerViagensDuplicadas()">Verificar e remover</button>
-      </div>
       <div class="clear-row">
         <div>
           <div class="cr-label">Limpar diário de viagens</div>
@@ -1045,16 +1003,35 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
         <label>Título</label>
         <input type="text" id="tTitulo" placeholder="Ex.: Lua de mel na Toscânia">
       </div>
-      <div class="form-section" style="margin-top:10px">
-        <label class="sec-title">🏙️ Cidades visitadas</label>
-        <div id="tCidadesContainer"></div>
-        <button class="btn" id="btnAddCidade" type="button">+ Nova cidade</button>
+      <div class="grid c2" style="margin-top:10px">
+        <div><label>Cidades visitadas</label><input type="text" id="tLocais" placeholder="Ex.: Florença, Siena, Pisa"></div>
+        <div><label>Locais de pernoita</label><input type="text" id="tPernoita" placeholder="Ex.: Hotel Roma, B&amp;B Florença"></div>
       </div>
-      <div class="form-section" style="margin-top:10px">
-        <label class="sec-title">✈️ Voos</label>
-        <div id="tVoosContainer"></div>
-        <button class="btn" id="btnAddVoo" type="button">+ Novo voo</button>
-        <datalist id="tAirlineList"></datalist>
+      <div style="margin-top:12px;display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+        <label style="font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-right:4px">Tipo de viagem</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.88rem;cursor:pointer">
+          <input type="radio" name="tTipoViagem" id="tTipoGrande" value="grande">
+          🌍 Grande viagem
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.88rem;cursor:pointer">
+          <input type="radio" name="tTipoViagem" id="tTipoEscapadinha" value="escapadinha" checked>
+          ✈️ Escapadinha
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.88rem;cursor:pointer;margin-left:16px">
+          <input type="checkbox" id="tIlhas">
+          🏝 Ilhas
+        </label>
+      </div>
+      <div class="grid c2" style="margin-top:10px">
+        <div>
+          <label>Companhia aérea</label>
+          <input type="text" id="tAirline" placeholder="Ex.: TAP, Ryanair, Emirates…" list="tAirlineList" autocomplete="off">
+          <datalist id="tAirlineList"></datalist>
+        </div>
+        <div>
+          <label>Voo / Rota</label>
+          <input type="text" id="tRota" placeholder="Ex.: TP1234  ou  LIS-LHR">
+        </div>
       </div>
       <div style="margin-top:14px"><label>Notas / diário</label><textarea id="tNotas" placeholder="O que viste, comeste, sentiste…"></textarea></div>
 
@@ -1139,7 +1116,6 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
       <div class="im-step" id="imStep3">
         <div class="im-stats" id="imStats"></div>
         <div id="imNoUserSection"></div>
-        <div id="imDupSection"></div>
         <div style="margin-bottom:10px;font-size:.85rem;color:var(--muted)">
           Pré-visualização das entradas a importar (podes corrigir o país antes de confirmar):
         </div>
@@ -1465,18 +1441,6 @@ function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); refreshSta
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2200); }
 function nomePT(a2){ try { return dn.of(a2) || a2; } catch(e){ return a2; } }
 function bandeira(a2){ if(!/^[A-Z]{2}$/.test(a2)) return '🏳'; return String.fromCodePoint(...[...a2].map(c=>0x1F1E6 + c.charCodeAt(0) - 65)); }
-/* Bandeira como imagem real (o Windows não desenha os emojis de bandeira — mostra as duas letras).
-   Usa flagcdn.com; se a imagem falhar, cai para o emoji/letras normais. */
-function bandeiraImgHtml(a2, w){
-  w = w || 20;
-  const valido = /^[A-Z]{2}$/.test(a2) && a2 !== 'XX';
-  if (!valido) return `<span class="flag-emoji">${bandeira(a2)}</span>`;
-  const h = Math.round(w*0.75);
-  const fallback = bandeira(a2);
-  return `<img src="https://flagcdn.com/${a2.toLowerCase()}.svg" alt="${a2}" class="flag-img"
-    style="width:${w}px;height:${h}px;object-fit:cover;border-radius:2px;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,.15)"
-    onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'flag-emoji',textContent:'${fallback}'}))">`;
-}
 function statusDe(a2){
   /* Estado manual tem prioridade absoluta */
   const manual = ud().countries[a2] && ud().countries[a2].status;
@@ -1488,63 +1452,8 @@ function statusDe(a2){
 }
 function setStatus(a2, st){
   if (st === 'nao') delete ud().countries[a2];
-  else {
-    const prev = ud().countries[a2] || {};
-    ud().countries[a2] = { status: st, planMes: prev.planMes, planAno: prev.planAno };
-  }
+  else ud().countries[a2] = { status: st };
   save();
-}
-
-/* ── Data prevista da viagem planeada + cruzamento com validade do passaporte ── */
-const PT_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-
-function setPlanData(a2, mes, ano){
-  const entry = ud().countries[a2] || {};
-  if (!entry.status || entry.status === 'nao') entry.status = 'planeado';
-  entry.planMes = mes ? Number(mes) : undefined;
-  entry.planAno = ano ? Number(ano) : undefined;
-  ud().countries[a2] = entry;
-  save();
-  if (selPais.value === a2) renderPlanoData(a2);
-  if (_pmA2 === a2){
-    const pmAlerta = document.getElementById('pmPassaporteAlerta');
-    if (pmAlerta) pmAlerta.innerHTML = planPassaporteAlerta(a2);
-  }
-}
-
-function planPassaporteAlerta(a2){
-  const entry = ud().countries[a2] || {};
-  if (!entry.planAno) return '';
-  const mesStr = entry.planMes ? String(entry.planMes).padStart(2,'0') : '12';
-  const diaStr = entry.planMes ? '01' : '31';
-  const dataViagem = `${entry.planAno}-${mesStr}-${diaStr}`;
-  const validade = ppGetData(state.editingUser).validade;
-  if (!validade){
-    return `<div class="pp-alert warn">ℹ️ Define a validade do passaporte na aba Passaporte para verificar se é válido para esta data.</div>`;
-  }
-  const v = ppValidadeStatus(validade, dataViagem);
-  if (!v) return '';
-  const aviso = !entry.planMes ? ` <span style="opacity:.7">(pior caso: fim de ${entry.planAno})</span>` : '';
-  return `<div class="pp-alert ${v.status}">${v.msg}${aviso}</div>`;
-}
-
-function renderPlanoData(a2){
-  const wrap = document.getElementById('pPlanoWrap');
-  if (!wrap) return;
-  const st = statusDe(a2);
-  if (st !== 'planeado'){ wrap.innerHTML=''; return; }
-  const entry = ud().countries[a2] || {};
-  const anoAtual = new Date().getFullYear();
-  const mesOpts = ['<option value="">Mês (opcional)</option>']
-    .concat(PT_MESES.map((m,i)=>`<option value="${i+1}" ${entry.planMes===i+1?'selected':''}>${m}</option>`)).join('');
-  wrap.innerHTML = `
-    <div class="plano-row">
-      <select id="pPlanoMes">${mesOpts}</select>
-      <input type="number" id="pPlanoAno" placeholder="Ano, ex: ${anoAtual+1}" min="${anoAtual}" max="${anoAtual+15}" value="${entry.planAno||''}">
-    </div>
-    <div id="pPlanoAlerta">${planPassaporteAlerta(a2)}</div>`;
-  document.getElementById('pPlanoMes').onchange = () => setPlanData(a2, document.getElementById('pPlanoMes').value, document.getElementById('pPlanoAno').value);
-  document.getElementById('pPlanoAno').onchange = () => setPlanData(a2, document.getElementById('pPlanoMes').value, document.getElementById('pPlanoAno').value);
 }
 
 /* Lista de todos os países (alpha-2) ordenada por nome PT */
@@ -1664,9 +1573,12 @@ if(document.getElementById('tPais')) document.getElementById('tPais').value = 'P
 let editId = null;
 /* btnSaveTrip e limparForm geridos pelo modal de formulário abaixo */
 function limparForm(){
-  ['tIni','tFim','tTitulo','tNotas'].forEach(id=>{
+  ['tIni','tFim','tTitulo','tLocais','tNotas'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.value='';
   });
+  const tAirline = document.getElementById('tAirline'); if(tAirline) tAirline.value='';
+  const tRota = document.getElementById('tRota'); if(tRota) tRota.value='';
+  const tPernoita = document.getElementById('tPernoita'); if(tPernoita) tPernoita.value='';
   _formPaises = []; renderPaisesChips();
   editId = null;
   const btnC = document.getElementById('btnCancelEdit'); if(btnC) btnC.style.display='none';
@@ -1693,15 +1605,9 @@ function renderTrips(){
     list.innerHTML = '<div class="empty">Nenhuma viagem corresponde aos filtros activos.</div>';
     return;
   }
-  list.innerHTML = trips.map(t=>{
-    const voosParaMostrar = (t.voos && t.voos.length) ? t.voos : (t.airline ? [{companhia:t.airline, rota:t.rota}] : []);
-    const temFoto = t.imgNomes && t.imgNomes.length;
-    return `
+  list.innerHTML = trips.map(t=>`
     <div class="trip ${t.ini > hoje ? 'futura' : ''}" onclick="abrirDiarioModal(${t.id})">
-      <div class="trip-body">
-        <div class="trip-row">
-          <div class="trip-main">
-            <h3><span class="flag">${bandeiraImgHtml(t.pais, 22)}</span>${esc(t.titulo)}${(()=>{
+      <h3><span class="flag">${bandeira(t.pais)}</span>${esc(t.titulo)}${(()=>{
   const ids = t.userIds || (t.userId ? [t.userId] : []);
   if (!ids.length || state.users.length<=1) return '';
   return ids.map(uid=>{
@@ -1709,30 +1615,18 @@ function renderTrips(){
     return u?`<span style="font-size:.7rem;background:${u.cor};color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px;font-family:ui-monospace,monospace;vertical-align:middle">${esc(u.nome)}</span>`:'';
   }).join('');
 })()}</h3>
-            <div class="meta">${(t.paises||[t.pais]).map(a=>bandeiraImgHtml(a,16)+' '+nomePT(a)).join(' · ')} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}</div>
-            ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
-            ${t.pernoita ? `<div class="locais" style="color:var(--teal)">🛏 ${esc(t.pernoita)}</div>` : ''}
-          </div>
-          <div class="trip-side">
-            ${voosParaMostrar.map(v => {
-              const obj = v.companhia ? AIRLINES_DB.find(a => a.nome === v.companhia || a.iata === v.companhia) : null;
-              const logo = obj ? AIRLINE_LOGO_DATA[obj.iata] : null;
-              if (!v.companhia && !v.rota) return '';
-              return `<div class="trip-airline">${logo?`<img src="${logo}" alt="${esc(v.companhia)}">`:(v.companhia?'✈️ '+esc(v.companhia):'✈️')}${v.rota?`<span class="trip-rota"> · ${esc(v.rota)}</span>`:''}</div>`;
-            }).join('')}
-            ${t.notas ? `<div class="trip-notas-preview">${esc(t.notas)}</div>` : ''}
-          </div>
-        </div>
-        ${t.links && t.links.length ? `<div class="trip-links">${t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label||l.url)}</a>`).join('')}</div>` : ''}
-        <div class="trip-actions" onclick="event.stopPropagation()">
-          <button class="btn" onclick="document.getElementById('diarioModal').classList.remove('open'); editarTrip(${t.id})">Editar</button>
-          <button class="btn danger" onclick="apagarTrip(${t.id})">Apagar</button>
-        </div>
+      <div class="meta">${(t.paises||[t.pais]).map(a=>bandeira(a)+' '+nomePT(a)).join(' · ')} · ${fmtData(t.ini)}${t.fim && t.fim!==t.ini ? ' → '+fmtData(t.fim) : ''}${t.ini > hoje ? ' · PLANEADA' : ''}${t.tipo==='grande'?' · 🌍':''}${t.ilhas?' · 🏝':''}${t.airline ? ' · ✈️ '+esc(t.airline) : ''}</div>
+      ${t.locais ? `<div class="locais">📍 ${esc(t.locais)}</div>` : ''}
+      ${t.pernoita ? `<div class="locais" style="color:var(--teal)">🛏 ${esc(t.pernoita)}</div>` : ''}
+      ${t.notas ? `<p>${esc(t.notas)}</p>` : ''}
+      ${t.imgNomes && t.imgNomes.length ? `<div class="trip-gallery" id="gal-${t.id}"></div>` : ''}
+      ${t.links && t.links.length ? `<div class="trip-links">${t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label||l.url)}</a>`).join('')}</div>` : ''}
+      <div class="trip-actions" onclick="event.stopPropagation()">
+        <button class="btn" onclick="document.getElementById('diarioModal').classList.remove('open'); editarTrip(${t.id})">Editar</button>
+        <button class="btn danger" onclick="apagarTrip(${t.id})">Apagar</button>
       </div>
-      ${temFoto ? `<div class="trip-thumb" id="thumb-${t.id}" onclick="event.stopPropagation()"></div>` : ''}
-    </div>`;
-  }).join('');
-  carregarThumbsTrips(trips);
+    </div>`).join('');
+  carregarGaleriasTrips(trips);
 }
 
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -1799,7 +1693,6 @@ function renderPais(){
   const a2 = selPais.value;
   const stActual = statusDe(a2);
   marcarBtns(document.getElementById('pStatus'), stActual);
-  renderPlanoData(a2);
   /* Sincronizar contexto com o estado actual do país */
   if (stActual === 'planeado') paisContexto = 'planeado';
   else if (stActual === 'visitado' || stActual === 'parcial') paisContexto = 'visitado';
@@ -2302,60 +2195,6 @@ function desenharRegioes(a2, gj){
   atualizarRegProg(a2);
 }
 
-/* ── Geocodificação de cidades (OpenStreetMap / Nominatim, gratuito) ──
-   Converte o nome de uma cidade em latitude/longitude, para poder desenhar
-   o alfinete no mapa. Feito em fila, uma pesquisa de cada vez com um
-   pequeno intervalo, para respeitar o serviço gratuito. */
-const _geocodeCache = {}; /* "cidade|codigos" → {lat,lon} | null */
-let _geocodeQueue = Promise.resolve();
-
-function geocodarCidade(nome, paises){
-  const codes = (paises||[]).filter(Boolean).map(a=>a.toLowerCase()).join(',');
-  const key = nome.trim().toLowerCase() + '|' + codes;
-  if (_geocodeCache[key] !== undefined) return Promise.resolve(_geocodeCache[key]);
-  const p = _geocodeQueue
-    .then(() => new Promise(res => setTimeout(res, 1100)))
-    .then(() => fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1'
-      + (codes ? '&countrycodes=' + encodeURIComponent(codes) : '')
-      + '&q=' + encodeURIComponent(nome)))
-    .then(r => r.json())
-    .then(res => {
-      const coord = (res && res[0]) ? {lat: parseFloat(res[0].lat), lon: parseFloat(res[0].lon)} : null;
-      _geocodeCache[key] = coord;
-      return coord;
-    })
-    .catch(() => { _geocodeCache[key] = null; return null; });
-  _geocodeQueue = p.catch(()=>{});
-  return p;
-}
-
-async function geocodarCidadesTrip(trip){
-  if (!trip || !trip.cidades || !trip.cidades.length) return;
-  let mudou = false;
-  for (const c of trip.cidades){
-    if (!c.nome || !c.nome.trim()) continue;
-    if (c.lat != null && c.lon != null) continue;
-    const coord = await geocodarCidade(c.nome, trip.paises || [trip.pais]);
-    if (coord){ c.lat = coord.lat; c.lon = coord.lon; mudou = true; }
-  }
-  if (mudou){
-    save();
-    /* Se a aba Regiões estiver aberta num continente que inclua algum destes países, actualizar o mapa */
-    if (_contAtivo && document.getElementById('contMapa')){
-      const c = CONTINENTES.find(x=>x.id===_contAtivo);
-      if (c && (trip.paises||[trip.pais]).some(a2=>c.paises.includes(a2))) desenharMapaContinente(_contAtivo);
-    }
-  }
-}
-
-function geocodarTodasCidadesPendentes(){
-  state.trips.forEach(t => {
-    if (t.cidades && t.cidades.some(c => c.nome && c.nome.trim() && (c.lat==null || c.lon==null))){
-      geocodarCidadesTrip(t);
-    }
-  });
-}
-
 function renderChips(a2, gj){
   const r = regDe(a2);
   const nomes = gj.features.map(nomeReg).sort((x,y)=>x.localeCompare(y,'pt'));
@@ -2521,10 +2360,8 @@ function renderContinentes(){
   }).join('');
   /* carregar fotos é feito via lista2.forEach abaixo */
 }
-let _contAtivo = null;
 function abrirContinente(id){
   const c = CONTINENTES.find(x=>x.id===id);
-  _contAtivo = id;
   document.getElementById('reg-continentes').style.display='none';
   document.getElementById('reg-paises').style.display='block';
   document.getElementById('contTitulo').innerHTML = c.emoji + ' <span>' + c.nome + '</span>';
@@ -2536,113 +2373,11 @@ function abrirContinente(id){
       <span class="cbflag">${bandeira(a2)}</span>${nomePT(a2)}
     </button>`;
   }).join('');
-  desenharMapaContinente(id);
 }
 document.getElementById('backCont').onclick = ()=>{
-  _contAtivo = null;
   document.getElementById('reg-continentes').style.display='block';
   document.getElementById('reg-paises').style.display='none';
 };
-
-/* ── Cidades visitadas (com coordenadas) em qualquer país deste continente ── */
-function cidadesDoContinente(c){
-  const trips = state.trips.filter(t =>
-    (t.userIds||[t.userId]).includes(state.editingUser) &&
-    (t.paises||[t.pais]).some(a2 => c.paises.includes(a2)) &&
-    t.cidades && t.cidades.length);
-  const out = [];
-  trips.forEach(t => t.cidades.forEach(ci => {
-    if (ci.nome && ci.nome.trim() && ci.lat != null && ci.lon != null){
-      out.push({nome: ci.nome.trim(), lat: ci.lat, lon: ci.lon, tripId: t.id});
-    }
-  }));
-  return out;
-}
-
-/* ── Mapa do continente com um alfinete por cidade visitada ── */
-function desenharMapaContinente(cid){
-  const cont = document.getElementById('contMapa');
-  const info = document.getElementById('contMapaInfo');
-  if (!cont) return;
-  const c = CONTINENTES.find(x=>x.id===cid);
-  if (!c) return;
-
-  if (!gPaises){
-    cont.innerHTML = '';
-    if (info) info.textContent = 'Mapa não disponível (sem ligação à internet ao carregar a página — actualiza a página).';
-    return;
-  }
-
-  const paisesFeatures = gPaises.data().filter(d => {
-    const a2 = N2A[String(+d.id)];
-    return a2 && c.paises.includes(a2);
-  });
-  const cidades = cidadesDoContinente(c);
-
-  if (!paisesFeatures.length && !cidades.length){
-    cont.innerHTML = '';
-    if (info) info.textContent = '—';
-    return;
-  }
-
-  const W = 760, H = 420;
-  const gj = {type:'FeatureCollection', features: paisesFeatures};
-  const proj = paisesFeatures.length
-    ? d3.geoMercator().fitExtent([[8,8],[W-8,H-8]], gj)
-    : d3.geoMercator().fitExtent([[8,8],[W-8,H-8]],
-        {type:'FeatureCollection', features: cidades.map(ci=>({type:'Feature',geometry:{type:'Point',coordinates:[ci.lon,ci.lat]}}))});
-  const path = d3.geoPath(proj);
-
-  cont.innerHTML = '';
-  const svg = d3.select(cont).append('svg').attr('viewBox', `0 0 ${W} ${H}`);
-  const gMap = svg.append('g');   /* países — faz zoom/pan normalmente */
-  const gPins = svg.append('g');  /* alfinetes — só mudam de posição, tamanho fixo */
-
-  gMap.selectAll('path.cont-country').data(paisesFeatures).join('path')
-    .attr('class','cont-country').attr('d', path)
-    .attr('fill', d => {
-      const a2 = N2A[String(+d.id)];
-      const st = a2 && statusDe(a2);
-      return (st==='visitado' || st==='parcial') ? 'var(--gold)' : 'var(--land)';
-    })
-    .attr('stroke','var(--panel)').attr('stroke-width',0.6)
-    .style('cursor','pointer')
-    .on('click', (ev,d) => { const a2=N2A[String(+d.id)]; if(a2) irParaPais(a2); })
-    .append('title').text(d => { const a2=N2A[String(+d.id)]; return a2 ? nomePT(a2) : ''; });
-
-  const tip = document.getElementById('tooltip');
-  const pinSel = gPins.selectAll('circle.pin').data(cidades).join('circle')
-    .attr('class','pin')
-    .attr('cx', d => proj([d.lon,d.lat])[0])
-    .attr('cy', d => proj([d.lon,d.lat])[1])
-    .attr('r', 4.5)
-    .attr('fill', 'var(--coral)')
-    .attr('stroke', '#fff').attr('stroke-width', 1.2)
-    .on('mousemove', (ev,d) => {
-      tip.textContent = d.nome;
-      tip.style.left = ev.clientX+'px'; tip.style.top = ev.clientY+'px'; tip.style.opacity = 1;
-    })
-    .on('mouseleave', () => { tip.style.opacity = 0; })
-    .on('click', (ev,d) => {
-      ev.stopPropagation();
-      if (typeof fecharDiarioModal === 'function') fecharDiarioModal();
-      showTab('diario');
-      setTimeout(()=>abrirDiarioModal(d.tripId), 80);
-    });
-
-  /* Zoom: o mapa escala normalmente, os alfinetes só reposicionam (tamanho fixo) */
-  const zoomBehCont = d3.zoom().scaleExtent([1,10]).on('zoom', ev => {
-    gMap.attr('transform', ev.transform);
-    pinSel
-      .attr('cx', d => ev.transform.apply(proj([d.lon,d.lat]))[0])
-      .attr('cy', d => ev.transform.apply(proj([d.lon,d.lat]))[1]);
-  });
-  svg.call(zoomBehCont);
-
-  if (info) info.textContent = cidades.length
-    ? `${cidades.length} cidade${cidades.length!==1?'s':''} visitada${cidades.length!==1?'s':''} — passa o rato por cima do alfinete para ver o nome, clica para abrir a viagem.`
-    : 'Ainda não há cidades geolocalizadas neste continente. Adiciona cidades a uma viagem (aba Diário) — a localização é calculada automaticamente ao gravar.';
-}
 window.irParaPais = a2 => {
   document.getElementById('pSel').value = a2;
   renderPais(); carregarRegioes(a2);
@@ -2918,8 +2653,6 @@ function desenharZonaExtraNoMapa(cont, a2, zona, r, W, H){
    Ao sair da entrada do diário, os ObjectURLs são revogados e a memória libertada. */
 let formImgs = [];   // [{name, objUrl, file}] temporário durante edição
 let formLinks = [];  // [{url, label}] temporário durante edição
-let formCidades = []; // [{nome, pernoita, dia}] temporário durante edição
-let formVoos = [];    // [{companhia, rota}] temporário durante edição
 /* Mapa id_viagem → [{name, objUrl}] para fotos carregadas nesta sessão */
 const sessFotos = {};
 
@@ -3013,48 +2746,15 @@ function renderFormLinks(){
     </div>`).join('');
 }
 
-/* Cidades visitadas */
-document.getElementById('btnAddCidade').onclick = () => { formCidades.push({nome:'',pernoita:'',dia:''}); renderFormCidades(); };
-
-function renderFormCidades(){
-  const cont = document.getElementById('tCidadesContainer');
-  cont.innerHTML = formCidades.map((c, i) => `
-    <div class="link-row cidade-row">
-      <input type="text" placeholder="Cidade (ex.: Florença)" value="${esc(c.nome)}"
-        oninput="formCidades[${i}].nome=this.value">
-      <input type="text" placeholder="Local de pernoita (ex.: Hotel Roma)" value="${esc(c.pernoita)}"
-        oninput="formCidades[${i}].pernoita=this.value">
-      <input type="date" value="${c.dia||''}" style="flex:none;width:150px"
-        oninput="formCidades[${i}].dia=this.value">
-      <button class="btn danger" type="button" onclick="formCidades.splice(${i},1); renderFormCidades()">✕</button>
-    </div>`).join('') || '<p style="color:var(--muted);font-size:.82rem;margin:4px 0">Ainda não adicionaste nenhuma cidade.</p>';
-}
-
-/* Voos */
-document.getElementById('btnAddVoo').onclick = () => { formVoos.push({companhia:'',rota:''}); renderFormVoos(); };
-
-function renderFormVoos(){
-  const cont = document.getElementById('tVoosContainer');
-  cont.innerHTML = formVoos.map((v, i) => `
-    <div class="link-row voo-row">
-      <input type="text" placeholder="Companhia (ex.: TAP)" value="${esc(v.companhia)}" list="tAirlineList" autocomplete="off"
-        oninput="formVoos[${i}].companhia=this.value">
-      <input type="text" placeholder="Voo / Rota (ex.: TP1234 ou LIS-LHR)" value="${esc(v.rota)}"
-        oninput="formVoos[${i}].rota=this.value">
-      <button class="btn danger" type="button" onclick="formVoos.splice(${i},1); renderFormVoos()">✕</button>
-    </div>`).join('') || '<p style="color:var(--muted);font-size:.82rem;margin:4px 0">Ainda não adicionaste nenhum voo.</p>';
-}
-
-/* Limpar form também limpa imagens, links, cidades e voos */
+/* Limpar form também limpa imagens e links */
 const _limparFormOld = limparForm;
 limparForm = function(){
   _limparFormOld();
   formImgs = []; formLinks = [];
-  formCidades = []; formVoos = [];
   _formPaises = [];
   renderPaisesChips();
   renderTUserSelector([state.editingUser]);
-  renderFormImgs(); renderFormLinks(); renderFormCidades(); renderFormVoos();
+  renderFormImgs(); renderFormLinks();
 };
 
 /* Guardar viagem: incluir imagens e links */
@@ -3348,7 +3048,6 @@ const IDB_VER  = 1;
 const IDB_STORE = 'fotos';
 let _idb = null;
 let paisContexto = 'visitado'; /* 'visitado' | 'planeado' | 'por visitar' */
-let _pmA2 = null; /* país actualmente aberto no modal de planeamento */
 
 function abrirIDB(){
   if (_idb) return Promise.resolve(_idb);
@@ -3409,14 +3108,16 @@ async function getFotos(tripId, nFotos){
 
 function invalidarCacheFotos(tripId){ delete _fotoCache[tripId]; }
 
-function carregarThumbsTrips(tripsArr){
+function carregarGaleriasTrips(tripsArr){
   tripsArr.forEach(t => {
     if (!t.imgNomes || !t.imgNomes.length) return;
-    getFotos(t.id, 1).then(fotos => {
-      const el = document.getElementById('thumb-' + t.id);
-      if (!el || !fotos.length) return;
-      el.innerHTML = `<img src="${fotos[0]}" title="${esc(t.imgNomes[0]||'')}"
-        onclick="event.stopPropagation();verImagem('${fotos[0]}')">`;
+    getFotos(t.id, t.imgNomes.length).then(fotos => {
+      const gal = document.getElementById('gal-' + t.id);
+      if (!gal || !fotos.length) return;
+      gal.innerHTML = fotos.map((url, i) =>
+        `<img src="${url}" title="${esc(t.imgNomes[i]||'')}"
+          onclick="event.stopPropagation();verImagem('${url}')">`
+      ).join('');
     });
   });
 }
@@ -3737,14 +3438,13 @@ const PLUG_SYMBOLS = {
 };
 
 document.getElementById('planModalClose').onclick =
-  () => { document.getElementById('planModal').classList.remove('open'); _pmA2 = null; };
+  () => document.getElementById('planModal').classList.remove('open');
 document.getElementById('planModal').addEventListener('click', ev => {
-  if (ev.target.id === 'planModal'){ ev.target.classList.remove('open'); _pmA2 = null; }
+  if (ev.target.id === 'planModal') ev.target.classList.remove('open');
 });
 document.getElementById('btnPlanear').onclick = () => abrirPlaneamento(selPais.value);
 
 function abrirPlaneamento(a2){
-  _pmA2 = a2;
   const nome = nomePT(a2);
   document.getElementById('pmFlag').textContent = bandeira(a2);
   document.getElementById('pmNome').textContent = 'Planear: ' + nome;
@@ -3772,21 +3472,7 @@ function abrirPlaneamento(a2){
 
   const checkedIds = new Set(marcados.map((_,i)=>i));
 
-  const entryPlano = ud().countries[a2] || {};
-  const anoAtualPlano = new Date().getFullYear();
-  const pmMesOpts = ['<option value="">Mês (opcional)</option>']
-    .concat(PT_MESES.map((m,i)=>`<option value="${i+1}" ${entryPlano.planMes===i+1?'selected':''}>${m}</option>`)).join('');
-
   document.getElementById('pmBody').innerHTML = `
-    <div class="pm-section">
-      <h3>🗓 Quando pretendes viajar</h3>
-      <div class="plano-row">
-        <select id="pmMes">${pmMesOpts}</select>
-        <input type="number" id="pmAno" placeholder="Ano, ex: ${anoAtualPlano+1}" min="${anoAtualPlano}" max="${anoAtualPlano+15}" value="${entryPlano.planAno||''}">
-      </div>
-      <div id="pmPassaporteAlerta">${planPassaporteAlerta(a2)}</div>
-    </div>
-
     <div class="pm-section">
       <h3>⚡ Electricidade & Adaptador</h3>
       <div class="pm-cards">
@@ -3835,10 +3521,6 @@ function abrirPlaneamento(a2){
 
   /* PDF */
   document.getElementById('btnPlanPDF').onclick = () => exportarPlanPDF(a2, nome, marcados, plugHtml, plug);
-
-  /* Data prevista da viagem */
-  document.getElementById('pmMes').onchange = () => setPlanData(a2, document.getElementById('pmMes').value, document.getElementById('pmAno').value);
-  document.getElementById('pmAno').onchange = () => setPlanData(a2, document.getElementById('pmMes').value, document.getElementById('pmAno').value);
 }
 
 window.togglePmCheck = (i) => {
@@ -4655,16 +4337,6 @@ function imProcessar(){
 
 /* Decisão para linhas sem utilizador: 'skip' | 'u1' | 'u2' | 'ambos' */
 let _imDecisaoSemUser = 'skip';
-let _imDecisaoDuplicados = 'skip'; /* 'skip' | 'substituir' | 'duplicar' */
-
-function chaveViagem(pais, ini, userIds){
-  const uids = (userIds||[]).slice().sort().join(',');
-  return (pais||'') + '|' + (ini||'') + '|' + uids;
-}
-function chaveViagemDeTrip(t){
-  const pais = (t.paises && t.paises.length ? t.paises.slice().sort().join(',') : (t.pais||''));
-  return chaveViagem(pais, t.ini, t.userIds||[t.userId]);
-}
 
 function imRenderPreview(){
   /* Stats */
@@ -4711,37 +4383,6 @@ function imRenderTableRows(){
     });
   }
 
-  /* Detectar linhas que já existem no diário (mesmo país + ano + utilizador) */
-  const existentes = new Map();
-  state.trips.forEach(t => existentes.set(chaveViagemDeTrip(t), t.id));
-  let nDuplicados = 0;
-  todasLinhas.forEach(l => {
-    const ini = l.ano ? l.ano + '-01-01' : '';
-    const chave = chaveViagem(l.a2 || 'XX', ini, l.userIds);
-    const idExistente = existentes.get(chave);
-    l.duplicada = !!idExistente;
-    l.duplicadaId = idExistente || null;
-    if (l.duplicada) nDuplicados++;
-  });
-
-  /* Secção de decisão para duplicados */
-  const dupSec = document.getElementById('imDupSection');
-  if (nDuplicados){
-    dupSec.innerHTML = `
-      <div class="im-no-user">
-        <span style="font-size:1.2rem">🔁</span>
-        <div style="flex:1">
-          <b>${nDuplicados}</b> linha(s) parecem já existir no diário (mesmo país, ano e utilizador). O que fazer?
-          <select id="imDecisaoDup" onchange="_imDecisaoDuplicados=this.value;imRenderTableRows()"
-            style="margin-left:10px" class="im-country-select">
-            <option value="skip" ${_imDecisaoDuplicados==='skip'?'selected':''}>Ignorar estas linhas</option>
-            <option value="substituir" ${_imDecisaoDuplicados==='substituir'?'selected':''}>Substituir as existentes</option>
-            <option value="duplicar" ${_imDecisaoDuplicados==='duplicar'?'selected':''}>Importar mesmo assim (duplicar)</option>
-          </select>
-        </div>
-      </div>`;
-  } else { dupSec.innerHTML = ''; }
-
   const tbody = document.getElementById('imPreviewBody');
   tbody.innerHTML = todasLinhas.map((l,i) => {
     const users = l.userIds.map(uid=>{
@@ -4759,24 +4400,20 @@ function imRenderTableRows(){
     const estadoBadge = l.semUser
       ? '<span class="im-badge skip">ignorar</span>'
       : (l.a2?'<span class="im-badge ok">✓</span>':'<span class="im-badge warn">sem ISO</span>');
-    const dupBadge = l.duplicada
-      ? ` <span class="im-badge warn">${_imDecisaoDuplicados==='skip'?'já existe · ignorada':(_imDecisaoDuplicados==='substituir'?'já existe · substitui':'já existe · duplica')}</span>`
-      : '';
     return `<tr>
       <td>${paisLabel}</td>
       <td>${esc(l.ano)}</td>
       <td>${users}</td>
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.locais)}</td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${esc(l.notas)}</td>
-      <td>${estadoBadge}${dupBadge}</td>
+      <td>${estadoBadge}</td>
     </tr>`;
   }).join('');
 
   /* Guardar referência para confirmar */
   window._imTodasLinhas = todasLinhas;
-  const aImportar = todasLinhas.filter(l=>!l.semUser && !(l.duplicada && _imDecisaoDuplicados==='skip')).length;
   document.getElementById('btnImportarConfirm').textContent =
-    `✓ Importar ${aImportar} entradas`;
+    `✓ Importar ${todasLinhas.filter(l=>!l.semUser).length} entradas`;
 }
 
 window.imCorrigirPais = (rowIdx, a2) => {
@@ -4790,29 +4427,22 @@ function imConfirmar(){
   const linhas = (window._imTodasLinhas||[]).filter(l=>!l.semUser);
   if(!linhas.length){ alert('Nenhuma linha para importar.'); return; }
 
-  let importadas = 0, semIso = 0, substituidas = 0, ignoradas = 0;
+  let importadas = 0, semIso = 0;
   linhas.forEach(l => {
-    if (l.duplicada && _imDecisaoDuplicados === 'skip'){ ignoradas++; return; }
-
     const pais = l.a2 || 'XX'; /* XX para países não reconhecidos */
     const ini = l.ano ? l.ano + '-01-01' : '';
-    const dadosTrip = {
-      pais, ini, fim: ini,
+    const trip = {
+      id: Date.now() + Math.random(),
+      pais,
+      ini,
+      fim: ini,
       titulo: l.locais ? l.locais.split('·')[0].trim() : (nomePT(pais)||l.paisNome||'Viagem'),
       locais: l.locais,
       notas: l.notas,
+      imgNomes: [],
+      links: [],
       userIds: l.userIds,
     };
-
-    if (l.duplicada && _imDecisaoDuplicados === 'substituir' && l.duplicadaId){
-      const existente = state.trips.find(t => t.id === l.duplicadaId);
-      if (existente){ Object.assign(existente, dadosTrip); substituidas++; }
-      else { state.trips.push({ id: Date.now()+Math.random(), imgNomes:[], links:[], ...dadosTrip }); importadas++; }
-    } else {
-      state.trips.push({ id: Date.now()+Math.random(), imgNomes:[], links:[], ...dadosTrip });
-      importadas++;
-    }
-
     /* Marcar país como visitado para os utilizadores correspondentes */
     l.userIds.forEach(uid => {
       const saved = state.editingUser;
@@ -4820,7 +4450,9 @@ function imConfirmar(){
       if(l.a2) setStatus(l.a2, 'visitado');
       state.editingUser = saved;
     });
+    state.trips.push(trip);
     if(!l.a2) semIso++;
+    importadas++;
   });
 
   save(); refreshStats(); renderTrips();
@@ -4831,42 +4463,11 @@ function imConfirmar(){
     <h3 style="font-family:'Fraunces',serif;font-size:1.4rem;margin-bottom:8px">
       ${importadas} entradas importadas!
     </h3>
-    ${substituidas?`<p style="color:var(--muted);font-size:.85rem">🔁 ${substituidas} entrada(s) já existente(s) foram substituídas.</p>`:''}
-    ${ignoradas?`<p style="color:var(--muted);font-size:.85rem">⏭ ${ignoradas} entrada(s) ignorada(s) por já existirem.</p>`:''}
     ${semIso?`<p style="color:var(--muted);font-size:.85rem">⚠️ ${semIso} entrada(s) sem código ISO — aparecem com país "XX" no diário. Podes editar cada uma manualmente.</p>`:''}
     <p style="color:var(--muted);font-size:.82rem;margin-top:8px">
       Os países foram marcados como visitados para cada utilizador.
     </p>`;
 }
-
-
-/* ============ REMOVER VIAGENS DUPLICADAS ============ */
-function encontrarViagensDuplicadas(){
-  const vistos = new Map();
-  const dups = [];
-  state.trips.forEach(t=>{
-    const chave = chaveViagemDeTrip(t);
-    if (vistos.has(chave)) dups.push(t.id);
-    else vistos.set(chave, t.id);
-  });
-  return dups;
-}
-window.removerViagensDuplicadas = () => {
-  const dupIds = encontrarViagensDuplicadas();
-  if (!dupIds.length){ toast('Não há viagens duplicadas 🎉'); return; }
-  if (!confirm(`Encontrei ${dupIds.length} viagem(ns) duplicada(s) — mesmo país, data e utilizador(es). Fica só uma cópia de cada, as restantes são apagadas. Continuar?`)) return;
-  const dupSet = new Set(dupIds);
-  dupIds.forEach(id=>{
-    const t = state.trips.find(x=>x.id===id);
-    if (t && t.imgNomes && t.imgNomes.length){
-      apagarFotosIDB(id, t.imgNomes.length);
-      invalidarCacheFotos(id);
-    }
-  });
-  state.trips = state.trips.filter(t=>!dupSet.has(t.id));
-  save(); refreshStats(); renderTrips();
-  toast(`${dupIds.length} viagem(ns) duplicada(s) removida(s) ✓`);
-};
 
 
 /* ============ LIMPEZA DE DADOS ============ */
@@ -4967,24 +4568,19 @@ document.getElementById('btnSaveTrip').addEventListener('click', function(){
   if (!_formPaises.length){ toast('Adiciona pelo menos um país'); return; }
 
   const paisPrimario = _formPaises[0];
-  const cidadesValidas = formCidades.filter(c => c.nome.trim());
-  const voosValidos = formVoos.filter(v => v.companhia.trim() || v.rota.trim());
   const trip = {
     id: editId || Date.now(),
     pais: paisPrimario,
     paises: [..._formPaises],
     ini, fim,
     titulo: titulo || ('Viagem a ' + _formPaises.map(a=>nomePT(a)).join(', ')),
-    cidades: cidadesValidas,
-    voos:    voosValidos,
-    /* Campos derivados — mantêm compatibilidade com cartões, carimbos, PDF, etc. */
-    locais:   cidadesValidas.map(c=>c.nome.trim()).filter(Boolean).join(', '),
-    pernoita: cidadesValidas.map(c=>c.pernoita.trim()).filter(Boolean).join(', '),
-    airline:  voosValidos[0]?.companhia.trim() || '',
-    rota:     voosValidos.map(v=>v.rota.trim()).filter(Boolean).join(', '),
+    locais:   document.getElementById('tLocais')?.value.trim()   || '',
+    pernoita: document.getElementById('tPernoita')?.value.trim() || '',
     notas:    document.getElementById('tNotas')?.value.trim()    || '',
     imgNomes: formImgs.map(f=>f.name),
     links:    formLinks.filter(l=>l.url.trim()),
+    airline:  document.getElementById('tAirline')?.value.trim()  || '',
+    rota:     document.getElementById('tRota')?.value.trim()     || '',
     userIds:  getTUserSelected(),
   };
 
@@ -5012,7 +4608,6 @@ document.getElementById('btnSaveTrip').addEventListener('click', function(){
   limparForm(); save(); renderTrips(); refreshStats();
   fecharFormModal();
   toast('Viagem guardada ✓');
-  geocodarCidadesTrip(trip); /* em segundo plano — não bloqueia */
 });
 
 /* Cancelar edição */
@@ -5038,14 +4633,16 @@ window.editarTrip = (id) => {
   if(document.getElementById('tIni'))      document.getElementById('tIni').value      = t.ini||'';
   if(document.getElementById('tFim'))      document.getElementById('tFim').value      = t.fim||'';
   if(document.getElementById('tTitulo'))   document.getElementById('tTitulo').value   = t.titulo||'';
+  if(document.getElementById('tLocais'))   document.getElementById('tLocais').value   = t.locais||'';
+  if(document.getElementById('tPernoita')) document.getElementById('tPernoita').value = t.pernoita||'';
   if(document.getElementById('tNotas'))    document.getElementById('tNotas').value    = t.notas||'';
-
-  /* Cidades e voos — usa os dados estruturados se existirem, senão migra os campos antigos (texto livre) para uma primeira linha */
-  formCidades = (t.cidades && t.cidades.length) ? t.cidades.map(c=>({...c}))
-    : (t.locais ? [{nome:t.locais, pernoita:t.pernoita||'', dia:''}] : []);
-  formVoos = (t.voos && t.voos.length) ? t.voos.map(v=>({...v}))
-    : ((t.airline || t.rota) ? [{companhia:t.airline||'', rota:t.rota||''}] : []);
-  renderFormCidades(); renderFormVoos();
+  if(document.getElementById('tAirline'))  document.getElementById('tAirline').value  = t.airline||'';
+  if(document.getElementById('tRota'))     document.getElementById('tRota').value     = t.rota||'';
+  /* Tipo de viagem */
+  const tipoVal = t.tipo || 'escapadinha';
+  const tipoRadio = document.querySelector(`input[name="tTipoViagem"][value="${tipoVal}"]`);
+  if(tipoRadio) tipoRadio.checked = true;
+  if(document.getElementById('tIlhas')) document.getElementById('tIlhas').checked = !!t.ilhas;
 
   /* Preencher utilizadores */
   const tripUserIds = t.userIds || (t.userId ? [t.userId] : [state.editingUser]);
@@ -5275,8 +4872,7 @@ function seededRand(seed){
   return ((s2 >>> 0) % 1000) / 1000;
 }
 
-function stampSVG(st, idx, scale){
-  scale = scale || 1;
+function stampSVG(st, idx){
   const seed = (st.tripId||1)*31 + idx*17;
   const r1=seededRand(seed), r2=seededRand(seed+7), r3=seededRand(seed+13),
         r4=seededRand(seed+19), r5=seededRand(seed+23), r6=seededRand(seed+29);
@@ -5392,7 +4988,7 @@ function stampSVG(st, idx, scale){
   </filter>`;
 
   return {
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(W*scale)}" height="${Math.round(H*scale)}" viewBox="0 0 ${W} ${H}"
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
       font-family="Arial,Helvetica,sans-serif" filter="url(#${filterId})">
       <defs>${filterEl}</defs>
       ${shapeEl}${contentEl}${extras}
@@ -5401,10 +4997,9 @@ function stampSVG(st, idx, scale){
   };
 }
 
-function stampHtml(st, idx, scale){
-  scale = scale || 1;
-  if (!st) return `<div style="width:${Math.round(180*scale)}px;height:${Math.round(110*scale)}px;"></div>`;
-  const { svg, rot } = stampSVG(st, idx, scale);
+function stampHtml(st, idx){
+  if (!st) return `<div style="width:180px;height:110px;"></div>`;
+  const { svg, rot } = stampSVG(st, idx);
   const planCls = st.planeado ? 'planeado' : '';
   return `<div class="pp-stamp-wrap ${planCls}"
     style="transform:rotate(${rot.toFixed(1)}deg);transform-origin:center;"
@@ -5414,35 +5009,72 @@ function stampHtml(st, idx, scale){
   </div>`;
 }
 
-/* ── Carimbos: 1 por país por viagem (revisitar o país noutra viagem = novo carimbo) ── */
-function ppGetAllStamps(uid){
+
+
+function stampHtmlSmall(st, idx){
+  if (!st) return '';
+  const seed = (st.tripId||1)*31 + idx*17;
+  const r3=seededRand(seed+13), r4=seededRand(seed+19), r5=seededRand(seed+23), r6=seededRand(seed+29);
+  const PALETTES=[
+    {stroke:'#1a3a7a',text:'#1a3a7a',fill:'rgba(26,58,122,.09)'},
+    {stroke:'#7a1a1a',text:'#7a1a1a',fill:'rgba(122,26,26,.09)'},
+    {stroke:'#1a5a1a',text:'#1a5a1a',fill:'rgba(26,90,26,.09)'},
+    {stroke:'#4a1a7a',text:'#4a1a7a',fill:'rgba(74,26,122,.09)'},
+    {stroke:'#7a5a1a',text:'#7a5a1a',fill:'rgba(122,90,26,.09)'},
+    {stroke:'#1a6a7a',text:'#1a6a7a',fill:'rgba(26,106,122,.09)'},
+  ];
+  const plColor={stroke:'#2a6a1a',text:'#2a6a1a',fill:'rgba(42,106,26,.09)'};
+  const c = st.planeado ? plColor : PALETTES[Math.floor(r3*PALETTES.length)];
+  const SHAPES=['oval-s','rect-s','circle-s'];
+  const shape = SHAPES[Math.floor(r4*SHAPES.length)];
+  const LABELS=["IMMIGRATION","ARRIVAL","CUSTOMS","DEPARTURE","BORDER"];
+  const label = LABELS[Math.floor(r5*LABELS.length)];
+  const tipo  = st.planeado?'PLANEADO':(Math.floor(r6*3)===0?'ADMITTED':'DEPARTED');
+  const nome=nomePT(st.a2).toUpperCase();
+  const data=fmtData(st.data);
+  const flag=bandeira(st.a2);
+  const W=110,H=72,cx=55,cy=36;
+  let shapeEl='',contentEl='';
+  const line=(y)=>`<line x1="${W*0.1}" y1="${y}" x2="${W*0.9}" y2="${y}" stroke="${c.stroke}" stroke-width=".6" opacity=".5"/>`;
+
+  if(shape==='oval-s'){
+    shapeEl=`<ellipse cx="${cx}" cy="${cy}" rx="52" ry="32" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2"/><ellipse cx="${cx}" cy="${cy}" rx="45" ry="25" fill="none" stroke="${c.stroke}" stroke-width=".6" opacity=".5"/>`;
+    contentEl=`<text x="${cx}" y="16" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}" opacity=".8">${label}</text>${line(20)}<text x="${cx}" y="35" text-anchor="middle" font-size="10" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>${line(42)}<text x="${cx}" y="53" text-anchor="middle" font-size="8" font-weight="700" fill="${c.text}">${data}</text><text x="${cx}" y="63" text-anchor="middle" font-size="5" letter-spacing="2" fill="${c.text}" opacity=".7">${tipo}</text>`;
+  } else if(shape==='circle-s'){
+    shapeEl=`<circle cx="${cx}" cy="${cy}" r="32" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="26" fill="none" stroke="${c.stroke}" stroke-width=".6" stroke-dasharray="2,2" opacity=".5"/>`;
+    contentEl=`<text x="${cx}" y="16" text-anchor="middle" font-size="5" font-weight="700" letter-spacing="1.5" fill="${c.text}" opacity=".8">${label}</text><text x="${cx}" y="33" text-anchor="middle" font-size="9.5" font-weight="900" fill="${c.text}">${nome.slice(0,10)}</text><text x="${cx}" y="47" text-anchor="middle" font-size="7.5" font-weight="700" fill="${c.text}">${data}</text><text x="${cx}" y="58" text-anchor="middle" font-size="5" letter-spacing="1.5" fill="${c.text}" opacity=".7">${tipo}</text>`;
+  } else {
+    shapeEl=`<rect x="3" y="4" width="${W-6}" height="${H-8}" rx="8" fill="${c.fill}" stroke="${c.stroke}" stroke-width="2"/><rect x="8" y="9" width="${W-16}" height="${H-18}" rx="5" fill="none" stroke="${c.stroke}" stroke-width=".6" opacity=".5"/>`;
+    contentEl=`<text x="${cx}" y="20" text-anchor="middle" font-size="5.5" font-weight="700" letter-spacing="2" fill="${c.text}" opacity=".8">${label}</text>${line(24)}<text x="${cx}" y="40" text-anchor="middle" font-size="10" font-weight="900" fill="${c.text}">${nome.slice(0,12)}</text>${line(46)}<text x="${cx}" y="57" text-anchor="middle" font-size="8" font-weight="700" fill="${c.text}">${data}</text>`;
+  }
+  const filterId=`inks${idx}t${st.tripId||0}`;
+  const filterEl=`<filter id="${filterId}"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="${seed}" result="n"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.8 2.2" in="n" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter>`;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Arial,Helvetica,sans-serif" filter="url(#${filterId})"><defs>${filterEl}</defs>${shapeEl}${contentEl}<text x="${W-4}" y="12" text-anchor="end" font-size="9">${flag}</text></svg>`;
+  const planCls = st.planeado?'planeado':'';
+  return `<div class="pp-stamp-wrap ${planCls}" onclick="fecharDiarioModal&&fecharDiarioModal();showTab('diario');setTimeout(()=>abrirDiarioModal(${st.tripId}),80)" title="${esc(st.titulo||nomePT(st.a2))}">${svg}</div>`;
+}
+
+/* ── Página de carimbos ── */
+function ppRenderStampsPage(uid, pageIdx){
   const hoje = new Date().toISOString().slice(0,10);
   const userTrips = state.trips
     .filter(t => (t.userIds||[t.userId]).includes(uid))
     .sort((a,b) => (a.ini||'').localeCompare(b.ini||''));
 
+  /* 1 carimbo por país por viagem — deduplicar */
   const allStamps = [];
-  const vistos = new Set(); /* país+data — evita duplicados de viagens/importações repetidas */
   userTrips.forEach(t => {
     const paises = t.paises || [t.pais];
-    const seenNaViagem = new Set();
+    const seen = new Set();
     paises.forEach(a2 => {
-      if (!a2 || a2 === 'XX') return; /* código de país desconhecido (ex: importação sem país identificado) — sem carimbo */
-      if (seenNaViagem.has(a2)) return;
-      seenNaViagem.add(a2);
-      const chave = a2 + '|' + (t.ini||'');
-      if (vistos.has(chave)) return; /* mesmo país + mesma data → é a mesma entrada, só um carimbo */
-      vistos.add(chave);
-      allStamps.push({a2, titulo:t.titulo||nomePT(a2), data:t.ini,
-        planeado:t.ini>hoje, tripId:t.id});
+      const key = a2; /* 1 carimbo por país, independente de quantas viagens */
+      if (!seen.has(key)){
+        seen.add(key);
+        allStamps.push({a2, titulo:t.titulo||nomePT(a2), data:t.ini,
+          planeado:t.ini>hoje, tripId:t.id});
+      }
     });
   });
-  return allStamps;
-}
-
-/* ── Página de carimbos ── */
-function ppRenderStampsPage(uid, pageIdx){
-  const allStamps = ppGetAllStamps(uid);
 
   /* Carimbos por página: 2, 3 ou 4 — determinístico por página */
   function pageCount(pi){
@@ -5459,37 +5091,30 @@ function ppRenderStampsPage(uid, pageIdx){
   const pageNum = pageIdx*2 + 3;
   const W_PAGE = 380, H_PAGE = 480; /* dimensões internas da página em px lógicos */
 
-  /* Gerar posições aleatórias sem sobreposição — cada carimbo fica numa "banda"
-     horizontal própria (a página nunca tem mais de 2 carimbos), com posição X e
-     tamanho aleatórios e alguma oscilação vertical dentro da banda. Isto garante
-     zero sobreposição mesmo com dois carimbos grandes (140%). */
+  /* Gerar posições aleatórias sem sobreposição */
   function positionStamps(stamps){
     const placed = [];
-    const margin = 30;
-    const topY = 40, bottomY = H_PAGE - 20;
-    const n = stamps.length || 1;
-    const bandH = (bottomY - topY) / n;
     stamps.forEach((st, i) => {
       const seed = (st.tripId||1)*13 + i*29 + pageIdx*7;
-      const isBig = seededRand(seed+3) > 0.5;
-      const sw = isBig ? 252 : 180, sh = isBig ? 154 : 110;
+      const r1 = seededRand(seed+1), r2 = seededRand(seed+2);
+      const isLarge = seededRand(seed+3) > 0.5;
+      const sw = isLarge ? 180 : 110, sh = isLarge ? 110 : 80;
       const rot = (seededRand(seed+4)-0.5)*24;
 
-      const r1 = seededRand(seed+1), r2 = seededRand(seed+2);
-      const bandTop = topY + i*bandH;
-      const jitter = Math.max(0, bandH - sh - 10);
-      const x = margin + r1 * Math.max(0, W_PAGE - sw - margin*2);
-      const y = bandTop + r2 * jitter;
+      /* Posição: margem para não sair da página */
+      const margin = 30;
+      const x = margin + r1 * (W_PAGE - sw - margin*2);
+      const y = 40 + r2 * (H_PAGE - sh - 60); /* deixar espaço para cabeçalho */
 
-      placed.push({st, i: startIdx+i, x, y, sw, sh, rot, isBig});
+      placed.push({st, i: startIdx+i, x, y, sw, sh, rot, isLarge});
     });
     return placed;
   }
 
   function renderPage(side, stampList){
     const positions = positionStamps(stampList);
-    const stamps = positions.map(({st, i, x, y, rot, isBig}) => {
-      const html = stampHtml(st, i, isBig ? 1.4 : 1);
+    const stamps = positions.map(({st, i, x, y, rot, isLarge}) => {
+      const html = isLarge ? stampHtml(st, i) : stampHtmlSmall(st, i);
       return `<div class="pp-stamp-free" style="left:${x.toFixed(0)}px;top:${y.toFixed(0)}px;transform:rotate(${rot.toFixed(1)}deg);">${html}</div>`;
     }).join('');
 
@@ -5513,8 +5138,10 @@ function ppRenderStampsPage(uid, pageIdx){
 }
 
 function ppTotalPages(uid){
-  /* Total de carimbos reais (mesma dedução usada na renderização) */
-  const total = ppGetAllStamps(uid).length;
+  /* Contar carimbos únicos por país */
+  const userTrips = state.trips.filter(t=>(t.userIds||[t.userId]).includes(uid));
+  let total = 0;
+  userTrips.forEach(t => { total += (t.paises||[t.pais]).length; });
 
   /* Calcular páginas necessárias baseado em pageCount */
   function pageCount(pi){
@@ -5587,16 +5214,6 @@ window.showTab = function(name){
     ppRenderUserSelector(); ppRenderAlerts(_ppUid); ppRenderPage();
   }
 };
-
-/* ── Render inicial ─────────────────────────────────────────────────────
-   Sem isto, os dados guardados no localStorage só aparecem no ecrã depois
-   de alguma acção (editar/apagar/importar); ao abrir ou actualizar a
-   página, o Diário, a aba Países e os contadores do topo ficavam em branco
-   até essa primeira acção. */
-renderTrips();
-renderPais();
-refreshStats();
-geocodarTodasCidadesPendentes();
 </script>
 </body>
 </html>
