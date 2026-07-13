@@ -661,9 +661,6 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   </div>
   <div class="hdr-actions">
     <button class="btn" id="btnTheme" title="Alternar tema claro/escuro">🌙</button>
-    <button class="btn" id="btnExport">⬇ Exportar</button>
-    <button class="btn" id="btnImport">⬆ Importar</button>
-  <button class="btn" onclick="abrirImportExcel()" style="background:var(--teal);color:#062621;border-color:var(--teal)">📊 Excel</button>
     <input type="file" id="fileImport" accept=".json" style="display:none">
   </div>
 </header>
@@ -868,6 +865,20 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
 
 <!-- ============ ABA PREFERÊNCIAS ============ -->
 <section class="page" id="page-prefs">
+  <!-- Acções de dados -->
+  <div class="card" style="margin-bottom:20px">
+    <h3 style="font-family:'Fraunces',serif;font-size:1.05rem;margin-bottom:14px;color:var(--gold)">💾 Dados</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn" id="btnExport" style="padding:8px 18px">⬇ Exportar JSON</button>
+      <button class="btn" id="btnImport" style="padding:8px 18px">⬆ Importar JSON</button>
+      <button class="btn" onclick="abrirImportExcel()" style="padding:8px 18px;background:var(--teal);color:#fff;border-color:var(--teal)">📊 Importar Excel</button>
+    </div>
+    <p style="font-size:.78rem;color:var(--muted);margin-top:10px">
+      <b>Exportar JSON</b>: guarda todos os dados (países, diário, passaportes).<br>
+      <b>Importar JSON</b>: restaura dados de uma exportação anterior.<br>
+      <b>Importar Excel</b>: importa histórico de viagens a partir de ficheiro .xlsx.
+    </p>
+  </div>
   <div class="pref-section">
     <h3>👥 Utilizadores</h3>
     <div id="prefUsersContainer"></div>
