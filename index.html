@@ -4858,6 +4858,8 @@ document.getElementById('btnSaveTrip').addEventListener('click', function(){
     links:    formLinks.filter(l=>l.url.trim()),
     airline:  document.getElementById('tAirline')?.value.trim()  || '',
     rota:     document.getElementById('tRota')?.value.trim()     || '',
+    tipo:     document.querySelector('input[name="tTipoViagem"]:checked')?.value || 'escapadinha',
+    ilhas:    document.getElementById('tIlhas')?.checked || false,
     userIds:  getTUserSelected(),
   };
 
