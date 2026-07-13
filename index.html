@@ -1226,6 +1226,81 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
 <div id="tooltip"></div>
 <div id="toast"></div>
 <script>
+
+/* ══════════════════════════════════════════════════════
+   TYPE-AHEAD PARA SELECTS COM EMOJI
+   Permite escrever letras para navegar em dropdowns
+   mesmo quando as opções começam com emoji
+   ══════════════════════════════════════════════════════ */
+(function(){
+  /* Normalizar texto: extrair apenas as letras do nome do país */
+  function normalize(str){
+    /* Remover tudo até à primeira letra latina/diacrítica */
+    const clean = str.replace(/^[^\p{L}]+/u, '').trim();
+    return clean
+      .normalize('NFD')          /* decompor diacríticos: é → e + ́ */
+      .replace(/[\u0300-\u036f]/g, '')  /* remover marcas diacríticas */
+      .toLowerCase();
+  }
+
+  let _taBuffer = '';
+  let _taTimer  = null;
+
+  function addTypeAhead(sel){
+    if(sel._taAdded) return;
+    sel._taAdded = true;
+    sel.addEventListener('keydown', function(e){
+      if(e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+
+      clearTimeout(_taTimer);
+      _taBuffer += normalize(e.key);
+      _taTimer = setTimeout(()=>{ _taBuffer=''; }, 900);
+
+      const opts = [...this.options];
+      /* Procurar opção cujo texto normalizado começa com o buffer */
+      let match = opts.findIndex(o => normalize(o.text).startsWith(_taBuffer));
+
+      /* Se não encontrar, tentar só a última letra (nova pesquisa) */
+      if(match === -1 && _taBuffer.length > 1){
+        const last = _taBuffer.slice(-1);
+        const m2 = opts.findIndex(o => normalize(o.text).startsWith(last));
+        if(m2 !== -1){ _taBuffer = last; match = m2; }
+      }
+      if(match !== -1){
+        this.selectedIndex = match;
+        this.dispatchEvent(new Event('change', {bubbles:true}));
+        e.preventDefault();
+      }
+    });
+  }
+
+  /* Aplicar a todos os selects com países/companhias quando o DOM estiver pronto */
+  function applyToAll(){
+    const IDS = ['tPaisAdd','fPais','pSel','fAirline','alRegion'];
+    IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if(el) addTypeAhead(el);
+    });
+    /* Também aplicar a qualquer select novo que apareça */
+    const observer = new MutationObserver(muts => {
+      muts.forEach(m => {
+        m.addedNodes.forEach(n => {
+          if(n.nodeType===1){
+            if(n.tagName==='SELECT') addTypeAhead(n);
+            n.querySelectorAll?.('select').forEach(addTypeAhead);
+          }
+        });
+      });
+    });
+    observer.observe(document.body, {childList:true, subtree:true});
+  }
+
+  if(document.readyState==='loading')
+    document.addEventListener('DOMContentLoaded', applyToAll);
+  else
+    applyToAll();
+})();
+
 /* ============ GUIA PRÉ-CARREGADO (regiões + o que ver) ============ */
 const GUIA = {
 "PT":{r:[
