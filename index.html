@@ -6,6 +6,8 @@
 <title>Atlas de Viagens</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -651,6 +653,16 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   .brand h1{font-size:1.5rem;}
 }
 @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+
+/* ── Mapa de cidades na aba Regiões ── */
+#regMapaCidades{height:380px;border-radius:10px;border:1px solid var(--line);margin:16px 0;overflow:hidden;}
+.reg-map-hint{font-size:.78rem;color:var(--muted);margin-bottom:8px;}
+.leaflet-popup-content-wrapper{background:var(--panel);border:1px solid var(--gold);border-radius:8px;color:var(--paper);box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.leaflet-popup-tip{background:var(--panel);}
+.lf-popup-title{font-weight:700;font-size:.92rem;margin-bottom:6px;color:var(--gold);}
+.lf-popup-trips{margin-top:4px;display:flex;flex-direction:column;gap:4px;}
+.lf-popup-trip{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:5px 9px;font-size:.78rem;cursor:pointer;text-align:left;color:var(--paper);width:100%;}
+.lf-popup-trip:hover{border-color:var(--gold);color:var(--gold);}
 </style>
 </head>
 <body>
@@ -812,6 +824,11 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   <div id="reg-paises" style="display:none">
     <button class="cont-back" id="backCont">← Voltar aos continentes</button>
     <h2 class="sec" id="contTitulo"></h2>
+    <!-- Mapa de cidades visitadas neste continente -->
+    <div id="regMapaWrap" style="display:none">
+      <p class="reg-map-hint">📍 Cidades visitadas nesta região (do Diário). Clica num marcador para ver a viagem.</p>
+      <div id="regMapaCidades"></div>
+    </div>
     <div class="country-grid" id="countryGrid"></div>
   </div>
 </section>
@@ -2490,6 +2507,8 @@ function abrirContinente(id){
       <span class="cbflag">${bandeira(a2)}</span>${nomePT(a2)}
     </button>`;
   }).join('');
+  /* Renderizar mapa de cidades visitadas nesta região */
+  renderRegMapaParaCont(id);
 }
 document.getElementById('backCont').onclick = ()=>{
   document.getElementById('reg-continentes').style.display='block';
@@ -4983,7 +5002,6 @@ function ppRenderCover(uid){
   return leftPage + rightPage;
 }
 
-
 /* ── Carimbo SVG realista ── */
 function seededRand(seed){
   let s2 = (seed * 1664525 + 1013904223) & 0xffffffff;
@@ -5434,6 +5452,175 @@ function exportarDiarioExcel(){
     toast('Erro ao exportar: ' + e.message);
   }
 }
+
+
+/* ══════════════════════════════════════════════════════
+   MAPA DE CIDADES — ABA REGIÕES (Leaflet)
+   ══════════════════════════════════════════════════════ */
+
+let _regLeafMap = null;   /* instância do mapa Leaflet */
+let _regLeafCont = null;  /* id do continente actual */
+
+/* Cache de geocodificação: cidade → {lat, lon} */
+const _geoCache = {};
+
+/* Geocodificar uma cidade via Nominatim (OpenStreetMap) */
+async function geocodificarCidade(cidade, paisA2){
+  const key = cidade + '|' + paisA2;
+  if (_geoCache[key]) return _geoCache[key];
+  try {
+    const countryCode = paisA2.toLowerCase();
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cidade)}&countrycodes=${countryCode}&format=json&limit=1`;
+    const r = await fetch(url, {headers:{'Accept-Language':'pt'}});
+    const data = await r.json();
+    if (data.length){
+      const res = {lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon)};
+      _geoCache[key] = res;
+      return res;
+    }
+    /* Tentar sem país se falhar */
+    const r2 = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cidade)}&format=json&limit=1`, {headers:{'Accept-Language':'pt'}});
+    const data2 = await r2.json();
+    if (data2.length){
+      const res = {lat: parseFloat(data2[0].lat), lon: parseFloat(data2[0].lon)};
+      _geoCache[key] = res;
+      return res;
+    }
+  } catch(e){}
+  return null;
+}
+
+/* Construir lista de cidades a partir das viagens de um continente */
+function cidadesDosContinente(contId){
+  const cont = CONTINENTES.find(c => c.id === contId);
+  if (!cont) return [];
+
+  /* Mapa: "Cidade|A2" → [{tripId, titulo, pais}] */
+  const cidadeMap = {};
+
+  state.trips.forEach(t => {
+    const paisArr = t.paises || [t.pais];
+    /* Verificar se algum país da viagem pertence a este continente */
+    const paisDoCont = paisArr.find(a2 => cont.paises.includes(a2));
+    if (!paisDoCont) return;
+    if (!t.locais) return;
+
+    /* Separar cidades por vírgula/ponto e vírgula */
+    const cidades = t.locais.split(/[,;]/).map(c=>c.trim()).filter(Boolean);
+    cidades.forEach(cidade => {
+      const key = cidade + '|' + paisDoCont;
+      if (!cidadeMap[key]) cidadeMap[key] = {cidade, paisA2: paisDoCont, trips:[]};
+      cidadeMap[key].trips.push({
+        id: t.id,
+        titulo: t.titulo || nomePT(paisDoCont),
+        data: t.ini,
+        pais: paisDoCont
+      });
+    });
+  });
+
+  return Object.values(cidadeMap);
+}
+
+/* Renderizar mapa Leaflet com marcadores */
+async function renderRegMapa(contId){
+  const wrap = document.getElementById('regMapaWrap');
+  const mapDiv = document.getElementById('regMapaCidades');
+  if (!wrap || !mapDiv) return;
+
+  const cidades = cidadesDosContinente(contId);
+
+  if (!cidades.length){
+    wrap.style.display = 'none';
+    return;
+  }
+
+  wrap.style.display = 'block';
+
+  /* Destruir mapa anterior se existir */
+  if (_regLeafMap){ _regLeafMap.remove(); _regLeafMap = null; }
+  mapDiv.innerHTML = '';
+
+  /* Pequena pausa para garantir que o div está visível no DOM */
+  await new Promise(r=>setTimeout(r,150));
+
+  /* Inicializar mapa */
+  _regLeafMap = L.map(mapDiv, {zoomControl:true, scrollWheelZoom:true});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains:'abcd', maxZoom:18
+  }).addTo(_regLeafMap);
+  setTimeout(()=>_regLeafMap && _regLeafMap.invalidateSize(), 100);
+
+  /* Ícone personalizado */
+  const pinIcon = L.divIcon({
+    className:'',
+    html:`<div style="width:22px;height:22px;background:var(--gold);border:3px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.35);"></div>`,
+    iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-14]
+  });
+
+  const bounds = [];
+  const markers = [];
+
+  /* Geocodificar todas as cidades em paralelo (máx 3 de cada vez para não sobrecarregar) */
+  const BATCH = 3;
+  for(let i=0; i < cidades.length; i += BATCH){
+    const batch = cidades.slice(i, i+BATCH);
+    const results = await Promise.all(batch.map(c => geocodificarCidade(c.cidade, c.paisA2)));
+    results.forEach((geo, j) => {
+      const c = batch[j];
+      if (!geo) return;
+      bounds.push([geo.lat, geo.lon]);
+
+      /* Popup com lista de viagens */
+      const tripsHtml = c.trips.map(t =>
+        `<button class="lf-popup-trip" onclick="fecharDiarioModal&&fecharDiarioModal();showTab('diario');setTimeout(()=>abrirDiarioModal(${t.id}),80)">
+          ${bandeira(t.pais)} ${esc(t.titulo)} · ${fmtData(t.data)}
+        </button>`
+      ).join('');
+
+      const popupHtml = `
+        <div class="lf-popup-title">📍 ${esc(c.cidade)}</div>
+        <div class="lf-popup-trips">${tripsHtml}</div>`;
+
+      const marker = L.marker([geo.lat, geo.lon], {icon: pinIcon})
+        .bindPopup(popupHtml, {maxWidth:260, minWidth:180})
+        .addTo(_regLeafMap);
+
+      /* Tooltip (hover) com nome da cidade */
+      marker.bindTooltip(`<b>${esc(c.cidade)}</b>`, {
+        direction:'top', offset:[0,-12], className:'leaflet-tooltip'
+      });
+
+      markers.push(marker);
+    });
+    /* Pequena pausa entre batches para respeitar rate limit do Nominatim */
+    if (i + BATCH < cidades.length) await new Promise(r=>setTimeout(r,300));
+  }
+
+  /* Ajustar vista para todos os marcadores */
+  if (bounds.length === 1){
+    _regLeafMap.setView(bounds[0], 8);
+  } else if (bounds.length > 1){
+    _regLeafMap.fitBounds(bounds, {padding:[30,30]});
+  } else {
+    /* Se nenhuma cidade foi geocodificada, centrar no continente */
+    const centros = {
+      europa:[50,10], america_norte:[40,-100], america_sul:[-15,-60],
+      africa:[5,20], asia:[35,90], oceania:[-25,135], antartica:[-70,0]
+    };
+    const c = centros[contId] || [20,0];
+    _regLeafMap.setView(c, 3);
+  }
+
+  _regLeafCont = contId;
+}
+
+/* Hook: quando se abre um continente na aba Regiões, renderizar o mapa */
+const _renderContinenteOld = window.renderContinente || null;
+window.renderRegMapaParaCont = function(contId){
+  renderRegMapa(contId);
+};
 
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
