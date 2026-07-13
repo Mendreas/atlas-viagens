@@ -2150,26 +2150,27 @@ if (data.byUser) {
             const tripId = parseInt(tid);
             const trip = state.trips.find(t=>t.id===tripId);
             if(!trip) continue;
-            const fileObjs = fotoUrls.filter(Boolean).map((url, i)=>({
-              name: (trip.imgNomes&&trip.imgNomes[i]) || `foto_${i+1}.jpg`,
-              dataUrl: url
-            }));
+            const dataUrls = fotoUrls.filter(Boolean);
             try {
-              await guardarFotosIDB(tripId, fileObjs);
+              /* Guardar directamente as data URLs no IDB */
+              await guardarFotosIDB(tripId, dataUrls);
               fotosGuardadas += fileObjs.length;
             } catch(e){
               /* Fallback: guardar em sessFotos (memória) */
               if(!sessFotos) window.sessFotos = {};
-              sessFotos[tripId] = fileObjs.map((f,i)=>({
-                name: f.name,
-                objUrl: f.dataUrl,
-                dataUrl: f.dataUrl
+              sessFotos[tripId] = dataUrls.map((url,i)=>({
+                name: (trip.imgNomes&&trip.imgNomes[i])||`foto_${i+1}.jpg`,
+                objUrl: url, dataUrl: url
               }));
-              fotosFallback += fileObjs.length;
+              fotosFallback += dataUrls.length;
             }
           }
+          /* Limpar cache de fotos para forçar releitura do IDB */
+          Object.keys(_fotoCache).forEach(k => delete _fotoCache[k]);
+          /* Re-renderizar para mostrar fotos */
+          renderTrips();
           if(fotosFallback > 0){
-            toast(`Dados importados ✓ (${fotosGuardadas} fotos guardadas, ${fotosFallback} em memória temporária — desactiva o Tracking Prevention no Edge para guardar permanentemente)`);
+            toast(`Dados importados ✓ (${fotosGuardadas} fotos guardadas, ${fotosFallback} em memória temporária)`);
           } else {
             toast(`Dados + ${nF} foto${nF!==1?'s':''} importados ✓`);
           }
@@ -3257,10 +3258,18 @@ function fotoKey(tripId, idx){ return 'trip_' + tripId + '_' + idx; }
 
 async function guardarFotosIDB(tripId, fotos){
   const db = await abrirIDB();
-  const tx = db.transaction(IDB_STORE, 'readwrite');
-  const st = tx.objectStore(IDB_STORE);
-  fotos.forEach((f, i) => st.put(f.dataUrl, fotoKey(tripId, i)));
-  return new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = ()=>rej(tx.error); });
+  return new Promise((res, rej) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    const st = tx.objectStore(IDB_STORE);
+    /* Guardar cada foto — f pode ser {name, dataUrl} ou string directa */
+    fotos.forEach((f, i) => {
+      const dataUrl = (typeof f === 'string') ? f : f.dataUrl;
+      if(dataUrl) st.put(dataUrl, fotoKey(tripId, i));
+    });
+    tx.oncomplete = res;
+    tx.onerror = () => rej(tx.error);
+    tx.onabort  = () => rej(new Error('IDB transaction aborted'));
+  });
 }
 
 async function carregarFotosIDB(tripId, n){
