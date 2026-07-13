@@ -1543,7 +1543,18 @@ try {
   }
 } catch(e){}
 
-function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); refreshStats(); paintMap(); }
+function save(){
+  /* Garantir que _fotos nunca vai para localStorage (pode ter vários MB) */
+  const {_fotos, ...stateToSave} = state;
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(stateToSave));
+  } catch(e) {
+    /* localStorage cheio — tentar limpar dados antigos */
+    console.warn('localStorage quota exceeded:', e);
+    toast('⚠️ Erro ao guardar dados — localStorage cheio. Vai a Preferências e exporta os dados.');
+  }
+  refreshStats(); paintMap();
+}
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2200); }
 function nomePT(a2){ try { return dn.of(a2) || a2; } catch(e){ return a2; } }
 function bandeira(a2){ if(!/^[A-Z]{2}$/.test(a2)) return '🏳'; return String.fromCodePoint(...[...a2].map(c=>0x1F1E6 + c.charCodeAt(0) - 65)); }
@@ -2137,6 +2148,8 @@ if (data.byUser) {
   state = Object.assign(defaultState, {trips: data.trips||[]});
   state.byUser.u1 = {countries:data.countries||{},regioes:data.regioes||{},seen:data.seen||{},unescoSeen:data.unescoSeen||{}};
 }
+      /* Remover _fotos do state — não devem ir para localStorage */
+      delete state._fotos;
       save(); renderTrips(); renderPais();
       /* Restaurar fotos se o JSON as incluir */
       if(data._fotos){
