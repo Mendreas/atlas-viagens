@@ -887,13 +887,15 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
     <h3 style="font-family:'Fraunces',serif;font-size:1.05rem;margin-bottom:14px;color:var(--gold)">💾 Dados</h3>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
       <button class="btn" id="btnExport" style="padding:8px 18px">⬇ Exportar JSON</button>
+      <button class="btn" id="btnExportFull" style="padding:8px 18px;background:var(--gold);color:#1d1607;border-color:var(--gold)" title="Inclui fotos — pode ser ficheiro grande">📦 Exportar TUDO (com fotos)</button>
       <button class="btn" id="btnImport" style="padding:8px 18px">⬆ Importar JSON</button>
       <button class="btn" onclick="abrirImportExcel()" style="padding:8px 18px;background:var(--teal);color:#fff;border-color:var(--teal)">📊 Importar Excel</button>
     </div>
     <p style="font-size:.78rem;color:var(--muted);margin-top:10px">
-      <b>Exportar JSON</b>: guarda todos os dados (países, diário, passaportes).<br>
-      <b>Importar JSON</b>: restaura dados de uma exportação anterior.<br>
-      <b>Importar Excel</b>: importa histórico de viagens a partir de ficheiro .xlsx.
+      <b>⬇ Exportar JSON</b>: guarda todos os dados (sem fotos). Rápido, pequeno.<br>
+      <b>📦 Exportar TUDO</b>: inclui fotos em base64 — ideal para transferir para outro PC. Pode ser grande (depende das fotos).<br>
+      <b>⬆ Importar JSON</b>: restaura dados de qualquer exportação anterior (com ou sem fotos).<br>
+      <b>📊 Importar Excel</b>: importa histórico de viagens a partir de ficheiro .xlsx.
     </p>
   </div>
   <div class="pref-section">
@@ -2134,8 +2136,25 @@ if (data.byUser) {
   state = Object.assign(defaultState, {trips: data.trips||[]});
   state.byUser.u1 = {countries:data.countries||{},regioes:data.regioes||{},seen:data.seen||{},unescoSeen:data.unescoSeen||{}};
 }
+      /* Restaurar fotos se o JSON as incluir */
+      if(parsed._fotos){
+        Object.entries(parsed._fotos).forEach(([tid, fotoUrls])=>{
+          const tripId = parseInt(tid);
+          const trip = state.trips.find(t=>t.id===tripId);
+          if(!trip) return;
+          /* Converter data URLs para File-like objects para guardarFotosIDB */
+          const fileObjs = fotoUrls.map((url, i)=>({
+            name: (trip.imgNomes&&trip.imgNomes[i]) || `foto_${i+1}.jpg`,
+            dataUrl: url
+          }));
+          guardarFotosIDB(tripId, fileObjs).catch(()=>{});
+        });
+        const nF = Object.values(parsed._fotos).reduce((a,v)=>a+v.length,0);
+        toast(`Dados + ${nF} foto${nF!==1?'s':''} importados ✓`);
+      } else {
+        toast('Dados importados ✓');
+      }
       save(); renderTrips(); renderPais();
-      toast('Dados importados ✓');
     } catch(e){ toast('Ficheiro inválido'); }
     ev.target.value = '';
   };
@@ -3169,6 +3188,7 @@ document.getElementById('dmEditar').onclick = () => {
   fecharDiarioModal();
   setTimeout(() => { showTab('diario'); editarTrip(idToEdit); }, 100);
 };
+document.getElementById('dmPdf').onclick = () => { exportarViagemPDF(_dmTripId); };
 document.getElementById('dmApagar').onclick = () => {
   if (!confirm('Apagar esta viagem do diário?')) return;
   fecharDiarioModal();
@@ -4137,7 +4157,7 @@ ${trips.map(t => {
     <div class="v-head">
       <span class="v-flag">${bandeira(t.pais)}</span>
       <div>
-        <div class="v-titulo">${esc(t.titulo)}${u?`<span class="v-user">${esc(u.nome)}</span>`:''}</div>
+        <div class="v-titulo">${esc(t.titulo)}${uNames}</div>
         <div class="v-meta">${nomePT(t.pais)} · ${fmtData(t.ini)}${t.fim&&t.fim!==t.ini?' → '+fmtData(t.fim):''}${futura?' · PLANEADA':''}</div>
       </div>
     </div>
@@ -5622,7 +5642,125 @@ window.renderRegMapaParaCont = function(contId){
   renderRegMapa(contId);
 };
 
+
+/* ══════════════════════════════════════════════════════
+   EXPORTAR PDF DE UMA VIAGEM
+   Gera HTML formatado e abre janela de impressão (→ Guardar PDF)
+   ══════════════════════════════════════════════════════ */
+async function exportarViagemPDF(tripId){
+  const t = state.trips.find(x=>x.id===tripId); if(!t) return;
+  const hoje2 = new Date().toISOString().slice(0,10);
+  const futura = t.ini > hoje2;
+  const paisArr = t.paises||[t.pais];
+  const userIds = t.userIds||(t.userId?[t.userId]:[]);
+  const uNames  = userIds.map(uid=>{
+    const u=state.users.find(x=>x.id===uid);
+    return u ? `<span style="background:${u.cor};color:#fff;padding:2px 8px;border-radius:12px;font-size:.8rem;margin-right:4px">${u.nome}</span>` : '';
+  }).join('');
+
+  /* Fotos */
+  let fotosHtml = '';
+  if(t.imgNomes && t.imgNomes.length){
+    const fotos = await getFotos(t.id, t.imgNomes.length);
+    fotosHtml = fotos.filter(Boolean).map(url =>
+      `<img src="${url}" style="width:100%;max-width:240px;border-radius:6px;object-fit:cover;">`
+    ).join('');
+    if(fotosHtml) fotosHtml = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">${fotosHtml}</div>`;
+  }
+
+  /* Companhia + logo */
+  let airlineHtml = '';
+  if(t.airline){
+    const aObj = AIRLINES_DB.find(a=>a.nome===t.airline||a.iata===t.airline);
+    const logo = aObj ? AIRLINE_LOGO_DATA[aObj.iata] : null;
+    airlineHtml = `<div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+      ${logo?`<img src="${logo}" style="height:32px;object-fit:contain;background:#fff;padding:3px;border-radius:4px;">`:'✈️'}
+      <span style="font-size:.9rem;color:#3D7D8F">${t.airline}${t.rota?' · '+t.rota:''}</span>
+    </div>`;
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>${t.titulo||'Viagem'}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:28px 32px;max-width:700px;margin:0 auto}
+  h1{font-size:1.6rem;font-weight:700;color:#2C3E6B;margin-bottom:4px}
+  .meta{font-size:.85rem;color:#666;margin-bottom:10px}
+  .flags{font-size:1.4rem;margin-bottom:6px}
+  .section{margin-top:14px}
+  .label{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:#999;margin-bottom:3px}
+  .value{font-size:.95rem;line-height:1.5;white-space:pre-wrap}
+  .notas{background:#f9f7f3;border-left:3px solid #c5973a;padding:10px 14px;border-radius:0 6px 6px 0;font-size:.9rem;line-height:1.6}
+  .links a{color:#3D7D8F;text-decoration:none;font-size:.85rem;margin-right:12px}
+  .badge{display:inline-block;background:#f0f0f0;border-radius:4px;padding:2px 8px;font-size:.78rem;margin-right:4px;color:#444}
+  hr{border:none;border-top:1px solid #e0dbd0;margin:16px 0}
+  @media print{body{padding:0}@page{margin:1.5cm}}
+</style>
+</head>
+<body>
+<div class="flags">${paisArr.map(bandeira).join(' ')}</div>
+<h1>${esc(t.titulo||'Viagem')}</h1>
+<div class="meta">
+  ${paisArr.map(a=>nomePT(a)).join(', ')} · ${fmtData(t.ini)}${t.fim&&t.fim!==t.ini?' → '+fmtData(t.fim):''}
+  ${futura ? ' · <b style="color:#45b0a4">PLANEADA</b>' : ''}
+</div>
+${uNames ? `<div style="margin-bottom:8px">${uNames}</div>` : ''}
+${t.tipo === 'grande' ? '<span class="badge">🌍 Grande viagem</span>' : '<span class="badge">✈️ Escapadinha</span>'}
+${t.ilhas ? '<span class="badge">🏝 Ilhas</span>' : ''}
+<hr>
+${t.locais ? `<div class="section"><div class="label">Cidades visitadas</div><div class="value">📍 ${esc(t.locais)}</div></div>` : ''}
+${t.pernoita ? `<div class="section"><div class="label">Locais de pernoita</div><div class="value">🛏 ${esc(t.pernoita)}</div></div>` : ''}
+${airlineHtml}
+${t.notas ? `<div class="section"><div class="label">Notas / Diário</div><div class="notas">${esc(t.notas)}</div></div>` : ''}
+${fotosHtml}
+${t.links&&t.links.length ? `<div class="section"><div class="label">Links</div><div class="links">${t.links.map(l=>`<a href="${esc(l.url)}">${esc(l.label||l.url)}</a>`).join('')}</div></div>` : ''}
+<hr>
+<div style="font-size:.72rem;color:#aaa;margin-top:8px">Atlas de Viagens · mendreas.github.io/atlas-viagens</div>
+</body></html>`;
+
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>w.print(), 600);
+}
+
+
+/* ── Exportar TUDO com fotos (IndexedDB → base64 no JSON) ── */
+async function exportarTudoComFotos(){
+  toast('A preparar exportação com fotos…');
+  const data = JSON.parse(JSON.stringify(state)); /* deep copy */
+  data._fotos = {};
+
+  /* Recolher fotos de todas as viagens */
+  for(const t of state.trips){
+    if(t.imgNomes && t.imgNomes.length){
+      try {
+        const fotos = await getFotos(t.id, t.imgNomes.length);
+        if(fotos && fotos.some(Boolean)){
+          data._fotos[t.id] = fotos.filter(Boolean);
+        }
+      } catch(e){}
+    }
+  }
+
+  const nFotos = Object.values(data._fotos).reduce((a,v)=>a+v.length,0);
+  const json = JSON.stringify(data);
+  const blob = new Blob([json], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `atlas_viagens_completo_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast(`Exportação completa: ${nFotos} foto${nFotos!==1?'s':''} incluída${nFotos!==1?'s':''} ✓`);
+}
+
+/* ── Importar: detectar se tem fotos e restaurá-las ── */
+const _importOriginal = document.getElementById('fileImport');
+
 /* ============ ARRANQUE ============ */
+document.getElementById('btnExportFull')?.addEventListener('click', exportarTudoComFotos);
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
 renderUserToggle(); renderTUserSelector([state.editingUser]);
 
