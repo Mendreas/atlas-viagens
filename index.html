@@ -668,6 +668,26 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
 #paisDropWrap.open #tPaisSearch{display:block !important;}
 #paisDropWrap.open #tPaisAdd{border-radius:0 0 6px 6px;border-top:none;max-height:220px;}
 #tPaisAdd[size="1"]{cursor:pointer;}
+
+/* ── Combobox custom (selector de países) ── */
+.cb-wrap{position:relative;flex:1;min-width:160px;}
+.cb-input{width:100%;padding:6px 30px 6px 10px;border:1px solid var(--line);
+  border-radius:6px;background:var(--panel2);color:var(--paper);
+  font-size:.88rem;cursor:pointer;}
+.cb-input:focus{outline:none;border-color:var(--gold);}
+.cb-arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  pointer-events:none;color:var(--muted);font-size:.75rem;}
+.cb-dropdown{position:absolute;top:100%;left:0;right:0;z-index:9999;
+  background:var(--panel);border:1px solid var(--gold);border-top:none;
+  border-radius:0 0 6px 6px;max-height:240px;overflow-y:auto;
+  box-shadow:0 6px 20px rgba(0,0,0,.2);display:none;}
+.cb-dropdown.open{display:block;}
+.cb-opt{padding:7px 12px;cursor:pointer;font-size:.86rem;display:flex;
+  align-items:center;gap:8px;border-bottom:1px solid var(--line);}
+.cb-opt:last-child{border-bottom:none;}
+.cb-opt:hover,.cb-opt.active{background:var(--panel2);}
+.cb-opt mark{background:rgba(197,151,58,.35);color:inherit;border-radius:2px;padding:0 1px;}
+.cb-empty{padding:10px 12px;color:var(--muted);font-size:.83rem;text-align:center;}
 </style>
 </head>
 <body>
@@ -1025,12 +1045,11 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
       <div style="margin-top:10px">
         <label>Países visitados</label>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px">
-          <div style="flex:1;min-width:160px;position:relative" id="paisDropWrap">
-            <input type="text" id="tPaisSearch" placeholder="🔍 Pesquisar país…"
-              autocomplete="off"
-              style="width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:6px 6px 0 0;background:var(--panel2);color:var(--paper);font-size:.88rem;display:none">
-            <select id="tPaisAdd" size="1"
-              style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--paper);font-size:.88rem"></select>
+          <div class="cb-wrap" id="paisDropWrap">
+            <input class="cb-input" id="tPaisAdd" type="text"
+              placeholder="Seleccionar país…" autocomplete="off" readonly>
+            <span class="cb-arrow">▼</span>
+            <div class="cb-dropdown" id="tPaisDropdown"></div>
           </div>
           <button type="button" class="btn" id="btnAddPais" style="flex:none;padding:5px 12px">+ Adicionar</button>
         </div>
@@ -1710,7 +1729,7 @@ function limparForm(){
   const tAirline = document.getElementById('tAirline'); if(tAirline) tAirline.value='';
   const tRota = document.getElementById('tRota'); if(tRota) tRota.value='';
   const tPernoita = document.getElementById('tPernoita'); if(tPernoita) tPernoita.value='';
-  _formPaises = []; renderPaisesChips();
+  _formPaises = []; renderPaisesChips(); _cbReset();
   editId = null;
   const btnC = document.getElementById('btnCancelEdit'); if(btnC) btnC.style.display='none';
   renderTUserSelector([state.editingUser]);
@@ -4763,23 +4782,9 @@ function abrirFormModal(titulo){
   document.getElementById('formModal').classList.add('open');
   /* Preencher selector de países múltiplos */
   setTimeout(()=>{
-    const selPaisAdd = document.getElementById('tPaisAdd');
-    if (selPaisAdd && typeof N2A !== 'undefined'){
-      if(selPaisAdd.options.length < 2){
-        selPaisAdd.innerHTML = '<option value="">Seleccionar país…</option>';
-        const pairesOrdenados = [...new Set(Object.values(N2A))]
-          .map(a2 => [a2, nomePT(a2)])
-          .filter(([,n]) => n)
-          .sort((a,b) => a[1].localeCompare(b[1],'pt'));
-        pairesOrdenados.forEach(([a2,nome]) => {
-          selPaisAdd.add(new Option(bandeira(a2)+' '+nome, a2));
-        });
-        /* Guardar todas as opções para filtragem */
-        selPaisAdd._allOptions = [...selPaisAdd.options].map(o=>({t:o.text,v:o.value}));
-      }
-      /* Inicializar pesquisa (só uma vez) */
-      _initPaisSearch();
-    }
+    /* Inicializar combobox de países */
+    _cbInit();
+    _cbInitListeners();
     renderPaisesChips();
   }, 50);
   /* Preencher datalist companhias (só se AIRLINES_DB já existir) */
@@ -4875,6 +4880,7 @@ window.editarTrip = (id) => {
   editId = id;
   /* Preencher países */
   _formPaises = t.paises || (t.pais ? [t.pais] : []);
+  _cbValorA2=''; _cbReset();
 
   /* Preencher campos */
   if(document.getElementById('tIni'))      document.getElementById('tIni').value      = t.ini||'';
@@ -4946,18 +4952,13 @@ function renderPaisesChips(){
 }
 
 document.getElementById('btnAddPais').addEventListener('click', () => {
-  const sel = document.getElementById('tPaisAdd');
-  const a2 = sel?.value;
-  if (!a2) return;
-  if (!_formPaises.includes(a2)) {
+  const a2 = _cbValorA2 || document.getElementById('tPaisAdd')?.dataset.a2;
+  if (!a2){ toast('Selecciona um país primeiro'); return; }
+  if (!_formPaises.includes(a2)){
     _formPaises.push(a2);
     renderPaisesChips();
   }
-  sel.value = '';
-  /* Fechar search e limpar filtro */
-  document.getElementById('tPaisSearch').value='';
-  _filterPaisOptions('');
-  document.getElementById('paisDropWrap')?.classList.remove('open');
+  _cbReset();
 });
 
 window.removerPaisForm = (a2) => {
@@ -5854,86 +5855,158 @@ async function exportarTudoComFotos(){
 const _importOriginal = document.getElementById('fileImport');
 
 
-/* ── Pesquisa live no selector de países ── */
-let _paisSearchInit = false;
-function _filterPaisOptions(q){
-  const sel = document.getElementById('tPaisAdd');
-  if(!sel || !sel._allOptions) return;
-  const norm = q.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  sel.innerHTML = '';
-  sel._allOptions.forEach(({t,v}) => {
-    const tn = t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-    /* Remover emoji/prefixo para comparação */
-    const name = tn.replace(/^[^\p{L}]+/u,'');
-    if(!norm || name.includes(norm)){
-      sel.add(new Option(t, v));
-    }
-  });
-  if(sel.options.length > 0 && !sel.value) sel.selectedIndex = 0;
-}
-function _initPaisSearch(){
-  if(_paisSearchInit) return;
-  _paisSearchInit = true;
-  const sel = document.getElementById('tPaisAdd');
-  const inp = document.getElementById('tPaisSearch');
-  const wrap = document.getElementById('paisDropWrap');
-  if(!sel||!inp||!wrap) return;
+/* ── Combobox custom de países ── */
+let _cbPaises = [];      /* [{a2, nome, flag, normNome}] */
+let _cbValorA2 = '';     /* a2 seleccionado */
+let _cbActivo = -1;      /* índice activo no dropdown */
 
-  /* Ao focar no select, mostrar campo de pesquisa */
-  sel.addEventListener('focus', ()=>{
-    wrap.classList.add('open');
-    inp.style.display='block';
-    setTimeout(()=>inp.focus(),50);
+function _cbInit(){
+  if(_cbPaises.length) return;
+  if(typeof N2A === 'undefined') return;
+  _cbPaises = [...new Set(Object.values(N2A))]
+    .map(a2 => ({
+      a2, flag: bandeira(a2), nome: nomePT(a2),
+      normNome: nomePT(a2).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+    }))
+    .filter(p => p.nome)
+    .sort((a,b) => a.nome.localeCompare(b.nome,'pt'));
+}
+
+function _cbRender(q){
+  const dd = document.getElementById('tPaisDropdown');
+  if(!dd) return;
+  const norm = (q||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  /* Filtrar: começa pelo início do nome OU pelo código IATA */
+  const filtered = !norm ? _cbPaises :
+    _cbPaises.filter(p =>
+      p.normNome.startsWith(norm) ||
+      p.a2.toLowerCase().startsWith(norm)
+    );
+  if(!filtered.length){
+    dd.innerHTML = `<div class="cb-empty">Nenhum país encontrado para "${q}"</div>`;
+    _cbActivo = -1;
+    return;
+  }
+  _cbActivo = 0;
+  dd.innerHTML = filtered.map((p,i) => {
+    /* Highlight da parte pesquisada */
+    let nome = p.nome;
+    if(norm){
+      const idx = p.normNome.indexOf(norm);
+      if(idx === 0) nome = `<mark>${nome.slice(0,norm.length)}</mark>${nome.slice(norm.length)}`;
+    }
+    return `<div class="cb-opt${i===0?' active':''}" data-a2="${p.a2}" data-i="${i}">
+      <span>${p.flag}</span><span>${nome}</span>
+    </div>`;
+  }).join('');
+
+  /* Listeners de click */
+  dd.querySelectorAll('.cb-opt').forEach(el => {
+    el.addEventListener('mousedown', e=>{
+      e.preventDefault();
+      _cbSelect(el.dataset.a2, el.querySelector('span:last-child').textContent.replace(/<[^>]+>/g,''));
+    });
   });
-  /* Ao escrever na pesquisa, filtrar opções */
-  inp.addEventListener('input', ()=>_filterPaisOptions(inp.value));
-  /* Enter na pesquisa → focar no select */
+}
+
+function _cbSelect(a2, nome){
+  _cbValorA2 = a2;
+  const inp = document.getElementById('tPaisAdd');
+  if(inp){
+    inp.value = bandeira(a2) + ' ' + nomePT(a2);
+    inp.dataset.a2 = a2;
+  }
+  _cbClose();
+}
+
+function _cbOpen(){
+  _cbInit();
+  const dd = document.getElementById('tPaisDropdown');
+  const inp = document.getElementById('tPaisAdd');
+  if(!dd||!inp) return;
+  /* Ao abrir, tornar editável e limpar para pesquisa */
+  inp.removeAttribute('readonly');
+  inp.select();
+  _cbRender('');
+  dd.classList.add('open');
+  document.getElementById('paisDropWrap')?.classList.add('open');
+}
+
+function _cbClose(){
+  const dd = document.getElementById('tPaisDropdown');
+  const inp = document.getElementById('tPaisAdd');
+  if(dd) dd.classList.remove('open');
+  document.getElementById('paisDropWrap')?.classList.remove('open');
+  /* Restaurar nome do país seleccionado */
+  if(inp){
+    inp.setAttribute('readonly', '');
+    if(_cbValorA2) inp.value = bandeira(_cbValorA2)+' '+nomePT(_cbValorA2);
+    else inp.value = '';
+  }
+}
+
+function _cbMoveActive(dir){
+  const opts = document.querySelectorAll('#tPaisDropdown .cb-opt');
+  if(!opts.length) return;
+  opts[_cbActivo]?.classList.remove('active');
+  _cbActivo = Math.max(0, Math.min(opts.length-1, _cbActivo + dir));
+  const el = opts[_cbActivo];
+  el?.classList.add('active');
+  el?.scrollIntoView({block:'nearest'});
+}
+
+function _cbInitListeners(){
+  const inp = document.getElementById('tPaisAdd');
+  if(!inp || inp._cbDone) return;
+  inp._cbDone = true;
+
+  /* Abrir ao clicar ou focar */
+  inp.addEventListener('click', _cbOpen);
+  inp.addEventListener('focus', _cbOpen);
+
+  /* Pesquisa ao escrever */
+  inp.addEventListener('input', e=>{
+    _cbRender(e.target.value);
+    const dd = document.getElementById('tPaisDropdown');
+    if(dd && !dd.classList.contains('open')) dd.classList.add('open');
+  });
+
+  /* Teclado */
   inp.addEventListener('keydown', e=>{
-    if(e.key==='ArrowDown'||e.key==='Enter'){ e.preventDefault(); sel.focus(); sel.size=6; }
-    if(e.key==='Escape'){ wrap.classList.remove('open'); sel.size=1; inp.value=''; _filterPaisOptions(''); }
+    const dd = document.getElementById('tPaisDropdown');
+    if(!dd?.classList.contains('open')) return;
+    if(e.key==='ArrowDown'){ e.preventDefault(); _cbMoveActive(1); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); _cbMoveActive(-1); }
+    else if(e.key==='Enter'){
+      e.preventDefault();
+      const active = dd.querySelector('.cb-opt.active');
+      if(active) _cbSelect(active.dataset.a2);
+      else document.getElementById('btnAddPais')?.click();
+    }
+    else if(e.key==='Escape'){ _cbClose(); }
+    else if(e.key==='Tab'){ _cbClose(); }
   });
-  /* Ao seleccionar no dropdown, fechar pesquisa */
-  sel.addEventListener('change', ()=>{
-    wrap.classList.remove('open');
-    sel.size=1;
-    inp.value='';
-    _filterPaisOptions('');
+
+  /* Fechar ao clicar fora */
+  document.addEventListener('mousedown', e=>{
+    if(!document.getElementById('paisDropWrap')?.contains(e.target)) _cbClose();
   });
-  /* Click fora → fechar */
-  document.addEventListener('click', e=>{
-    if(!wrap.contains(e.target)){ wrap.classList.remove('open'); sel.size=1; }
-  });
+}
+
+/* ── Limpar o combobox (ao fechar o modal) ── */
+function _cbReset(){
+  _cbValorA2 = '';
+  _cbActivo = -1;
+  const inp = document.getElementById('tPaisAdd');
+  if(inp){ inp.value=''; inp.setAttribute('readonly',''); }
+  const dd = document.getElementById('tPaisDropdown');
+  if(dd) dd.classList.remove('open');
 }
 
 /* ============ ARRANQUE ============ */
-document.getElementById('btnExportFull')?.addEventListener('click', exportarTudoComFotos);
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
 renderUserToggle(); renderTUserSelector([state.editingUser]);
-
-/* Aviso de configuração inicial */
-if (state.users.length === 1 && !state.users[0].nome) {
-  setTimeout(() => {
-    const banner = document.createElement('div');
-    banner.id = 'setupBanner';
-    banner.innerHTML = `
-      <div style="background:var(--gold);color:#1d1607;padding:10px 18px;display:flex;
-        align-items:center;gap:12px;font-size:.88rem;font-weight:600;">
-        👋 Bem-vindo ao Atlas de Viagens!
-        <span style="font-weight:400">Começa por definir o teu nome na aba</span>
-        <button onclick="showTab('prefs');document.getElementById('setupBanner').remove()"
-          style="background:#1d1607;color:#fff;border:none;border-radius:5px;
-          padding:4px 12px;cursor:pointer;font-weight:700;font-family:inherit">
-          ⚙️ Preferências →
-        </button>
-        <button onclick="document.getElementById('setupBanner').remove()"
-          style="background:none;border:none;cursor:pointer;color:#1d1607;
-          font-size:1.1rem;margin-left:auto">✕</button>
-      </div>`;
-    const tabsEl = document.querySelector('.tabs') || document.querySelector('nav') || document.querySelector('.tab');
-    if(tabsEl) tabsEl.parentElement.insertBefore(banner, tabsEl);
-  }, 800);
-}
-
+document.getElementById('btnExportFull')?.addEventListener('click', exportarTudoComFotos);
 </script>
 </body>
 </html>
