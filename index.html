@@ -2137,26 +2137,58 @@ if (data.byUser) {
   state = Object.assign(defaultState, {trips: data.trips||[]});
   state.byUser.u1 = {countries:data.countries||{},regioes:data.regioes||{},seen:data.seen||{},unescoSeen:data.unescoSeen||{}};
 }
+      save(); renderTrips(); renderPais();
       /* Restaurar fotos se o JSON as incluir */
       if(parsed._fotos){
-        Object.entries(parsed._fotos).forEach(([tid, fotoUrls])=>{
-          const tripId = parseInt(tid);
-          const trip = state.trips.find(t=>t.id===tripId);
-          if(!trip) return;
-          /* Converter data URLs para File-like objects para guardarFotosIDB */
-          const fileObjs = fotoUrls.map((url, i)=>({
-            name: (trip.imgNomes&&trip.imgNomes[i]) || `foto_${i+1}.jpg`,
-            dataUrl: url
-          }));
-          guardarFotosIDB(tripId, fileObjs).catch(()=>{});
-        });
         const nF = Object.values(parsed._fotos).reduce((a,v)=>a+v.length,0);
-        toast(`Dados + ${nF} foto${nF!==1?'s':''} importados ✓`);
+        let fotosGuardadas = 0;
+        let fotosFallback = 0;
+        const entries = Object.entries(parsed._fotos);
+        /* Tentar guardar no IndexedDB; se falhar, guardar em memória como fallback */
+        (async()=>{
+          for(const [tid, fotoUrls] of entries){
+            const tripId = parseInt(tid);
+            const trip = state.trips.find(t=>t.id===tripId);
+            if(!trip) continue;
+            const fileObjs = fotoUrls.filter(Boolean).map((url, i)=>({
+              name: (trip.imgNomes&&trip.imgNomes[i]) || `foto_${i+1}.jpg`,
+              dataUrl: url
+            }));
+            try {
+              await guardarFotosIDB(tripId, fileObjs);
+              fotosGuardadas += fileObjs.length;
+            } catch(e){
+              /* Fallback: guardar em sessFotos (memória) */
+              if(!sessFotos) window.sessFotos = {};
+              sessFotos[tripId] = fileObjs.map((f,i)=>({
+                name: f.name,
+                objUrl: f.dataUrl,
+                dataUrl: f.dataUrl
+              }));
+              fotosFallback += fileObjs.length;
+            }
+          }
+          if(fotosFallback > 0){
+            toast(`Dados importados ✓ (${fotosGuardadas} fotos guardadas, ${fotosFallback} em memória temporária — desactiva o Tracking Prevention no Edge para guardar permanentemente)`);
+          } else {
+            toast(`Dados + ${nF} foto${nF!==1?'s':''} importados ✓`);
+          }
+        })();
+        toast(`A importar ${nF} foto${nF!==1?'s':''}…`);
       } else {
         toast('Dados importados ✓');
       }
-      save(); renderTrips(); renderPais();
-    } catch(e){ toast('Ficheiro inválido'); }
+    } catch(e){
+      console.error('Importação falhou:', e);
+      /* Se o erro for de tracking/storage, os dados foram importados mas as fotos falharam */
+      if(e.message && (e.message.includes('storage') || e.message.includes('IndexedDB') || e.message.includes('blocked'))){
+        toast('Dados importados, mas as fotos não puderam ser guardadas. Desactiva o Tracking Prevention no Edge (Definições → Privacidade → Básico).');
+      } else if(typeof state !== 'undefined' && state.trips && state.trips.length){
+        toast('Dados importados ✓ (algumas fotos podem não ter sido restauradas)');
+      } else {
+        toast('Erro ao importar — verifica se o ficheiro é válido');
+      }
+    }
     ev.target.value = '';
   };
   r.readAsText(f);
