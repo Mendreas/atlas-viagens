@@ -1020,7 +1020,11 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
       <div style="margin-top:10px">
         <label>Países visitados</label>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px">
-          <select id="tPaisAdd" style="flex:1;min-width:160px"></select>
+          <input type="text" id="tPaisAdd" list="tPaisAddList" 
+            placeholder="Escreve para pesquisar…"
+            style="flex:1;min-width:160px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--paper);font-size:.88rem"
+            autocomplete="off">
+          <datalist id="tPaisAddList"></datalist>
           <button type="button" class="btn" id="btnAddPais" style="flex:none;padding:5px 12px">+ Adicionar</button>
         </div>
         <div id="tPaisesChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
@@ -1269,18 +1273,21 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
   function addTypeAhead(sel){
     if(sel._taAdded) return;
     sel._taAdded = true;
+    let _dropOpen = false;
+    /* Detectar se o dropdown está aberto */
+    sel.addEventListener('mousedown', () => { _dropOpen = true; setTimeout(()=>{ _dropOpen=false; },50); });
+
     sel.addEventListener('keydown', function(e){
       if(e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+      /* Se o dropdown está aberto (lista visível), deixar o browser gerir */
+      if(_dropOpen) return;
 
       clearTimeout(_taTimer);
       _taBuffer += normalize(e.key);
       _taTimer = setTimeout(()=>{ _taBuffer=''; }, 900);
 
       const opts = [...this.options];
-      /* Procurar opção cujo texto normalizado começa com o buffer */
       let match = opts.findIndex(o => normalize(o.text).startsWith(_taBuffer));
-
-      /* Se não encontrar, tentar só a última letra (nova pesquisa) */
       if(match === -1 && _taBuffer.length > 1){
         const last = _taBuffer.slice(-1);
         const m2 = opts.findIndex(o => normalize(o.text).startsWith(last));
@@ -4926,14 +4933,29 @@ function renderPaisesChips(){
 }
 
 document.getElementById('btnAddPais').addEventListener('click', () => {
-  const sel = document.getElementById('tPaisAdd');
-  const a2 = sel.value;
-  if (!a2) return;
+  const inp = document.getElementById('tPaisAdd');
+  const txt = (inp.value||'').trim();
+  if (!txt) return;
+  /* Procurar o a2 pelo texto digitado (com ou sem emoji) */
+  const dl = document.getElementById('tPaisAddList');
+  const opt = [...(dl?.options||[])].find(o => 
+    o.value.toLowerCase() === txt.toLowerCase() ||
+    o.value.replace(/^[^\p{L}]+/u,'').trim().toLowerCase() === txt.toLowerCase()
+  );
+  const a2 = opt?.dataset.a2 || 
+    /* fallback: procurar por nome */
+    Object.entries(N2A).find(([,code]) => nomePT(code).toLowerCase() === txt.toLowerCase())?.[1];
+  if (!a2){ toast('País não encontrado — selecciona da lista'); return; }
   if (!_formPaises.includes(a2)) {
     _formPaises.push(a2);
     renderPaisesChips();
   }
-  sel.value = '';
+  inp.value = '';
+});
+
+/* Permitir adicionar com Enter */
+document.getElementById('tPaisAdd')?.addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('btnAddPais').click(); }
 });
 
 window.removerPaisForm = (a2) => {
