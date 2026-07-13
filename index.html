@@ -4764,15 +4764,21 @@ function abrirFormModal(titulo){
   /* Preencher selector de países múltiplos */
   setTimeout(()=>{
     const selPaisAdd = document.getElementById('tPaisAdd');
-    if (selPaisAdd && selPaisAdd.options.length < 2 && typeof N2A !== 'undefined'){
-      selPaisAdd.innerHTML = '<option value="">Seleccionar país…</option>';
-      const pairesOrdenados = [...new Set(Object.values(N2A))]
-        .map(a2 => [a2, nomePT(a2)])
-        .filter(([,n]) => n)
-        .sort((a,b) => a[1].localeCompare(b[1],'pt'));
-      pairesOrdenados.forEach(([a2,nome]) => {
-        selPaisAdd.add(new Option(bandeira(a2)+' '+nome, a2));
-      });
+    if (selPaisAdd && typeof N2A !== 'undefined'){
+      if(selPaisAdd.options.length < 2){
+        selPaisAdd.innerHTML = '<option value="">Seleccionar país…</option>';
+        const pairesOrdenados = [...new Set(Object.values(N2A))]
+          .map(a2 => [a2, nomePT(a2)])
+          .filter(([,n]) => n)
+          .sort((a,b) => a[1].localeCompare(b[1],'pt'));
+        pairesOrdenados.forEach(([a2,nome]) => {
+          selPaisAdd.add(new Option(bandeira(a2)+' '+nome, a2));
+        });
+        /* Guardar todas as opções para filtragem */
+        selPaisAdd._allOptions = [...selPaisAdd.options].map(o=>({t:o.text,v:o.value}));
+      }
+      /* Inicializar pesquisa (só uma vez) */
+      _initPaisSearch();
     }
     renderPaisesChips();
   }, 50);
