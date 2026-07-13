@@ -1678,7 +1678,7 @@ function renderTrips(){
   const list = document.getElementById('tripList');
   try { populateFiltroDropdowns(); } catch(e){}
   const hoje = new Date().toISOString().slice(0,10);
-  const allTrips = [...state.trips].sort((a,b)=> b.ini.localeCompare(a.ini));
+  const allTrips = [...state.trips].sort((a,b)=> (b.ini||'').localeCompare(a.ini||''));
   const trips = filtrarTrips(allTrips);
   /* Actualizar contador */
   const countEl = document.getElementById('fCount');
@@ -3924,7 +3924,7 @@ function populateFiltroDropdowns(){
 
   /* Países das viagens */
   const paisSaved = fPais.value;
-  const paisesUsados = [...new Set(state.trips.map(t=>t.pais))].sort((a,b)=>nomePT(a).localeCompare(nomePT(b),'pt'));
+  const paisesUsados = [...new Set(state.trips.map(t=>t.pais).filter(Boolean))].sort((a,b)=>nomePT(a).localeCompare(nomePT(b),'pt'));
   fPais.innerHTML = '<option value="">Todos os países</option>';
   paisesUsados.forEach(a2 => fPais.add(new Option(bandeira(a2)+' '+nomePT(a2), a2)));
   fPais.value = paisSaved;
@@ -3975,7 +3975,8 @@ function filtrarTrips(trips){
   return trips.filter(t => {
     if (f.user){
       const ids = t.userIds || (t.userId ? [t.userId] : []);
-      if (!ids.includes(f.user)) return false;
+      /* Se viagem não tem utilizador definido, mostrar sempre (dados antigos) */
+      if (ids.length > 0 && !ids.includes(f.user)) return false;
     }
     if (f.pais && t.pais !== f.pais) return false;
     if (f.cont){
@@ -5300,6 +5301,34 @@ window.showTab = function(name){
     ppRenderUserSelector(); ppRenderAlerts(_ppUid); ppRenderPage();
   }
 };
+/* ============ ARRANQUE ============ */
+refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
+renderUserToggle(); renderTUserSelector([state.editingUser]);
+
+/* Aviso de configuração inicial */
+if (state.users.length === 1 && !state.users[0].nome) {
+  setTimeout(() => {
+    const banner = document.createElement('div');
+    banner.id = 'setupBanner';
+    banner.innerHTML = `
+      <div style="background:var(--gold);color:#1d1607;padding:10px 18px;display:flex;
+        align-items:center;gap:12px;font-size:.88rem;font-weight:600;">
+        👋 Bem-vindo ao Atlas de Viagens!
+        <span style="font-weight:400">Começa por definir o teu nome na aba</span>
+        <button onclick="showTab('prefs');document.getElementById('setupBanner').remove()"
+          style="background:#1d1607;color:#fff;border:none;border-radius:5px;
+          padding:4px 12px;cursor:pointer;font-weight:700;font-family:inherit">
+          ⚙️ Preferências →
+        </button>
+        <button onclick="document.getElementById('setupBanner').remove()"
+          style="background:none;border:none;cursor:pointer;color:#1d1607;
+          font-size:1.1rem;margin-left:auto">✕</button>
+      </div>`;
+    const tabsEl = document.querySelector('.tabs') || document.querySelector('nav') || document.querySelector('.tab');
+    if(tabsEl) tabsEl.parentElement.insertBefore(banner, tabsEl);
+  }, 800);
+}
+
 </script>
 </body>
 </html>
