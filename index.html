@@ -5373,16 +5373,13 @@ function exportarDiarioExcel(){
 
     const paises = t.paises || [t.pais];
     paises.forEach((a2, pi) => {
-      if(pi===0){
-        rows.push([...row]);
-      } else {
-        const c2 = (typeof CONTINENTES!=='undefined') ? CONTINENTES.find(c=>c.paises.includes(a2)) : null;
-        const extra = new Array(row.length).fill('');
-        extra[1]=row[1]; extra[2]=row[2];
-        extra[3]=c2?.nome||''; extra[4]=nomePT(a2);
-        extra[14]=row[14];
-        rows.push(extra);
-      }
+      /* Todos os países da mesma viagem partilham os mesmos dados */
+      /* Apenas o País e o Continente mudam por linha */
+      const c2 = (typeof CONTINENTES!=='undefined') ? CONTINENTES.find(c=>c.paises.includes(a2)) : null;
+      const rowCopy = [...row];
+      rowCopy[3] = c2?.nome || '';   /* Continente do país desta linha */
+      rowCopy[4] = nomePT(a2);      /* País desta linha */
+      rows.push(rowCopy);
     });
   });
 
