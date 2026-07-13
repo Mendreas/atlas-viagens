@@ -3169,8 +3169,11 @@ function preencherGaleria(id){
       img.onclick = () => verImagem(url);
       gal.appendChild(img);
     });
-    if (!fotos.length)
-      gal.innerHTML = '<p style="color:var(--muted);font-size:.8rem">Fotos não encontradas neste dispositivo.</p>';
+    if (!fotos.length){
+      if(t.imgNomes && t.imgNomes.length){
+        gal.innerHTML = '<p style="color:var(--muted);font-size:.8rem">📷 ' + t.imgNomes.length + ' foto(s) registada(s) mas não disponíveis neste dispositivo.<br><span style="font-size:.72rem">Para ver as fotos, use o ficheiro de backup completo (📦 Exportar TUDO) e importe-o neste dispositivo.</span></p>';
+      }
+    }
   });
 }
 
@@ -3298,10 +3301,22 @@ const _fotoCache = {};  /* tripId → [dataUrl, ...] */
 
 async function getFotos(tripId, nFotos){
   if (!nFotos) return [];
-  if (_fotoCache[tripId]) return _fotoCache[tripId];
-  const fotos = await carregarFotosIDB(tripId, nFotos);
-  _fotoCache[tripId] = fotos;
-  return fotos;
+  if (_fotoCache[tripId] && _fotoCache[tripId].length) return _fotoCache[tripId];
+  /* Tentar IDB */
+  try {
+    const fotos = await carregarFotosIDB(tripId, nFotos);
+    if (fotos && fotos.length){
+      _fotoCache[tripId] = fotos;
+      return fotos;
+    }
+  } catch(e){ console.warn('IDB read error:', e); }
+  /* Fallback: sessFotos em memória (importação recente) */
+  if (window.sessFotos && window.sessFotos[tripId]){
+    const sf = window.sessFotos[tripId];
+    const urls = sf.map(f => f.dataUrl || f.objUrl).filter(Boolean);
+    if (urls.length){ _fotoCache[tripId] = urls; return urls; }
+  }
+  return [];
 }
 
 function invalidarCacheFotos(tripId){ delete _fotoCache[tripId]; }
