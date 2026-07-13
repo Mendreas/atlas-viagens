@@ -2139,11 +2139,11 @@ if (data.byUser) {
 }
       save(); renderTrips(); renderPais();
       /* Restaurar fotos se o JSON as incluir */
-      if(parsed._fotos){
-        const nF = Object.values(parsed._fotos).reduce((a,v)=>a+v.length,0);
+      if(data._fotos){
+        const nF = Object.values(data._fotos).reduce((a,v)=>a+v.length,0);
         let fotosGuardadas = 0;
         let fotosFallback = 0;
-        const entries = Object.entries(parsed._fotos);
+        const entries = Object.entries(data._fotos);
         /* Tentar guardar no IndexedDB; se falhar, guardar em memória como fallback */
         (async()=>{
           for(const [tid, fotoUrls] of entries){
@@ -3238,7 +3238,7 @@ const IDB_STORE = 'fotos';
 let _idb = null;
 let paisContexto = 'visitado'; /* 'visitado' | 'planeado' | 'por visitar' */
 
-function abrirIDB(){
+async function abrirIDB(){
   if (_idb) return Promise.resolve(_idb);
   return new Promise((res, rej) => {
     const req = indexedDB.open(IDB_NAME, IDB_VER);
