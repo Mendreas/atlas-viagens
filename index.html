@@ -2222,17 +2222,22 @@ function desenharRegioes(a2, gj){
   const W = 760, H = 420;
   const proj = d3.geoMercator().fitExtent([[8,8],[W-8,H-8]], gj);
   const path = d3.geoPath(proj);
-  const svg = d3.select(cont).append('svg').attr('viewBox', `0 0 ${W} ${H}`);
+  const svg = d3.select(cont).append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .style('cursor','grab').style('width','100%').style('height','auto');
+
+  /* Grupo principal para zoom */
+  const gReg = svg.append('g');
 
   /* Polígonos */
-  svg.selectAll('path.region').data(gj.features).join('path')
+  gReg.selectAll('path.region').data(gj.features).join('path')
     .attr('class','region').attr('d', path)
     .attr('fill', d => r.v[nomeReg(d)] ? 'var(--gold)' : 'var(--land)')
     .on('click', (ev,d)=> toggleRegiao(a2, nomeReg(d)))
     .append('title').text(d => nomeReg(d));
 
   /* Etiquetas das capitais/cidades principais por região */
-  const labelG = svg.append('g').attr('class','reg-labels');
+  const labelG = gReg.append('g').attr('class','reg-labels');
   gj.features.forEach(f => {
     const nome = nomeReg(f);
     const geo = f.geometry;
@@ -2276,6 +2281,32 @@ function desenharRegioes(a2, gj){
         .text(nome);
     }
   });
+
+  /* ── Zoom e pan no mapa de regiões ── */
+  const zoomReg = d3.zoom()
+    .scaleExtent([1, 12])
+    .on('zoom', ev => {
+      gReg.attr('transform', ev.transform);
+    });
+  svg.call(zoomReg)
+    .on('dblclick.zoom', null); /* desactivar dblclick para não conflituar com toggle */
+
+  /* Botões de zoom */
+  const zg = d3.select(cont).append('div')
+    .style('position','absolute').style('top','8px').style('right','8px')
+    .style('display','flex').style('flex-direction','column').style('gap','4px');
+  [['+', 1.5],['−', 0.67],['⌂', null]].forEach(([lbl, factor]) => {
+    zg.append('button')
+      .attr('class','btn')
+      .style('padding','3px 9px').style('font-size','.9rem')
+      .text(lbl)
+      .on('click', () => {
+        if(factor) svg.transition().call(zoomReg.scaleBy, factor);
+        else svg.transition().call(zoomReg.transform, d3.zoomIdentity);
+      });
+  });
+  /* Garantir que o container é position:relative */
+  d3.select(cont).style('position','relative');
 
   renderChips(a2, gj);
   atualizarRegProg(a2);
