@@ -5301,6 +5301,112 @@ window.showTab = function(name){
     ppRenderUserSelector(); ppRenderAlerts(_ppUid); ppRenderPage();
   }
 };
+
+/* ══════════════════════════════════════════════════════
+   EXPORTAÇÃO EXCEL DO DIÁRIO
+   ══════════════════════════════════════════════════════ */
+function exportarDiarioExcel(){
+  const hoje = new Date().toISOString().slice(0,10);
+  const trips = state.trips
+    .filter(t => (t.fim||t.ini||'') <= hoje)
+    .sort((a,b)=>(a.ini||'').localeCompare(b.ini||''));
+
+  if(!trips.length){ toast('Sem viagens passadas para exportar'); return; }
+
+  const users = state.users;
+
+  const header = [
+    users[0]?.nome||'Utilizador 1',
+    users[1]?.nome||'Utilizador 2',
+    'Ano', 'Continente', 'País', 'Cidades Visitadas',
+    'Grande Viagem', 'Escapadinha', 'Aeroportos', 'Companhia Aérea',
+    `Ilhas ${users[0]?.nome||'U1'}`,
+    `Ilhas ${users[1]?.nome||'U2'}`,
+    `UNESCO ${users[0]?.nome||'U1'}`,
+    `UNESCO ${users[1]?.nome||'U2'}`,
+    'Descrição', 'Notas',
+  ];
+  for(let i=2; i<users.length; i++){
+    header.push(users[i].nome||`Utilizador ${i+1}`);
+    header.push(`Ilhas ${users[i].nome||'U'+(i+1)}`);
+    header.push(`UNESCO ${users[i].nome||'U'+(i+1)}`);
+  }
+
+  const rows = [header];
+
+  trips.forEach(t => {
+    const paisPrimario = (t.paises||[t.pais])[0];
+    const contObj = (typeof CONTINENTES!=='undefined') ?
+      CONTINENTES.find(c=>c.paises.includes(paisPrimario)) : null;
+
+    function unescoStr(uid){
+      const seen = state.byUser?.[uid]?.unescoSeen?.[paisPrimario] || {};
+      return Object.keys(seen).filter(k=>seen[k]).join('; ');
+    }
+    const userIds = t.userIds || (t.userId?[t.userId]:[]);
+    function foiUser(uid){ return userIds.includes(uid); }
+    function ilhasUser(uid){ return (foiUser(uid) && t.ilhas) ? 'Sim' : ''; }
+
+    const row = [
+      foiUser(users[0]?.id) ? 'Sim' : '',
+      foiUser(users[1]?.id) ? 'Sim' : '',
+      (t.ini||'').slice(0,4),
+      contObj?.nome||'',
+      nomePT(paisPrimario),
+      t.locais||'',
+      t.tipo==='grande' ? 'Sim' : '',
+      t.tipo!=='grande' ? 'Sim' : '',
+      t.rota||'',
+      t.airline||'',
+      ilhasUser(users[0]?.id),
+      ilhasUser(users[1]?.id),
+      unescoStr(users[0]?.id),
+      unescoStr(users[1]?.id),
+      t.titulo||'',
+      t.notas||'',
+    ];
+    for(let i=2; i<users.length; i++){
+      row.push(foiUser(users[i].id) ? 'Sim' : '');
+      row.push(ilhasUser(users[i].id));
+      row.push(unescoStr(users[i].id));
+    }
+
+    const paises = t.paises || [t.pais];
+    paises.forEach((a2, pi) => {
+      if(pi===0){
+        rows.push([...row]);
+      } else {
+        const c2 = (typeof CONTINENTES!=='undefined') ? CONTINENTES.find(c=>c.paises.includes(a2)) : null;
+        const extra = new Array(row.length).fill('');
+        extra[1]=row[1]; extra[2]=row[2];
+        extra[3]=c2?.nome||''; extra[4]=nomePT(a2);
+        extra[14]=row[14];
+        rows.push(extra);
+      }
+    });
+  });
+
+  try {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      {wch:12},{wch:12},{wch:6},{wch:14},{wch:20},{wch:28},
+      {wch:14},{wch:14},{wch:12},{wch:20},{wch:8},{wch:8},
+      {wch:30},{wch:30},{wch:30},{wch:40},
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, 'Diário de Viagens');
+    const data = XLSX.write(wb, {bookType:'xlsx', type:'base64'});
+    const a = document.createElement('a');
+    a.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + data;
+    a.download = `atlas_viagens_${new Date().toISOString().slice(0,10)}.xlsx`;
+    a.click();
+    toast('Excel exportado ✓');
+  } catch(e){
+    console.error(e);
+    toast('Erro ao exportar: ' + e.message);
+  }
+}
+
 /* ============ ARRANQUE ============ */
 refreshStats(); renderTrips(); renderPais(); carregarRegioes(selPais.value);
 renderUserToggle(); renderTUserSelector([state.editingUser]);
