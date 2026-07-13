@@ -663,6 +663,11 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
 .lf-popup-trips{margin-top:4px;display:flex;flex-direction:column;gap:4px;}
 .lf-popup-trip{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:5px 9px;font-size:.78rem;cursor:pointer;text-align:left;color:var(--paper);width:100%;}
 .lf-popup-trip:hover{border-color:var(--gold);color:var(--gold);}
+
+/* Selector de países com pesquisa */
+#paisDropWrap.open #tPaisSearch{display:block !important;}
+#paisDropWrap.open #tPaisAdd{border-radius:0 0 6px 6px;border-top:none;max-height:220px;}
+#tPaisAdd[size="1"]{cursor:pointer;}
 </style>
 </head>
 <body>
@@ -1020,11 +1025,13 @@ html[data-theme="dark"] .plug-badge{background:var(--line);}
       <div style="margin-top:10px">
         <label>Países visitados</label>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px">
-          <input type="text" id="tPaisAdd" list="tPaisAddList" 
-            placeholder="Escreve para pesquisar…"
-            style="flex:1;min-width:160px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--paper);font-size:.88rem"
-            autocomplete="off">
-          <datalist id="tPaisAddList"></datalist>
+          <div style="flex:1;min-width:160px;position:relative" id="paisDropWrap">
+            <input type="text" id="tPaisSearch" placeholder="🔍 Pesquisar país…"
+              autocomplete="off"
+              style="width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:6px 6px 0 0;background:var(--panel2);color:var(--paper);font-size:.88rem;display:none">
+            <select id="tPaisAdd" size="1"
+              style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--paper);font-size:.88rem"></select>
+          </div>
           <button type="button" class="btn" id="btnAddPais" style="flex:none;padding:5px 12px">+ Adicionar</button>
         </div>
         <div id="tPaisesChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
@@ -4933,29 +4940,18 @@ function renderPaisesChips(){
 }
 
 document.getElementById('btnAddPais').addEventListener('click', () => {
-  const inp = document.getElementById('tPaisAdd');
-  const txt = (inp.value||'').trim();
-  if (!txt) return;
-  /* Procurar o a2 pelo texto digitado (com ou sem emoji) */
-  const dl = document.getElementById('tPaisAddList');
-  const opt = [...(dl?.options||[])].find(o => 
-    o.value.toLowerCase() === txt.toLowerCase() ||
-    o.value.replace(/^[^\p{L}]+/u,'').trim().toLowerCase() === txt.toLowerCase()
-  );
-  const a2 = opt?.dataset.a2 || 
-    /* fallback: procurar por nome */
-    Object.entries(N2A).find(([,code]) => nomePT(code).toLowerCase() === txt.toLowerCase())?.[1];
-  if (!a2){ toast('País não encontrado — selecciona da lista'); return; }
+  const sel = document.getElementById('tPaisAdd');
+  const a2 = sel?.value;
+  if (!a2) return;
   if (!_formPaises.includes(a2)) {
     _formPaises.push(a2);
     renderPaisesChips();
   }
-  inp.value = '';
-});
-
-/* Permitir adicionar com Enter */
-document.getElementById('tPaisAdd')?.addEventListener('keydown', e => {
-  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('btnAddPais').click(); }
+  sel.value = '';
+  /* Fechar search e limpar filtro */
+  document.getElementById('tPaisSearch').value='';
+  _filterPaisOptions('');
+  document.getElementById('paisDropWrap')?.classList.remove('open');
 });
 
 window.removerPaisForm = (a2) => {
@@ -5850,6 +5846,58 @@ async function exportarTudoComFotos(){
 
 /* ── Importar: detectar se tem fotos e restaurá-las ── */
 const _importOriginal = document.getElementById('fileImport');
+
+
+/* ── Pesquisa live no selector de países ── */
+let _paisSearchInit = false;
+function _filterPaisOptions(q){
+  const sel = document.getElementById('tPaisAdd');
+  if(!sel || !sel._allOptions) return;
+  const norm = q.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  sel.innerHTML = '';
+  sel._allOptions.forEach(({t,v}) => {
+    const tn = t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    /* Remover emoji/prefixo para comparação */
+    const name = tn.replace(/^[^\p{L}]+/u,'');
+    if(!norm || name.includes(norm)){
+      sel.add(new Option(t, v));
+    }
+  });
+  if(sel.options.length > 0 && !sel.value) sel.selectedIndex = 0;
+}
+function _initPaisSearch(){
+  if(_paisSearchInit) return;
+  _paisSearchInit = true;
+  const sel = document.getElementById('tPaisAdd');
+  const inp = document.getElementById('tPaisSearch');
+  const wrap = document.getElementById('paisDropWrap');
+  if(!sel||!inp||!wrap) return;
+
+  /* Ao focar no select, mostrar campo de pesquisa */
+  sel.addEventListener('focus', ()=>{
+    wrap.classList.add('open');
+    inp.style.display='block';
+    setTimeout(()=>inp.focus(),50);
+  });
+  /* Ao escrever na pesquisa, filtrar opções */
+  inp.addEventListener('input', ()=>_filterPaisOptions(inp.value));
+  /* Enter na pesquisa → focar no select */
+  inp.addEventListener('keydown', e=>{
+    if(e.key==='ArrowDown'||e.key==='Enter'){ e.preventDefault(); sel.focus(); sel.size=6; }
+    if(e.key==='Escape'){ wrap.classList.remove('open'); sel.size=1; inp.value=''; _filterPaisOptions(''); }
+  });
+  /* Ao seleccionar no dropdown, fechar pesquisa */
+  sel.addEventListener('change', ()=>{
+    wrap.classList.remove('open');
+    sel.size=1;
+    inp.value='';
+    _filterPaisOptions('');
+  });
+  /* Click fora → fechar */
+  document.addEventListener('click', e=>{
+    if(!wrap.contains(e.target)){ wrap.classList.remove('open'); sel.size=1; }
+  });
+}
 
 /* ============ ARRANQUE ============ */
 document.getElementById('btnExportFull')?.addEventListener('click', exportarTudoComFotos);
