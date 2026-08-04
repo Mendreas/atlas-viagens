@@ -928,11 +928,12 @@ body.light .hero-sub { color:#c8cbdc; }
   display: flex; flex-direction: row; gap: 0;
 }
 .dc-user-photos {
-  flex: 1; display: flex; gap: 2px; overflow: hidden;
-  background: var(--bg);
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px;
+  overflow: hidden; background: var(--bg); padding: 0 6px;
 }
 .dc-user-photo {
-  flex: 1; min-width: 0; position: relative; overflow: hidden;
+  flex: 0 0 auto; width: 42px; height: 42px;
+  border-radius: 6px; position: relative; overflow: hidden;
 }
 .dc-user-photo img {
   width:100%; height:100%; object-fit:cover;
@@ -1703,11 +1704,47 @@ function abrirContinente(id){
 
 /* Cache de imagens de capa por local (evita pedidos repetidos) */
 const _coverCache = {};
-/* Rejeitar imagens que sejam claramente bandeiras/brasões/logótipos/colagens em vez de fotos do local */
-function _imagemSuspeita(url){
-  return /flag_of|bandeira|coat_of_arms|bras[aã]o|escudo|seal_of|emblem|logo|montage|collage/i.test(url);
+/* Rejeitar ficheiros que sejam claramente bandeiras/brasões/logótipos/colagens/mapas em vez de fotos do local */
+function _nomeFicheiroSuspeito(t){
+  return /flag.?of|bandeira|coat.?of.?arms|bras[aã]o|escudo|seal.?of|emblem|logo|montage|collage|locat|location.?map|adm.*map|map\.svg|orthographic|district|province|region.*svg|symbol|disambig|commons-logo/i.test(t);
 }
-/* 1ª tentativa: título exacto da página (mais fiável, evita apanhar locais homónimos obscuros) */
+/* Procura entre as fotos REAIS usadas no artigo da Wikipédia (evita a "imagem oficial" da página, que nestes artigos é muitas vezes a bandeira) */
+async function _capaPorImagensDaPagina(titulo){
+  const key='I:'+titulo;
+  if(_coverCache[key]!==undefined) return _coverCache[key];
+  for(const lang of ['pt','en']){
+    try{
+      const listUrl=`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&titles=${encodeURIComponent(titulo)}&prop=images&imlimit=50`;
+      const listRes=await fetch(listUrl);
+      const listData=await listRes.json();
+      const pages=listData?.query?.pages;
+      if(!pages) continue;
+      const page=Object.values(pages)[0];
+      if(!page || page.missing!==undefined || !page.images) continue;
+      const candidatos=page.images
+        .map(i=>i.title)
+        .filter(t=>/\.(jpe?g|png)$/i.test(t) && !_nomeFicheiroSuspeito(t))
+        .slice(0,12);
+      if(!candidatos.length) continue;
+      const infoUrl=`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&titles=${candidatos.map(encodeURIComponent).join('|')}&prop=imageinfo&iiprop=url|size&iiurlwidth=700`;
+      const infoRes=await fetch(infoUrl);
+      const infoData=await infoRes.json();
+      const infoPages=infoData?.query?.pages;
+      if(!infoPages) continue;
+      const porTitulo={};
+      Object.values(infoPages).forEach(p=>{ if(p.title) porTitulo[p.title]=p; });
+      for(const fname of candidatos){
+        const info=porTitulo[fname]?.imageinfo?.[0];
+        if(info?.thumburl && info.thumbwidth>=300 && info.thumbheight>=200){
+          _coverCache[key]=info.thumburl; return info.thumburl;
+        }
+      }
+    }catch(e){/* tenta próxima língua */}
+  }
+  _coverCache[key]=null;
+  return null;
+}
+/* Fallback: imagem "oficial" da página (pode ser bandeira nalguns artigos, por isso filtrada) */
 async function _capaPorTitulo(titulo){
   const key='T:'+titulo;
   if(_coverCache[key]!==undefined) return _coverCache[key];
@@ -1719,13 +1756,13 @@ async function _capaPorTitulo(titulo){
       const data=await res.json();
       if(data.type==='disambiguation') continue;
       const img=data?.originalimage?.source||data?.thumbnail?.source;
-      if(img && !_imagemSuspeita(img)){ _coverCache[key]=img; return img; }
+      if(img && !_nomeFicheiroSuspeito(img)){ _coverCache[key]=img; return img; }
     }catch(e){/* tenta próxima língua */}
   }
   _coverCache[key]=null;
   return null;
 }
-/* 2ª tentativa: pesquisa de texto, só aceita se a página tiver coordenadas geográficas */
+/* Último recurso: pesquisa de texto, só aceita se a página tiver coordenadas geográficas */
 async function _capaPorPesquisa(query){
   const key='S:'+query;
   if(_coverCache[key]!==undefined) return _coverCache[key];
@@ -1738,7 +1775,7 @@ async function _capaPorPesquisa(query){
       if(pages){
         const first=Object.values(pages)[0];
         const img=first?.thumbnail?.source;
-        if(first?.coordinates && img && !_imagemSuspeita(img)){ _coverCache[key]=img; return img; }
+        if(first?.coordinates && img && !_nomeFicheiroSuspeito(img)){ _coverCache[key]=img; return img; }
       }
     }catch(e){/* tenta próxima língua */}
   }
@@ -1750,7 +1787,11 @@ async function buscarCapaLocal(local, pais){
   if(local) tentativas.push(local);
   if(local && pais && local.toLowerCase()!==pais.toLowerCase()) tentativas.push(`${local}, ${pais}`);
   if(pais) tentativas.push(pais);
-  /* título exacto primeiro (para todas as tentativas), depois pesquisa de texto */
+  /* 1. fotos reais do artigo; 2. imagem oficial da página; 3. pesquisa de texto */
+  for(const q of tentativas){
+    const url=await _capaPorImagensDaPagina(q);
+    if(url) return url;
+  }
   for(const q of tentativas){
     const url=await _capaPorTitulo(q);
     if(url) return url;
