@@ -1627,9 +1627,9 @@ function renderExplorar(){
 
   /* Stats strip */
   const hoje = new Date().toISOString().slice(0,10);
-  const all = Object.values(state.byUser[state.editingUser]?.countries||{});
-  const vis = all.filter(v=>v==='visitado').length;
-  const plan = all.filter(v=>v==='planeado').length;
+  const todosA2 = new Set([...Object.keys(ud().countries||{}), ...Object.keys(ud().regioes||{})]);
+  let vis = 0, plan = 0;
+  todosA2.forEach(a2=>{ const st=statusDe(a2); if(st==='visitado'||st==='parcial') vis++; else if(st==='planeado') plan++; });
   const total = 195;
   const pct = Math.round(vis/total*100);
   const trips = state.trips.length;
@@ -1639,11 +1639,11 @@ function renderExplorar(){
 
   const strip = document.getElementById('stats-strip-v2');
   if(strip) strip.innerHTML = [
-    {v:vis,    l:'Países visitados',  icon:STAT_ICONS.paises,   click:"showTabV2('paises')"},
-    {v:plan,   l:'Planeados',         icon:STAT_ICONS.planeados},
-    {v:pct+'%',l:'Do mundo',          icon:STAT_ICONS.mundo},
-    {v:regioes,l:'Regiões visitadas', icon:STAT_ICONS.regioes},
-    {v:unesco, l:'UNESCO',            icon:STAT_ICONS.unesco},
+    {v:vis,    l:'Países visitados',  icon:STAT_ICONS.paises,   click:"abrirStatModal('visitados')"},
+    {v:plan,   l:'Planeados',         icon:STAT_ICONS.planeados,click:"abrirStatModal('planeados')"},
+    {v:pct+'%',l:'Do mundo',          icon:STAT_ICONS.mundo,    click:"showTabV2('mapa')"},
+    {v:regioes,l:'Regiões visitadas', icon:STAT_ICONS.regioes,  click:"abrirStatModal('regioes')"},
+    {v:unesco, l:'UNESCO',            icon:STAT_ICONS.unesco,   click:"abrirStatModal('unesco')"},
     {v:trips,  l:'Viagens no diário', icon:STAT_ICONS.viagens,  click:"showTabV2('diario')"},
   ].map(s=>`<div class="stat-chip" ${s.click?`onclick="${s.click}"`:''}>${s.icon?`<img src="${s.icon}" style="height:28px;margin-bottom:4px;display:block">`:''}<div class="val">${s.v}</div><div class="lbl">${s.l}</div></div>`).join('');
 
@@ -3955,7 +3955,7 @@ document.getElementById('statModal').addEventListener('click', ev => {
 function abrirStatModal(tipo){
   const modal = document.getElementById('statModal');
   const titulo = document.getElementById('statModalTitulo');
-  const cont = document.getElementById('statModalContent');
+  const cont = document.getElementById('statModalBody');
   modal.classList.add('open');
   cont.innerHTML = '';
 
