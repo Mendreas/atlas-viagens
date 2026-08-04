@@ -1639,11 +1639,11 @@ function renderExplorar(){
 
   const strip = document.getElementById('stats-strip-v2');
   if(strip) strip.innerHTML = [
-    {v:vis,    l:'Países visitados',  icon:STAT_ICONS.paises,   click:"abrirStatModal('visitados')"},
-    {v:plan,   l:'Planeados',         icon:STAT_ICONS.planeados,click:"abrirStatModal('planeados')"},
+    {v:vis,    l:'Países visitados',  icon:STAT_ICONS.paises,   click:"showTabV2('diario')"},
+    {v:plan,   l:'Planeados',         icon:STAT_ICONS.planeados,click:"showTabV2('mapa')"},
     {v:pct+'%',l:'Do mundo',          icon:STAT_ICONS.mundo,    click:"showTabV2('mapa')"},
-    {v:regioes,l:'Regiões visitadas', icon:STAT_ICONS.regioes,  click:"abrirStatModal('regioes')"},
-    {v:unesco, l:'UNESCO',            icon:STAT_ICONS.unesco,   click:"abrirStatModal('unesco')"},
+    {v:regioes,l:'Regiões visitadas', icon:STAT_ICONS.regioes,  click:"showTabV2('mapa')"},
+    {v:unesco, l:'UNESCO',            icon:STAT_ICONS.unesco,   click:"showTabV2('mapa')"},
     {v:trips,  l:'Viagens no diário', icon:STAT_ICONS.viagens,  click:"showTabV2('diario')"},
   ].map(s=>`<div class="stat-chip" ${s.click?`onclick="${s.click}"`:''}>${s.icon?`<img src="${s.icon}" style="height:28px;margin-bottom:4px;display:block">`:''}<div class="val">${s.v}</div><div class="lbl">${s.l}</div></div>`).join('');
 
