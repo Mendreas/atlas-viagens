@@ -851,18 +851,18 @@ body.light {
   --text: #1a1a2e;
   --text2: #555770;
   --text3: #9499b0;
-  --sidebar-bg: #1a1a2e;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: rgba(0,0,0,.08);
   --card-bg: #ffffff;
   --card-hover: #f5f5f8;
 }
-body.light .sidebar-logo-text strong,
-body.light .nav-item { color: #e6edf3; }
-body.light .nav-item:hover { background: rgba(255,255,255,.12); }
-body.light .nav-item.active { background: var(--gold-dim); color: var(--gold); }
+body.light #sidebar { border-right:1px solid rgba(0,0,0,.08); }
 body.light #topbar { background: #ffffff; border-color: rgba(0,0,0,.08); }
 body.light .topbar-search { background: #f0f2f5; border-color: rgba(0,0,0,.1); }
 body.light .topbar-search input { color: #1a1a2e; }
 body.light .topbar-btn, body.light .topbar-user { background:#f0f2f5; border-color:rgba(0,0,0,.1); color:#1a1a2e; }
+body.light .hero-title { color:#f5f6fa; }
+body.light .hero-sub { color:#c8cbdc; }
 
 /* ── Theme toggle ── */
 #theme-toggle {
@@ -3492,6 +3492,7 @@ function renderContinentes(){
   /* carregar fotos é feito via lista2.forEach abaixo */
 }
 function abrirContinente(id){
+  showTabV2('regioes');
   const c = CONTINENTES.find(x=>x.id===id);
   document.getElementById('reg-continentes').style.display='none';
   document.getElementById('reg-paises').style.display='block';
