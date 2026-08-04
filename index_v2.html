@@ -925,7 +925,7 @@ body.light .hero-sub { color:#c8cbdc; }
 }
 /* coluna direita: fotos do utilizador */
 .dc-right {
-  display: flex; flex-direction: column; gap: 0;
+  display: flex; flex-direction: row; gap: 0;
 }
 .dc-user-photos {
   flex: 1; display: flex; gap: 2px; overflow: hidden;
@@ -946,17 +946,19 @@ body.light .hero-sub { color:#c8cbdc; }
   color:#fff; font-size:13px; font-weight:700;
 }
 .dc-airline-strip {
-  padding: 7px 10px;
-  display: flex; align-items: center; gap: 8px;
-  border-top: 1px solid var(--border);
+  flex-shrink: 0; width: 64px;
+  padding: 8px 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  border-top: none; border-right: 1px solid var(--border);
   background: var(--bg3);
+  text-align: center;
 }
 .dc-airline-strip img {
-  height: 16px; max-width: 60px; object-fit: contain;
+  height: 18px; max-width: 50px; object-fit: contain;
   background: #fff; padding: 1px 3px; border-radius: 3px;
 }
-.dc-airline-strip-name { font-size:11px; color:var(--teal); font-weight:500; flex:1; }
-.dc-airline-strip-rota { font-size:10px; color:var(--text3); }
+.dc-airline-strip-name { font-size:9px; color:var(--teal); font-weight:500; line-height:1.2; }
+.dc-airline-strip-rota { font-size:9px; color:var(--text3); }
 
 /* Esconder a coluna date no novo layout */
 .dc-date { display: none; }
@@ -1333,7 +1335,6 @@ body.light .hero-sub { color:#c8cbdc; }
       <button class="btn-v2 btn-danger" id="dmApagar">Apagar</button>
       <button class="btn-v2 btn-ghost" style="margin-left:auto" onclick="fecharDiarioModal()">Fechar</button>
     </div>
-    <select id="tPais"></select>
 </div>
 </div>
 
@@ -1701,6 +1702,27 @@ function abrirContinente(id){
   renderRegMapaParaCont(id);
 }
 
+/* Cache de imagens de capa por local (evita pedidos repetidos) */
+const _coverCache = {};
+async function buscarCapaLocal(query){
+  if(!query) return null;
+  if(_coverCache[query]!==undefined) return _coverCache[query];
+  for(const lang of ['pt','en']){
+    try{
+      const url=`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=600`;
+      const res=await fetch(url);
+      const data=await res.json();
+      const pages=data?.query?.pages;
+      if(pages){
+        const first=Object.values(pages)[0];
+        if(first?.thumbnail?.source){ _coverCache[query]=first.thumbnail.source; return first.thumbnail.source; }
+      }
+    }catch(e){/* tenta próxima língua */}
+  }
+  _coverCache[query]=null;
+  return null;
+}
+
 /* renderTripsV2: novo visual */
 function renderTripsV2(){
   populateFiltroDropdownsV2();
@@ -1756,21 +1778,18 @@ function renderTripsV2(){
     /* Links */
     const linksHtml=t.links&&t.links.length?t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--teal)">🔗 ${esc(l.label||l.url)}</a>`).join(' '):'';
 
-    /* Imagem de capa: buscar via Unsplash/Wikipedia para a cidade/país */
+    /* Imagem de capa: buscar via Wikipedia para a cidade/local */
     const pais=nomePT(t.pais||t.paises?.[0]||'');
-    const query=encodeURIComponent((t.locais||pais).split(',')[0].trim());
-    const coverUrl=`https://source.unsplash.com/400x280/?${query},travel,city`;
+    const localQuery=(t.locais||pais).split(',')[0].trim();
 
     /* Card */
     const div=document.createElement('div');
     div.className='diary-card'+(t.ini>hoje?' futura':'');
     div.onclick=()=>abrirDiarioModal(t.id);
     div.innerHTML=`
-      <!-- Imagem de capa (Unsplash) -->
-      <div class="dc-cover-img">
-        <img src="${coverUrl}" alt="${esc(pais)}" loading="lazy"
-          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="dc-cover-placeholder" style="display:none">${bandeira(t.pais||t.paises?.[0]||'')}</div>
+      <!-- Imagem de capa (Wikipedia) -->
+      <div class="dc-cover-img" id="cover-${t.id}">
+        <div class="dc-cover-placeholder">${bandeira(t.pais||t.paises?.[0]||'')}</div>
       </div>
       <!-- Conteúdo central -->
       <div class="dc-body">
@@ -1789,15 +1808,15 @@ function renderTripsV2(){
         <div class="dc-tags" style="margin-top:auto">${tags}</div>
         ${linksHtml?`<div style="margin-top:4px">${linksHtml}</div>`:''}
       </div>
-      <!-- Fotos do utilizador + airline -->
+      <!-- Airline + Fotos do utilizador -->
       <div class="dc-right">
+        ${airlineStrip}
         <div class="dc-user-photos" id="uphotos-${t.id}">
           ${t.imgNomes&&t.imgNomes.length?
             '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:11px">A carregar...</div>'
             :'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:22px">📷</div>'
           }
         </div>
-        ${airlineStrip}
       </div>
       <!-- Acções -->
       <div class="dc-actions" onclick="event.stopPropagation()" style="grid-column:2/3">
@@ -1805,6 +1824,19 @@ function renderTripsV2(){
         <button class="btn-v2 btn-danger" style="font-size:12px;padding:5px 10px" onclick="apagarTrip(${t.id})">Apagar</button>
       </div>`;
     list.appendChild(div);
+  });
+
+  /* Carregar imagens de capa (Wikipedia) */
+  trips.forEach(t=>{
+    const pais=nomePT(t.pais||t.paises?.[0]||'');
+    const localQuery=(t.locais||pais).split(',')[0].trim();
+    const coverEl=document.getElementById(`cover-${t.id}`);
+    if(!coverEl) return;
+    buscarCapaLocal(localQuery).then(url=>{
+      if(url && coverEl.isConnected){
+        coverEl.innerHTML=`<img src="${url}" alt="${esc(pais)}" loading="lazy">`;
+      }
+    });
   });
 
   /* Carregar fotos nas cards */
