@@ -895,7 +895,7 @@ body.light .hero-sub { color:#c8cbdc; }
 
 /* ── Diary card novo visual (mockup) ── */
 .diary-card {
-  grid-template-columns: 220px 1fr 376px;
+  grid-template-columns: 220px 1fr 220px;
   grid-template-rows: auto auto;
   min-height: 132px;
   position: relative;
@@ -925,15 +925,22 @@ body.light .hero-sub { color:#c8cbdc; }
 }
 /* coluna direita: fotos do utilizador */
 .dc-right {
-  display: flex; flex-direction: row; gap: 0;
+  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 14px;
+  padding: 12px;
 }
 .dc-user-photos {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-  overflow: hidden; background: var(--bg); padding: 0 6px;
+  flex: 0 0 auto; width: 116px; height: 116px; margin: auto;
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px;
+  overflow: hidden; border-radius: 10px;
+}
+.dc-user-photos.loading, .dc-user-photos.empty {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
 }
 .dc-user-photo {
-  flex: 0 0 auto; width: 100px; height: 100px;
-  border-radius: 8px; position: relative; overflow: hidden;
+  width: 100%; height: 100%;
+  border-radius: 6px; position: relative; overflow: hidden;
+  background: var(--bg3);
 }
 .dc-user-photo img {
   width:100%; height:100%; object-fit:cover;
@@ -946,11 +953,16 @@ body.light .hero-sub { color:#c8cbdc; }
   display:flex; align-items:center; justify-content:center;
   color:#fff; font-size:13px; font-weight:700;
 }
+.dc-user-photo.dc-photo-more {
+  position: static; background: var(--bg3); cursor: pointer;
+  font-size: 15px; font-weight: 700; color: var(--text2);
+}
+.dc-user-photo.dc-photo-more:hover { background: var(--card-hover); color: var(--text); }
 .dc-airline-strip {
-  flex-shrink: 0; width: 64px;
+  flex-shrink: 0; width: 60px;
   padding: 8px 6px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-  border-top: none; border-right: 1px solid var(--border);
+  border: 1px solid var(--border); border-radius: 10px;
   background: var(--bg3);
   text-align: center;
 }
@@ -1890,12 +1902,7 @@ function renderTripsV2(){
       <!-- Airline + Fotos do utilizador -->
       <div class="dc-right">
         ${airlineStrip}
-        <div class="dc-user-photos" id="uphotos-${t.id}">
-          ${t.imgNomes&&t.imgNomes.length?
-            '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:11px">A carregar...</div>'
-            :'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:22px">📷</div>'
-          }
-        </div>
+        <div class="dc-user-photos loading" id="uphotos-${t.id}"></div>
       </div>
       <!-- Acções -->
       <div class="dc-actions" onclick="event.stopPropagation()" style="grid-column:2/3">
@@ -1918,20 +1925,29 @@ function renderTripsV2(){
     });
   });
 
-  /* Carregar fotos nas cards */
+  /* Carregar fotos nas cards (mosaico até 3 + "+N") */
   trips.forEach(t=>{
-    if(!t.imgNomes||!t.imgNomes.length) return;
     const wrap=document.getElementById(`uphotos-${t.id}`);
     if(!wrap) return;
+    if(!t.imgNomes||!t.imgNomes.length){
+      wrap.className='dc-user-photos empty';
+      wrap.innerHTML='<span style="color:var(--text3);font-size:22px">📷</span>';
+      return;
+    }
     getFotos(t.id,t.imgNomes.length).then(fotos=>{
-      if(!fotos.length){ wrap.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:22px">📷</div>'; return; }
+      if(!fotos.length){
+        wrap.className='dc-user-photos empty';
+        wrap.innerHTML='<span style="color:var(--text3);font-size:22px">📷</span>';
+        return;
+      }
+      wrap.className='dc-user-photos';
       const show=fotos.slice(0,3);
       const more=fotos.length-3;
-      wrap.innerHTML=show.map((url,i)=>`
+      wrap.innerHTML=show.map((url)=>`
         <div class="dc-user-photo">
           <img src="${url}" loading="lazy" onclick="event.stopPropagation();verImagem('${url}')">
-          ${i===2&&more>0?`<div class="dc-photo-more">+${more}</div>`:''}
-        </div>`).join('');
+        </div>`).join('') + (more>0?`
+        <div class="dc-user-photo dc-photo-more" onclick="event.stopPropagation();abrirDiarioModal(${t.id})">+${more}</div>`:'');
     });
   });
 }
