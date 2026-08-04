@@ -1703,8 +1703,32 @@ function abrirContinente(id){
 
 /* Cache de imagens de capa por local (evita pedidos repetidos) */
 const _coverCache = {};
-async function _buscarCapaQuery(query){
-  if(_coverCache[query]!==undefined) return _coverCache[query];
+/* Rejeitar imagens que sejam claramente bandeiras/brasões/logótipos/colagens em vez de fotos do local */
+function _imagemSuspeita(url){
+  return /flag_of|bandeira|coat_of_arms|bras[aã]o|escudo|seal_of|emblem|logo|montage|collage/i.test(url);
+}
+/* 1ª tentativa: título exacto da página (mais fiável, evita apanhar locais homónimos obscuros) */
+async function _capaPorTitulo(titulo){
+  const key='T:'+titulo;
+  if(_coverCache[key]!==undefined) return _coverCache[key];
+  for(const lang of ['pt','en']){
+    try{
+      const url=`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(titulo)}`;
+      const res=await fetch(url);
+      if(!res.ok) continue;
+      const data=await res.json();
+      if(data.type==='disambiguation') continue;
+      const img=data?.originalimage?.source||data?.thumbnail?.source;
+      if(img && !_imagemSuspeita(img)){ _coverCache[key]=img; return img; }
+    }catch(e){/* tenta próxima língua */}
+  }
+  _coverCache[key]=null;
+  return null;
+}
+/* 2ª tentativa: pesquisa de texto, só aceita se a página tiver coordenadas geográficas */
+async function _capaPorPesquisa(query){
+  const key='S:'+query;
+  if(_coverCache[key]!==undefined) return _coverCache[key];
   for(const lang of ['pt','en']){
     try{
       const url=`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=1&prop=pageimages|coordinates&piprop=thumbnail&pithumbsize=600`;
@@ -1713,24 +1737,26 @@ async function _buscarCapaQuery(query){
       const pages=data?.query?.pages;
       if(pages){
         const first=Object.values(pages)[0];
-        /* só aceitar se a página tiver coordenadas (é um local geográfico), evita apanhar pessoas/organizações com o mesmo nome */
-        if(first?.coordinates && first?.thumbnail?.source){
-          _coverCache[query]=first.thumbnail.source;
-          return first.thumbnail.source;
-        }
+        const img=first?.thumbnail?.source;
+        if(first?.coordinates && img && !_imagemSuspeita(img)){ _coverCache[key]=img; return img; }
       }
     }catch(e){/* tenta próxima língua */}
   }
-  _coverCache[query]=null;
+  _coverCache[key]=null;
   return null;
 }
 async function buscarCapaLocal(local, pais){
   const tentativas=[];
-  if(local && pais && local.toLowerCase()!==pais.toLowerCase()) tentativas.push(`${local}, ${pais}`);
   if(local) tentativas.push(local);
+  if(local && pais && local.toLowerCase()!==pais.toLowerCase()) tentativas.push(`${local}, ${pais}`);
   if(pais) tentativas.push(pais);
+  /* título exacto primeiro (para todas as tentativas), depois pesquisa de texto */
   for(const q of tentativas){
-    const url=await _buscarCapaQuery(q);
+    const url=await _capaPorTitulo(q);
+    if(url) return url;
+  }
+  for(const q of tentativas){
+    const url=await _capaPorPesquisa(q);
     if(url) return url;
   }
   return null;
