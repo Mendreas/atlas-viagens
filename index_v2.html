@@ -1577,7 +1577,6 @@ body.light .hero-sub { color:#c8cbdc; }
 <div id="tImgInput" style="display:none"></div>
 <div id="tImgsPreview" style="display:none"></div>
 <div id="tLinksContainer" style="display:none"></div>
-<div id="tPais" style="display:none"></div>
 <div id="tooltip" style="display:none"></div>
 <div id="tripList" style="display:none"></div>
 <div id="userToggle" style="display:none"></div>
@@ -2636,14 +2635,12 @@ document.getElementById('mFicha').onclick = ()=>{
 };
 
 /* ============ DIÁRIO ============ */
-/* selTrip removido — usar document.getElementById('tPais') directamente */
 const selPais = document.getElementById('selPais');
 TODOS.forEach(a2=>{
-  const o1 = new Option(bandeira(a2)+' '+nomePT(a2), a2);
   const o2 = new Option(bandeira(a2)+' '+nomePT(a2), a2);
-  if(document.getElementById("tPais")) document.getElementById("tPais").add(o1); selPais.add(o2);
+  selPais.add(o2);
 });
-if(document.getElementById('tPais')) document.getElementById('tPais').value = 'PT'; selPais.value = 'PT';
+selPais.value = 'PT';
 
 let editId = null;
 /* btnSaveTrip e limparForm geridos pelo modal de formulário abaixo */
