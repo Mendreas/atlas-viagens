@@ -1703,22 +1703,36 @@ function abrirContinente(id){
 
 /* Cache de imagens de capa por local (evita pedidos repetidos) */
 const _coverCache = {};
-async function buscarCapaLocal(query){
-  if(!query) return null;
+async function _buscarCapaQuery(query){
   if(_coverCache[query]!==undefined) return _coverCache[query];
   for(const lang of ['pt','en']){
     try{
-      const url=`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=600`;
+      const url=`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=1&prop=pageimages|coordinates&piprop=thumbnail&pithumbsize=600`;
       const res=await fetch(url);
       const data=await res.json();
       const pages=data?.query?.pages;
       if(pages){
         const first=Object.values(pages)[0];
-        if(first?.thumbnail?.source){ _coverCache[query]=first.thumbnail.source; return first.thumbnail.source; }
+        /* só aceitar se a página tiver coordenadas (é um local geográfico), evita apanhar pessoas/organizações com o mesmo nome */
+        if(first?.coordinates && first?.thumbnail?.source){
+          _coverCache[query]=first.thumbnail.source;
+          return first.thumbnail.source;
+        }
       }
     }catch(e){/* tenta próxima língua */}
   }
   _coverCache[query]=null;
+  return null;
+}
+async function buscarCapaLocal(local, pais){
+  const tentativas=[];
+  if(local && pais && local.toLowerCase()!==pais.toLowerCase()) tentativas.push(`${local}, ${pais}`);
+  if(local) tentativas.push(local);
+  if(pais) tentativas.push(pais);
+  for(const q of tentativas){
+    const url=await _buscarCapaQuery(q);
+    if(url) return url;
+  }
   return null;
 }
 
@@ -1777,9 +1791,8 @@ function renderTripsV2(){
     /* Links */
     const linksHtml=t.links&&t.links.length?t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--teal)">🔗 ${esc(l.label||l.url)}</a>`).join(' '):'';
 
-    /* Imagem de capa: buscar via Wikipedia para a cidade/local */
+    /* Imagem de capa: buscada via Wikipedia mais abaixo (buscarCapaLocal) */
     const pais=nomePT(t.pais||t.paises?.[0]||'');
-    const localQuery=(t.locais||pais).split(',')[0].trim();
 
     /* Card */
     const div=document.createElement('div');
@@ -1828,10 +1841,10 @@ function renderTripsV2(){
   /* Carregar imagens de capa (Wikipedia) */
   trips.forEach(t=>{
     const pais=nomePT(t.pais||t.paises?.[0]||'');
-    const localQuery=(t.locais||pais).split(',')[0].trim();
+    const cidade=t.locais?t.locais.split(',')[0].trim():'';
     const coverEl=document.getElementById(`cover-${t.id}`);
     if(!coverEl) return;
-    buscarCapaLocal(localQuery).then(url=>{
+    buscarCapaLocal(cidade, pais).then(url=>{
       if(url && coverEl.isConnected){
         coverEl.innerHTML=`<img src="${url}" alt="${esc(pais)}" loading="lazy">`;
       }
