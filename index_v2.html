@@ -840,6 +840,155 @@ textarea.form-input { resize:vertical; min-height:90px; }
 }
 .img-modal-v2.open { display:flex; }
 .img-modal-v2 img { max-width:90vw; max-height:90vh; border-radius:8px; }
+
+/* ── Light mode ── */
+body.light {
+  --bg: #f0f2f5;
+  --bg2: #ffffff;
+  --bg3: #e8eaed;
+  --border: rgba(0,0,0,.1);
+  --border2: rgba(0,0,0,.18);
+  --text: #1a1a2e;
+  --text2: #555770;
+  --text3: #9499b0;
+  --sidebar-bg: #1a1a2e;
+  --card-bg: #ffffff;
+  --card-hover: #f5f5f8;
+}
+body.light .sidebar-logo-text strong,
+body.light .nav-item { color: #e6edf3; }
+body.light .nav-item:hover { background: rgba(255,255,255,.12); }
+body.light .nav-item.active { background: var(--gold-dim); color: var(--gold); }
+body.light #topbar { background: #ffffff; border-color: rgba(0,0,0,.08); }
+body.light .topbar-search { background: #f0f2f5; border-color: rgba(0,0,0,.1); }
+body.light .topbar-search input { color: #1a1a2e; }
+body.light .topbar-btn, body.light .topbar-user { background:#f0f2f5; border-color:rgba(0,0,0,.1); color:#1a1a2e; }
+
+/* ── Theme toggle ── */
+#theme-toggle {
+  background: none; border: 1px solid var(--border);
+  border-radius: 8px; width:34px; height:34px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:16px; color:var(--text2);
+  transition: background .15s;
+}
+#theme-toggle:hover { background:var(--bg3); color:var(--text); }
+
+/* ── Hero melhorado ── */
+#hero-section {
+  background: linear-gradient(135deg, #0d1a2e 0%, #1a2340 40%, #2a1409 100%);
+  min-height: 240px;
+}
+#hero-section::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/0,20,1.5/1200x400?access_token=NOTOKEN') center/cover;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* ── Continente cards com emoji grande ── */
+.continent-card .cc-emoji {
+  font-size: 2.2rem; margin-bottom: 6px; display:block;
+}
+.continent-card { min-height: 120px; }
+
+/* ── Diary card novo visual (mockup) ── */
+.diary-card {
+  grid-template-columns: 220px 1fr 200px;
+  grid-template-rows: auto auto;
+  min-height: 140px;
+  position: relative;
+}
+.dc-cover-img {
+  grid-row: 1 / 3;
+  position: relative; overflow: hidden;
+  background: var(--bg3);
+}
+.dc-cover-img img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform .4s;
+}
+.diary-card:hover .dc-cover-img img { transform: scale(1.06); }
+.dc-cover-placeholder {
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:3rem; background:linear-gradient(135deg,var(--bg3),var(--bg2));
+}
+/* coluna central */
+.dc-body {
+  padding: 14px 18px;
+  display: flex; flex-direction: column;
+  gap: 5px; min-width: 0;
+  border-right: 1px solid var(--border);
+}
+/* coluna direita: fotos do utilizador */
+.dc-right {
+  display: flex; flex-direction: column; gap: 0;
+}
+.dc-user-photos {
+  flex: 1; display: flex; gap: 2px; overflow: hidden;
+  background: var(--bg);
+}
+.dc-user-photo {
+  flex: 1; min-width: 0; position: relative; overflow: hidden;
+}
+.dc-user-photo img {
+  width:100%; height:100%; object-fit:cover;
+  transition: transform .3s;
+}
+.diary-card:hover .dc-user-photo img { transform: scale(1.05); }
+.dc-photo-more {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,.55);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:13px; font-weight:700;
+}
+.dc-airline-strip {
+  padding: 7px 10px;
+  display: flex; align-items: center; gap: 8px;
+  border-top: 1px solid var(--border);
+  background: var(--bg3);
+}
+.dc-airline-strip img {
+  height: 16px; max-width: 60px; object-fit: contain;
+  background: #fff; padding: 1px 3px; border-radius: 3px;
+}
+.dc-airline-strip-name { font-size:11px; color:var(--teal); font-weight:500; flex:1; }
+.dc-airline-strip-rota { font-size:10px; color:var(--text3); }
+
+/* Esconder a coluna date no novo layout */
+.dc-date { display: none; }
+
+/* Mobile: stack vertical */
+@media(max-width:700px){
+  .diary-card { grid-template-columns: 1fr; grid-template-rows: 160px auto auto; }
+  .dc-cover-img { grid-row: 1; height:160px; }
+  .dc-right { display:none; }
+  .dc-date { display:none; }
+}
+
+/* ── Mapa: fundo escuro e legenda melhorada ── */
+#mapa svg { background: #0a0e1a; }
+.map-legend {
+  position:absolute; top:16px; left:16px; z-index:10;
+  background:rgba(13,17,23,.85); backdrop-filter:blur(8px);
+  border:1px solid var(--border); border-radius:10px;
+  padding:10px 14px;
+}
+.map-legend-item {
+  display:flex; align-items:center; gap:8px;
+  font-size:12px; color:var(--text2); margin-bottom:4px;
+}
+.map-legend-item:last-child { margin-bottom:0; }
+.map-legend-dot {
+  width:12px; height:12px; border-radius:3px; flex-shrink:0;
+}
+
+/* Corrigir Mapa toggle user */
+#renderUserToggle { display:none; }
+
 </style>
 </head>
 <body>
@@ -902,6 +1051,7 @@ textarea.form-input { resize:vertical; min-height:90px; }
       <input type="text" id="topbar-search-inp" placeholder="Para onde vamos?">
     </div>
     <div class="topbar-actions">
+      <button id="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
       <button class="topbar-btn" id="btn-nova-viagem-top" onclick="abrirFormModal()" title="Nova viagem">✈️</button>
       <div class="topbar-user" onclick="showTabV2('definicoes')">
         <div class="topbar-avatar" id="topbar-avatar">👤</div>
@@ -996,10 +1146,10 @@ textarea.form-input { resize:vertical; min-height:90px; }
         <button class="map-ctrl-btn" id="zoomOut" title="Zoom −">−</button>
         <button class="map-ctrl-btn" id="zReset" title="Reset">⌂</button>
       </div>
-      <div style="position:absolute;top:16px;left:16px;z-index:10;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--text2)">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><span style="width:10px;height:10px;border-radius:2px;background:var(--gold);display:inline-block"></span> Visitado</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><span style="width:10px;height:10px;border-radius:2px;background:var(--teal);display:inline-block"></span> Planeado</div>
-        <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:var(--bg3);border:1px solid var(--border);display:inline-block"></span> Por visitar</div>
+      <div class="map-legend">
+        <div class="map-legend-item"><span class="map-legend-dot" style="background:var(--gold)"></span> Visitado</div>
+        <div class="map-legend-item"><span class="map-legend-dot" style="background:var(--teal)"></span> Planeado</div>
+        <div class="map-legend-item"><span class="map-legend-dot" style="background:var(--bg3);border:1px solid var(--border)"></span> Por visitar</div>
       </div>
     </section>
 
@@ -1556,6 +1706,8 @@ function renderTripsV2(){
 
   const cnt = document.getElementById('diary-count');
   if(cnt) cnt.innerHTML = `<b>${trips.length}</b> viagem${trips.length!==1?'s':''}`;
+  const badge = document.getElementById('nav-badge-diario');
+  if(badge) badge.textContent = allTrips.length;
 
   if(!allTrips.length){
     list.innerHTML = `<div class="empty-state"><div class="icon">✈️</div><h3>Ainda sem viagens</h3><p>Regista a tua primeira aventura!</p><button class="btn-v2 btn-primary" onclick="abrirFormModal()">+ Nova viagem</button></div>`;
@@ -1571,61 +1723,78 @@ function renderTripsV2(){
     const ids = t.userIds||(t.userId?[t.userId]:[]);
     const uBadges = (ids.length&&state.users.length>1)?ids.map(uid=>{
       const u=state.users.find(x=>x.id===uid);
-      return u?`<span style="font-size:10px;background:${u.cor};color:#fff;border-radius:3px;padding:1px 5px">${esc(u.nome)}</span>`:'';
+      return u?`<span style="font-size:10px;background:${u.cor};color:#fff;border-radius:3px;padding:1px 6px;margin-left:4px">${esc(u.nome)}</span>`:'';
     }).join(''):'';
-    /* Data */
-    const d = t.ini||'';
-    const parts = d.split('-');
-    const day = parts[2]||'?';
-    const months = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
-    const month = parts[1] ? months[parseInt(parts[1])-1] : '';
-    /* Airline */
-    const aObj = t.airline ? AIRLINES_DB.find(a=>a.nome===t.airline||a.iata===t.airline) : null;
-    const logo  = aObj ? AIRLINE_LOGO_DATA[aObj.iata] : null;
-    const airHtml = t.airline ? `<div class="dc-airline">
-      ${logo?`<img src="${logo}" alt="${esc(t.airline)}">`:'<span style="font-size:16px">✈️</span>'}
-      <div><div class="dc-airline-name">${esc(t.airline)}</div>${t.rota?`<div class="dc-airline-rota">${esc(t.rota)}</div>`:''}</div>
-    </div>` : '';
-    /* Tags */
-    const tags = [
-      t.tipo==='grande' ? '<span class="dc-tag grande">🌍 Grande viagem</span>' : '<span class="dc-tag escapadinha">✈️ Escapadinha</span>',
-      t.ilhas ? '<span class="dc-tag ilhas">🏝 Ilhas</span>' : '',
-    ].filter(Boolean).join('');
-    /* Photos placeholder */
-    const hasPhotos = t.imgNomes && t.imgNomes.length > 0;
-    const photosHtml = hasPhotos ? `<div class="dc-photos" id="dcphotos-${t.id}">
-      <div class="dc-photo"><div style="width:100%;height:100%;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:11px">📷</div></div>
-    </div>` : '';
 
-    const div = document.createElement('div');
-    div.className = 'diary-card' + (t.ini>hoje?' futura':'');
-    div.onclick = ()=>abrirDiarioModal(t.id);
-    div.innerHTML = `
-      <div class="dc-date">
-        <div class="month">${month}</div>
-        <div class="day">${day}</div>
+    /* Data */
+    const d=t.ini||''; const parts=d.split('-');
+    const months=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+    const monthStr=parts[1]?months[parseInt(parts[1])-1]:'';
+    const dayStr=parts[2]||'';
+
+    /* Airline */
+    const aObj=t.airline?AIRLINES_DB.find(a=>a.nome===t.airline||a.iata===t.airline):null;
+    const logo=aObj?AIRLINE_LOGO_DATA[aObj.iata]:null;
+    const airlineStrip=t.airline?`<div class="dc-airline-strip">
+      ${logo?`<img src="${logo}" alt="${esc(t.airline)}">`:'<span style="font-size:14px">✈️</span>'}
+      <span class="dc-airline-strip-name">${esc(t.airline)}</span>
+      ${t.rota?`<span class="dc-airline-strip-rota">${esc(t.rota)}</span>`:''}
+    </div>`:'';
+
+    /* Tags */
+    const tags=[
+      t.tipo==='grande'?'<span class="dc-tag grande">🌍 Grande viagem</span>':'<span class="dc-tag escapadinha">✈️ Escapadinha</span>',
+      t.ilhas?'<span class="dc-tag ilhas">🏝 Ilhas</span>':'',
+    ].filter(Boolean).join('');
+
+    /* Links */
+    const linksHtml=t.links&&t.links.length?t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--teal)">🔗 ${esc(l.label||l.url)}</a>`).join(' '):'';
+
+    /* Imagem de capa: buscar via Unsplash/Wikipedia para a cidade/país */
+    const pais=nomePT(t.pais||t.paises?.[0]||'');
+    const query=encodeURIComponent((t.locais||pais).split(',')[0].trim());
+    const coverUrl=`https://source.unsplash.com/400x280/?${query},travel,city`;
+
+    /* Card */
+    const div=document.createElement('div');
+    div.className='diary-card'+(t.ini>hoje?' futura':'');
+    div.onclick=()=>abrirDiarioModal(t.id);
+    div.innerHTML=`
+      <!-- Imagem de capa (Unsplash) -->
+      <div class="dc-cover-img">
+        <img src="${coverUrl}" alt="${esc(pais)}" loading="lazy"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="dc-cover-placeholder" style="display:none">${bandeira(t.pais||t.paises?.[0]||'')}</div>
       </div>
+      <!-- Conteúdo central -->
       <div class="dc-body">
         <div class="dc-title">
           ${bandeira(t.pais)} ${esc(t.titulo||nomePT(t.pais))}
-          <span class="user-badges">${uBadges}</span>
+          ${uBadges}
         </div>
         <div class="dc-meta">
-          ${(t.paises||[t.pais]).map(a=>bandeira(a)+' '+nomePT(a)).join(' · ')}
-          · ${fmtData(t.ini)}${t.fim&&t.fim!==t.ini?' → '+fmtData(t.fim):''}
-          ${t.ini>hoje?' · <span style="color:var(--teal)">PLANEADA</span>':''}
+          📍 ${(t.paises||[t.pais]).map(a=>nomePT(a)).join(' · ')}
+          <span style="color:var(--text3)">·</span>
+          ${monthStr} ${dayStr}${t.fim&&t.fim!==t.ini?' → '+fmtData(t.fim):''}
+          ${t.ini>hoje?'<span style="color:var(--teal);font-size:10px">PLANEADA</span>':''}
         </div>
         ${t.locais?`<div class="dc-locais">📍 ${esc(t.locais)}</div>`:''}
-        ${t.pernoita?`<div class="dc-pernoita">🛏 ${esc(t.pernoita)}</div>`:''}
         ${t.notas?`<div class="dc-notas">${esc(t.notas)}</div>`:''}
-        <div class="dc-tags">${tags}</div>
-        ${t.links&&t.links.length?`<div style="margin-top:4px">${t.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;color:var(--teal);margin-right:8px">🔗 ${esc(l.label||l.url)}</a>`).join('')}</div>`:''}
+        <div class="dc-tags" style="margin-top:auto">${tags}</div>
+        ${linksHtml?`<div style="margin-top:4px">${linksHtml}</div>`:''}
       </div>
+      <!-- Fotos do utilizador + airline -->
       <div class="dc-right">
-        ${airHtml}
-        ${photosHtml}
+        <div class="dc-user-photos" id="uphotos-${t.id}">
+          ${t.imgNomes&&t.imgNomes.length?
+            '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:11px">A carregar...</div>'
+            :'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:22px">📷</div>'
+          }
+        </div>
+        ${airlineStrip}
       </div>
-      <div class="dc-actions" onclick="event.stopPropagation()">
+      <!-- Acções -->
+      <div class="dc-actions" onclick="event.stopPropagation()" style="grid-column:2/3">
         <button class="btn-v2 btn-ghost" style="font-size:12px;padding:5px 10px" onclick="editarTrip(${t.id})">Editar</button>
         <button class="btn-v2 btn-danger" style="font-size:12px;padding:5px 10px" onclick="apagarTrip(${t.id})">Apagar</button>
       </div>`;
@@ -1634,22 +1803,22 @@ function renderTripsV2(){
 
   /* Carregar fotos nas cards */
   trips.forEach(t=>{
-    if(t.imgNomes && t.imgNomes.length){
-      const wrap = document.getElementById(`dcphotos-${t.id}`);
-      if(!wrap) return;
-      getFotos(t.id, t.imgNomes.length).then(fotos=>{
-        if(!fotos.length) return;
-        const show = fotos.slice(0,3);
-        const more = fotos.length - 3;
-        wrap.innerHTML = show.map((url,i)=>`
-          <div class="dc-photo">
-            <img src="${url}" loading="lazy" onclick="event.stopPropagation();verImagem('${url}')">
-            ${i===2&&more>0?`<div class="dc-photo-more">+${more}</div>`:''}
-          </div>`).join('');
-      });
-    }
+    if(!t.imgNomes||!t.imgNomes.length) return;
+    const wrap=document.getElementById(`uphotos-${t.id}`);
+    if(!wrap) return;
+    getFotos(t.id,t.imgNomes.length).then(fotos=>{
+      if(!fotos.length){ wrap.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:22px">📷</div>'; return; }
+      const show=fotos.slice(0,3);
+      const more=fotos.length-3;
+      wrap.innerHTML=show.map((url,i)=>`
+        <div class="dc-user-photo">
+          <img src="${url}" loading="lazy" onclick="event.stopPropagation();verImagem('${url}')">
+          ${i===2&&more>0?`<div class="dc-photo-more">+${more}</div>`:''}
+        </div>`).join('');
+    });
   });
 }
+
 
 /* populateFiltroDropdownsV2 */
 function populateFiltroDropdownsV2(){
@@ -2360,7 +2529,7 @@ function showTab(name){
 }
 
 /* ============ MAPA ============ */
-const CORES = { visitado:'var(--gold)', parcial:'var(--parcial)', planeado:'var(--teal)', nao:'var(--land)' };
+const CORES = { visitado:'var(--gold)', parcial:'rgba(212,168,67,.35)', planeado:'var(--teal)', nao:'#1c2535' };
 let gPaises, zoomBeh, svgMap;
 
 function desenharMapa(topo){
@@ -2370,7 +2539,7 @@ function desenharMapa(topo){
   const path = d3.geoPath(proj);
   svgMap = d3.select('#mapa').append('svg').attr('viewBox', `0 0 ${W} ${H}`);
   const g = svgMap.append('g');
-  g.append('path').attr('d', path({type:'Sphere'})).attr('fill', 'var(--panel2)');
+  g.append('path').attr('d', path({type:'Sphere'})).attr('fill', 'var(--bg)');
   gPaises = g.selectAll('path.country').data(paises).join('path')
     .attr('class','country').attr('d', path)
     .attr('fill', d => CORES[statusDe(N2A[String(+d.id)] || '')])
@@ -6581,6 +6750,67 @@ const _importOriginal = document.getElementById('fileImport');
 
 
 /* ── Combobox custom de países ── */
+
+
+/* ── Toggle Light/Dark Mode ── */
+function toggleTheme(){
+  const isLight = document.body.classList.toggle('light');
+  const btn = document.getElementById('theme-toggle');
+  if(btn) btn.textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('atlas_theme', isLight ? 'light' : 'dark');
+}
+
+/* ── renderContinentesV2 melhorado com emoji grandes ── */
+function renderContinentesV2(){
+  const grids=[document.getElementById('continents-grid-v2'),document.getElementById('contGrid')];
+  const html=CONTINENTES.map(c=>{
+    const vis=c.paises.filter(a2=>{const st=statusDe(a2);return st==='visitado'||st==='parcial';}).length;
+    const total=c.paises.length;
+    const pct=Math.round(vis/total*100);
+    return `<div class="continent-card" onclick="abrirContinente('${c.id}')">
+      <span class="cc-emoji">${c.emoji}</span>
+      <div class="cc-name">${c.nome}</div>
+      <div class="cc-count">${vis}/${total} países · ${pct}%</div>
+      <div class="cc-bar"><div class="cc-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+  grids.forEach(g=>{if(g)g.innerHTML=html;});
+}
+
+/* ── Fix: inicializar mapa ao clicar em Mapa ── */
+const _origShowTabV2 = showTabV2;
+window.showTabV2 = function(name){
+  _origShowTabV2(name);
+  if(name==='mapa'){
+    setTimeout(()=>{
+      const cont=document.getElementById('mapa');
+      if(!cont) return;
+      if(!svgMap){
+        fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json')
+          .then(r=>r.json())
+          .then(topo=>{ desenharMapa(topo); paintMap(); })
+          .catch(e=>console.warn('Mapa fetch error:',e));
+      } else {
+        paintMap();
+      }
+      /* Corrigir dimensões: forçar SVG a ocupar todo o espaço */
+      if(svgMap){
+        const box=cont.getBoundingClientRect();
+        if(box.width>0) svgMap.attr('width',box.width).attr('height',box.height||500);
+      }
+    },100);
+  }
+};
+
+/* ── Aplicar tema guardado ── */
+(function(){
+  const saved = localStorage.getItem('atlas_theme');
+  if(saved==='light'){
+    document.body.classList.add('light');
+    const btn=document.getElementById('theme-toggle');
+    if(btn) btn.textContent='☀️';
+  }
+})();
 
 /* ════════════════════════════════════════════════════════
    ARRANQUE V2
