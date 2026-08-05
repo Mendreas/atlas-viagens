@@ -908,6 +908,7 @@ body.light .hero-sub { color:#c8cbdc; }
   grid-template-rows: 1fr auto;
   height: 220px;
   position: relative;
+  overflow: hidden;
 }
 .dc-cover-img {
   grid-row: 1 / 3; grid-column: 1;
@@ -936,12 +937,15 @@ body.light .hero-sub { color:#c8cbdc; }
 /* coluna direita: fotos do utilizador (fila de quadrados) */
 .dc-right {
   grid-row: 1; grid-column: 3;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
+  display: flex; align-items: center; justify-content: center;
   border-left: 1px solid var(--border);
   padding: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 .dc-user-photos {
-  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
+  flex-wrap: nowrap; overflow: hidden; box-sizing: border-box;
 }
 .dc-user-photos.loading, .dc-user-photos.empty {
   width: 64px; height: 64px; border-radius: 10px;
@@ -949,7 +953,7 @@ body.light .hero-sub { color:#c8cbdc; }
   background: var(--bg);
 }
 .dc-user-photo {
-  flex: 0 0 auto; width: 64px; height: 64px;
+  flex: 1 1 0; min-width: 0; max-width: 88px; height: 80px;
   border-radius: 9px; position: relative; overflow: hidden;
   background: var(--bg3); cursor: zoom-in;
 }
