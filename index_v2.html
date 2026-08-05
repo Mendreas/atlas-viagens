@@ -24,6 +24,8 @@
   --bg:         #0d1117;
   --bg2:        #161b22;
   --bg3:        #1c2128;
+  --map-land:   #4a5268;
+  --map-void:   #0a0d12;
   --border:     rgba(255,255,255,.08);
   --border2:    rgba(255,255,255,.14);
 
@@ -882,6 +884,8 @@ body.light {
   --bg: #f0f2f5;
   --bg2: #ffffff;
   --bg3: #e8eaed;
+  --map-land: #c7cad3;
+  --map-void: #dfe2e8;
   --border: rgba(0,0,0,.1);
   --border2: rgba(0,0,0,.18);
   --text: #1a1a2e;
@@ -1343,18 +1347,30 @@ body.light .hero-sub { color:#c8cbdc; }
 .pz-view-btn:hover, .pz-view-btn.active { border-color:var(--gold); color:var(--gold2); }
 
 /* Vista em lista */
-.pz-list { display:flex; flex-direction:column; gap:8px; }
+.pz-list { display:flex; flex-direction:column; gap:10px; }
 .pz-row {
-  display:grid; grid-template-columns:64px 1fr auto auto; align-items:center; gap:14px;
-  background:var(--card-bg); border:1px solid var(--border); border-radius:12px;
-  padding:12px 16px; cursor:pointer; transition:border-color .15s, transform .15s;
+  display:grid; grid-template-columns:140px 1fr auto auto; align-items:center; gap:16px;
+  background:var(--card-bg); border:1px solid var(--border); border-radius:14px;
+  padding:14px; cursor:pointer; transition:border-color .15s, transform .15s;
 }
 .pz-row:hover { border-color:var(--border2); transform:translateY(-1px); }
 .pz-flag-thumb {
-  width:64px; height:64px; border-radius:10px; flex:none;
-  display:flex; align-items:center; justify-content:center; font-size:30px;
-  background:linear-gradient(135deg, var(--bg3), var(--bg2));
-  border:1px solid var(--border);
+  width:140px; height:140px; border-radius:12px; flex:none; position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; font-size:64px;
+  border:1px solid var(--border2);
+  box-shadow:inset 0 0 30px rgba(0,0,0,.35);
+}
+.pz-flag-thumb::after {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.16), transparent 55%);
+  pointer-events:none;
+}
+.pz-flag-emoji { position:relative; z-index:1; filter:drop-shadow(0 2px 6px rgba(0,0,0,.4)); }
+.pz-code-badge {
+  position:absolute; right:6px; bottom:6px; z-index:1;
+  background:rgba(0,0,0,.45); color:#fff; font-size:10px; font-weight:800;
+  letter-spacing:.04em; padding:2px 6px; border-radius:5px;
+  backdrop-filter:blur(2px);
 }
 .pz-info { min-width:0; }
 .pz-name-row { display:flex; align-items:center; gap:8px; font-weight:700; font-size:14.5px; color:var(--text); }
@@ -1389,11 +1405,18 @@ body.light .hero-sub { color:#c8cbdc; }
   display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px;
 }
 .pz-card:hover { border-color:var(--border2); transform:translateY(-2px); }
-.pz-card .pz-flag-thumb { width:56px; height:56px; font-size:26px; margin-bottom:4px; }
+.pz-card .pz-flag-thumb { width:140px; height:140px; font-size:60px; margin-bottom:4px; }
 .pz-card .pz-name-row { font-size:13px; justify-content:center; }
 .pz-card .pz-meta { text-align:center; }
-@media(max-width:900px){ .pz-grid { grid-template-columns:repeat(3,1fr); } }
-@media(max-width:600px){ .pz-grid { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:1100px){ .pz-grid { grid-template-columns:repeat(3,1fr); } }
+@media(max-width:760px){ .pz-grid { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:460px){ .pz-grid { grid-template-columns:1fr; } }
+
+/* Vista em lista — pequenos ecrãs: thumb menor para caber */
+@media(max-width:640px){
+  .pz-row { grid-template-columns:84px 1fr auto auto; gap:10px; padding:10px; }
+  .pz-row .pz-flag-thumb { width:84px; height:84px; font-size:36px; }
+}
 
 /* ══ MODAL DO PAÍS ══ */
 .pz-modal-status { display:flex; gap:8px; margin:12px 0 4px; flex-wrap:wrap; }
@@ -1459,9 +1482,41 @@ body.light .hero-sub { color:#c8cbdc; }
 .u-badge { background:var(--gold-dim); color:var(--gold2); border-radius:10px; padding:1px 8px; font-size:11px; margin-left:6px; }
 
 .reg-hint { font-size:12px; color:var(--text2); padding:10px 0; }
-#regMapa { position:relative; background:var(--bg3); border-radius:10px; overflow:hidden; min-height:200px; }
+
+/* "O que ver" — pontos de interesse curados por região */
+.pz-regiao { margin-bottom:14px; }
+.pz-regiao h4 { font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.pz-regiao h4 small { font-weight:600; color:var(--text2); font-size:10.5px; }
+.pz-vistas { display:flex; flex-direction:column; gap:6px; }
+.pz-vista {
+  display:flex; align-items:center; gap:8px;
+  background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+  padding:7px 10px; font-size:12.5px; color:var(--text2); cursor:pointer;
+}
+.pz-vista.done { color:var(--text); border-color:var(--gold); }
+.pz-vista input { accent-color:var(--gold); }
+.pz-vista span { flex:1; }
+.pz-vista-del {
+  background:none; border:none; color:var(--text3); cursor:pointer; font-size:12px;
+  padding:2px 4px; border-radius:4px; flex:none;
+}
+.pz-vista-del:hover { color:var(--red); background:var(--red-dim); }
+.pz-add-inline { display:flex; gap:6px; margin-top:6px; }
+.pz-add-inline input[type="text"] {
+  flex:1; background:var(--bg3); border:1px solid var(--border); border-radius:7px;
+  padding:6px 10px; font-size:12px; color:var(--text); font-family:inherit;
+}
+.pz-add-inline input[type="text"]::placeholder { color:var(--text3); }
+.pz-add-inline input[type="text"]:focus { outline:none; border-color:var(--gold); }
+.pz-add-inline .btn-mini {
+  background:var(--bg3); border:1px solid var(--border2); border-radius:7px;
+  color:var(--text); font-weight:700; width:30px; flex:none; cursor:pointer;
+}
+.pz-add-inline .btn-mini:hover { border-color:var(--gold); color:var(--gold2); }
+#regMapa { position:relative; background:var(--map-void); border-radius:10px; overflow:hidden; min-height:220px; }
 #regMapa svg { width:100%; height:auto; display:block; }
-#regMapa .region { cursor:pointer; transition:fill .15s; stroke:var(--border); stroke-width:.5; }
+#regMapa .region { cursor:pointer; transition:filter .15s; stroke:rgba(255,255,255,.4); stroke-width:1; }
+#regMapa .region:hover { filter:brightness(1.3); }
 #regMapa .btn { background:var(--bg2); border:1px solid var(--border); color:var(--text); border-radius:6px; cursor:pointer; }
 .zone-tabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:10px; }
 .zone-tab {
@@ -3857,6 +3912,13 @@ function regStore(){ return paisContexto === 'planeado' ? ud().planRegioes : ud(
 function regDe(a2){
   const store = regStore();
   if (!store[a2]) store[a2] = { total:0, v:{} };
+  /* Auto-reparação: se já temos a geometria real em cache mas o total ficou
+     desactualizado (ex.: regiões marcadas antes do mapa terminar de carregar),
+     corrige aqui em vez de depender só do desenho do mapa. */
+  const cache = REG_CACHE[a2];
+  if (cache && cache.features && cache.features.length && store[a2].total !== cache.features.length){
+    store[a2].total = cache.features.length;
+  }
   return store[a2];
 }
 
@@ -3944,7 +4006,7 @@ function desenharRegioes(a2, gj){
   /* Polígonos */
   gReg.selectAll('path.region').data(gj.features).join('path')
     .attr('class','region').attr('d', path)
-    .attr('fill', d => r.v[nomeReg(d)] ? 'var(--gold)' : 'var(--bg3)')
+    .attr('fill', d => r.v[nomeReg(d)] ? 'var(--gold)' : 'var(--map-land)')
     .on('click', (ev,d)=> toggleRegiao(a2, nomeReg(d)))
     .append('title').text(d => nomeReg(d));
 
@@ -4302,7 +4364,7 @@ window.desenharRegioes = function(a2, gj){
       const svg = d3.select(mapaDiv).append('svg').attr('viewBox',`0 0 ${W} ${H}`);
       svg.selectAll('path.region').data(zona.features).join('path')
         .attr('class','region').attr('d', path)
-        .attr('fill', d => r.v[nomeReg(d)] ? 'var(--gold)' : 'var(--bg3)')
+        .attr('fill', d => r.v[nomeReg(d)] ? 'var(--gold)' : 'var(--map-land)')
         .on('click', (ev,d) => { toggleRegiao(a2, nomeReg(d)); renderZona(idx); })
         .append('title').text(d => nomeReg(d));
       const labelG = svg.append('g').attr('class','reg-labels');
@@ -7307,6 +7369,12 @@ function pzUltimaData(a2){
 function pzStats(a2){
   const st = statusDe(a2);
   const r = ud().regioes[a2] || {total:0, v:{}};
+  /* Auto-reparação (mesma lógica de regDe): se a geometria já está em cache
+     mas o total ficou desactualizado, corrige antes de calcular a %. */
+  const cacheG = REG_CACHE[a2];
+  if (cacheG && cacheG.features && cacheG.features.length && r.total !== cacheG.features.length){
+    r.total = cacheG.features.length; /* corrige em memória; persiste na próxima gravação normal */
+  }
   const regVisitadas = Object.keys(r.v||{}).length;
   const regTotal = r.total || 0;
   const uSites = UNESCO_WHS[a2] || [];
@@ -7354,16 +7422,35 @@ function pzStatusLbl(st){
   return (st==='visitado'||st==='parcial') ? 'Visitado' : st==='planeado' ? 'Planeado' : 'Por visitar';
 }
 
+const PZ_CONT_GRAD = {
+  europa:        'linear-gradient(145deg,#3a4a6b,#6b5a8e)',
+  america_norte: 'linear-gradient(145deg,#2f6b6b,#3a8fa8)',
+  america_sul:   'linear-gradient(145deg,#2f6b4a,#5a9e5a)',
+  africa:        'linear-gradient(145deg,#8a5a2f,#b8823f)',
+  asia:          'linear-gradient(145deg,#8a2f3f,#b85a4a)',
+  oceania:       'linear-gradient(145deg,#2f6b8a,#4a9ec9)',
+  antartica:     'linear-gradient(145deg,#3a4a5a,#6f8aa0)'
+};
+function pzContinenteId(a2){
+  const c = CONTINENTES.find(c => c.paises.includes(a2));
+  return c ? c.id : 'europa';
+}
+function pzFlagThumbHtml(a2){
+  const grad = PZ_CONT_GRAD[pzContinenteId(a2)] || PZ_CONT_GRAD.europa;
+  return `<div class="pz-flag-thumb" style="background:${grad}">
+      <span class="pz-flag-emoji">${bandeira(a2)}</span>
+      <span class="pz-code-badge">${a2}</span>
+    </div>`;
+}
 function pzCardHtml(a2, view){
   const s = pzStats(a2);
   const nome = nomePT(a2);
-  const flag = bandeira(a2);
   const statusLbl = pzStatusLbl(s.status);
   const dataLbl = s.ultimaData ? ('Visitado a '+fmtData(s.ultimaData)) : statusLbl;
 
   if (view === 'grid'){
     return `<div class="pz-card" onclick="pzOpenModal('${a2}')">
-      <div class="pz-flag-thumb">${flag}</div>
+      ${pzFlagThumbHtml(a2)}
       <div class="pz-name-row">${esc(nome)}</div>
       <div class="pz-meta">${esc(s.continente)}</div>
       <div class="pz-meta">${esc(dataLbl)}</div>
@@ -7372,7 +7459,7 @@ function pzCardHtml(a2, view){
 
   const ringDeg = Math.round(s.pct*3.6);
   return `<div class="pz-row" onclick="pzOpenModal('${a2}')">
-    <div class="pz-flag-thumb">${flag}</div>
+    ${pzFlagThumbHtml(a2)}
     <div class="pz-info">
       <div class="pz-name-row">${esc(nome)} <span class="pz-badge-status ${s.status}">${statusLbl}</span></div>
       <div class="pz-meta">${esc(s.continente)} · ${esc(dataLbl)}</div>
