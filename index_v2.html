@@ -3461,7 +3461,7 @@ function desenharRegioes(a2, gj){
   /* Polígonos */
   gReg.selectAll('path.region').data(gj.features).join('path')
     .attr('class','region').attr('d', path)
-    .attr('fill', d => r.v[nomeReg(d)] ? 'var(--gold)' : 'var(--land)')
+    .attr('fill', d => r.v[nomeReg(d)] ? 'var(--gold)' : 'var(--bg3)')
     .on('click', (ev,d)=> toggleRegiao(a2, nomeReg(d)))
     .append('title').text(d => nomeReg(d));
 
@@ -3819,7 +3819,7 @@ window.desenharRegioes = function(a2, gj){
       const svg = d3.select(mapaDiv).append('svg').attr('viewBox',`0 0 ${W} ${H}`);
       svg.selectAll('path.region').data(zona.features).join('path')
         .attr('class','region').attr('d', path)
-        .attr('fill', d => r.v[nomeReg(d)] ? 'var(--gold)' : 'var(--land)')
+        .attr('fill', d => r.v[nomeReg(d)] ? 'var(--gold)' : 'var(--bg3)')
         .on('click', (ev,d) => { toggleRegiao(a2, nomeReg(d)); renderZona(idx); })
         .append('title').text(d => nomeReg(d));
       const labelG = svg.append('g').attr('class','reg-labels');
@@ -3934,9 +3934,9 @@ function desenharZonaExtraNoMapa(cont, a2, zona, r, W, H){
         if (isMain || isExtra){
           /* Marcar como visitado? */
           const st = statusDe(fa2 || a2);
-          return st==='visitado'?'var(--gold)': st==='parcial'?'var(--parcial)':'var(--land)';
+          return st==='visitado'?'var(--gold)': st==='parcial'?'var(--gold-dim)':'var(--bg3)';
         }
-        return 'var(--land)';
+        return 'var(--bg3)';
       })
       .attr('stroke','var(--ink)').attr('stroke-width','.4')
       .attr('opacity', f => {
@@ -3955,7 +3955,7 @@ function desenharZonaExtraNoMapa(cont, a2, zona, r, W, H){
           d3.select(ev.currentTarget)
             .attr('fill', ()=>{
               const st = statusDe(fa2);
-              return st==='visitado'?'var(--gold)': st==='parcial'?'var(--parcial)':'var(--land)';
+              return st==='visitado'?'var(--gold)': st==='parcial'?'var(--gold-dim)':'var(--bg3)';
             });
           /* Atualizar chip correspondente */
           cont.querySelectorAll('.chip').forEach(c => {
@@ -4198,7 +4198,7 @@ function abrirStatModal(tipo){
       const viagens = state.trips.filter(t => t.pais === a2)
         .sort((a,b) => b.ini.localeCompare(a.ini));
       const regsStr = nReg > 0 ? `${nReg}/${totalReg} regiões visitadas` : '';
-      const badge = st==='parcial' ? ' <span style="font-size:.7rem;background:var(--parcial);color:#1d1607;border-radius:4px;padding:1px 5px">parcial</span>' : '';
+      const badge = st==='parcial' ? ' <span style="font-size:.7rem;background:var(--gold-dim);color:#1d1607;border-radius:4px;padding:1px 5px">parcial</span>' : '';
       return `<div class="stat-item">
         <div class="si-top">
           <span class="si-flag">${bandeira(a2)}</span>
@@ -5088,6 +5088,11 @@ function toggleUserVisibility(uid){
 
 /* ── paintMap multi-user ───────────────────────────────────────────── */
 /* Override do paintMap original para suporte multi-user */
+function hexToRgbaMapa(hex, alpha){
+  const h = (hex||'#d4a843').replace('#','');
+  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 const _paintMapOriginal = paintMap;
 window.paintMap = function(){
   if (!gPaises) return;
@@ -5118,13 +5123,13 @@ window.paintMap = function(){
       const planned = statuses.filter(x=>x.st==='planeado');
       const partial = statuses.filter(x=>x.st==='parcial');
 
-      if (visited.length === statuses.length) return 'var(--gold)'; /* todos visitado */
-      if (visited.length > 0 && planned.length > 0) return 'var(--parcial)'; /* um visitou outro planeia */
+      if (visited.length === statuses.length) return CORES.visitado; /* todos visitado */
+      if (visited.length > 0 && planned.length > 0) return CORES.parcial; /* um visitou outro planeia */
       if (visited.length > 0) return visited.length === 1
-        ? corUser(visited[0].uid) : 'var(--gold)';
-      if (partial.length > 0) return 'var(--parcial)';
-      if (planned.length > 0) return 'var(--teal)';
-      return 'var(--land)';
+        ? hexToRgbaMapa(corUser(visited[0].uid), .55) : CORES.visitado;
+      if (partial.length > 0) return CORES.parcial;
+      if (planned.length > 0) return CORES.planeado;
+      return CORES.nao;
     });
   }
 };
