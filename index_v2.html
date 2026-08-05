@@ -1680,7 +1680,8 @@ function showTab(name){
 /* renderExplorar: hero + stats + continentes na página inicial */
 function renderExplorar(){
   /* Greeting */
-  const nome = state.users[0]?.nome;
+  const editU = state.users.find(u=>u.id===state.editingUser) || state.users[0];
+  const nome = editU?.nome;
   const hora = new Date().getHours();
   const saud = hora<12?'Bom dia':hora<18?'Boa tarde':'Boa noite';
   const greet = nome ? `Olá, ${nome}! 👋` : 'Olá! 👋';
@@ -7010,7 +7011,7 @@ setTimeout(()=>{
     const badge = document.getElementById('nav-badge-diario');
     if(badge) badge.textContent = state.trips.length;
     const tn = document.getElementById('topbar-user');
-    if(tn) tn.textContent = state.users[0]?.nome || 'Configurar nome';
+    if(tn) tn.textContent = (state.users.find(u=>u.id===state.editingUser) || state.users[0])?.nome || 'Configurar nome';
 
     document.getElementById('btnExport')?.addEventListener('click',()=>{
       const {_fotos,...toSave}=state;
