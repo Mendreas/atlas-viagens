@@ -327,6 +327,7 @@ body {
   transition:border-color .15s, background .15s, transform .15s;
   position:relative; overflow:hidden;
 }
+.continent-card.active { outline:2px solid var(--gold,#ffc414); outline-offset:2px; }
 .continent-card:hover {
   border-color:var(--border2);
   background:var(--card-hover);
@@ -4329,18 +4330,17 @@ function abrirContinente(id){
   showTabV2('regioes');
   const c = CONTINENTES.find(x=>x.id===id);
   _rgContinenteActual = id;
-  document.getElementById('reg-continentes').style.display='none';
   document.getElementById('reg-paises').style.display='block';
+  document.querySelectorAll('#contGrid .continent-card, #continents-grid-v2 .continent-card').forEach(el=>{
+    el.classList.toggle('active', el.getAttribute('data-cont-id')===id);
+  });
   document.getElementById('contTitulo').innerHTML = c.emoji + ' <span>' + c.nome + '</span>';
   rgRenderStats(id);
   rgRenderList(id);
   rgRenderMap(id);
+  document.getElementById('reg-paises').scrollIntoView({behavior:'smooth', block:'start'});
 }
-document.getElementById('backCont').onclick = ()=>{
-  document.getElementById('reg-continentes').style.display='block';
-  document.getElementById('reg-paises').style.display='none';
-  _rgContinenteActual = null;
-};
+document.getElementById('backCont')?.remove();
 window.irParaPais = a2 => { pzOpenModal(a2); };
 
 function rgStatusDe(a2){
@@ -4419,7 +4419,7 @@ async function rgRenderMap(id){
   const g = svg.append('g');
   g.append('image').attr('href', MAP_BG_IMG).attr('x',0).attr('y',0).attr('width',W).attr('height',H);
 
-  const RG_FILL = { visitado:'rgba(255,196,20,.5)', parcial:'rgba(255,196,20,.35)', planeado:'rgba(0,225,140,.5)', nao:'rgba(20,22,28,.4)' };
+  const RG_FILL = { visitado:'rgba(255,196,20,.25)', parcial:'rgba(255,196,20,.18)', planeado:'rgba(0,225,140,.25)', nao:'rgba(20,22,28,.4)' };
   g.selectAll('path.rg-country-path').data(todasFeatures).join('path')
     .attr('class','rg-country-path').attr('d', path)
     .attr('fill', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? RG_FILL[rgStatusDe(a2)] : 'rgba(20,22,28,.55)'; })
@@ -8511,7 +8511,7 @@ function renderContinentesV2(){
     const total=c.paises.length;
     const pct=Math.round(vis/total*100);
     const contIcon = CONT_ICONS[c.id];
-    return `<div class="continent-card" onclick="abrirContinente('${c.id}')">
+    return `<div class="continent-card" data-cont-id="${c.id}" onclick="abrirContinente('${c.id}')">
       ${contIcon
         ? `<img class="cc-img-bg" src="${contIcon}" alt="${c.nome}">`
         : `<div class="cc-img-bg" style="background:linear-gradient(135deg,var(--bg3),var(--bg2));display:flex;align-items:center;justify-content:center;font-size:3rem">${c.emoji}</div>`}
