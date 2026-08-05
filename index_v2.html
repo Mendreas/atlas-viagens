@@ -409,10 +409,10 @@ body {
 
 /* Coluna direita: airline + fotos */
 .dc-right {
-  width:220px; flex-shrink:0;
-  border-left:1px solid var(--border);
-  display:flex; flex-direction:column;
-  overflow:hidden;
+  width: auto; flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
 }
 .dc-airline {
   padding:10px 12px;
@@ -935,27 +935,27 @@ body.light .hero-sub { color:#c8cbdc; }
   gap: 5px; min-width: 0; max-width: 480px; overflow: hidden;
 }
 /* coluna direita: fotos do utilizador — encostadas à borda direita */
-.dc-right {
+#trip-list-v2 .dc-right {
   grid-row: 1; grid-column: 3;
-  display: flex; align-items: center;
+  width: auto !important; flex-shrink: 0;
+  display: flex; align-items: stretch;
   justify-content: flex-end;
   padding: 0;
   overflow: hidden;
   border-left: 1px solid var(--border);
+  flex-direction: row;
 }
-.dc-user-photos {
-  display: flex; align-items: center;
-  gap: 0;
-  flex-wrap: nowrap;
-  height: 100%;
+#trip-list-v2 .dc-user-photos {
+  display: flex; align-items: stretch;
+  gap: 0; flex-wrap: nowrap; height: 100%;
 }
-.dc-user-photos.loading, .dc-user-photos.empty {
-  width: 132px; height: 132px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--bg);
+#trip-list-v2 .dc-user-photos.loading,
+#trip-list-v2 .dc-user-photos.empty {
+  width: 132px; display: flex; align-items: center;
+  justify-content: center; background: var(--bg);
 }
-.dc-user-photo {
-  flex: 0 0 132px; width: 132px; height: 100%;
+#trip-list-v2 .dc-user-photo {
+  flex: 0 0 132px; width: 132px;
   position: relative; overflow: hidden;
   background: var(--bg3); cursor: zoom-in;
   border-left: 2px solid var(--bg);
