@@ -931,13 +931,13 @@ body.light .hero-sub { color:#c8cbdc; }
   grid-row: 1; grid-column: 2;
   padding: 14px 18px;
   display: flex; flex-direction: column;
-  gap: 5px; min-width: 0; overflow: hidden;
-  border-right: 1px solid var(--border);
+  gap: 5px; min-width: 0; max-width: 480px; overflow: hidden;
 }
 /* coluna direita: fotos do utilizador (fila de quadrados) */
 .dc-right {
   grid-row: 1; grid-column: 3;
   display: flex; align-items: center; justify-content: center; gap: 8px;
+  border-left: 1px solid var(--border);
   padding: 10px;
 }
 .dc-user-photos {
