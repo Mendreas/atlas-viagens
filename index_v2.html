@@ -1367,7 +1367,11 @@ body.light .hero-sub { color:#c8cbdc; }
   pointer-events:none;
 }
 .pz-flag-emoji { position:relative; z-index:1; filter:drop-shadow(0 2px 6px rgba(0,0,0,.4)); }
+.pz-flag-img-big { width:72px; height:auto; border-radius:6px; box-shadow:0 2px 10px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.25); display:block; }
 .pz-flag-mini { display:none; }
+.pz-flag-img-mini { width:16px; height:auto; border-radius:2px; display:block; box-shadow:0 0 0 1px rgba(255,255,255,.3); }
+.pz-flag-img-inline { width:20px; height:auto; border-radius:2px; display:block; box-shadow:0 0 0 1px var(--border2); vertical-align:middle; }
+.pzm-flag-img { width:38px; height:auto; border-radius:4px; box-shadow:0 0 0 1px var(--border2), 0 2px 6px rgba(0,0,0,.3); display:block; }
 .pz-code-badge {
   position:absolute; right:6px; bottom:6px; z-index:1;
   background:rgba(0,0,0,.45); color:#fff; font-size:10px; font-weight:800;
@@ -5283,7 +5287,7 @@ document.getElementById('btnFicha').onclick = () => abrirFicha(selPais.value);
 
 async function abrirFicha(a2){
   const nome = nomePT(a2);
-  document.getElementById('fmFlag').textContent  = bandeira(a2);
+  document.getElementById('fmFlag').innerHTML  = pzFlagImg(a2, 'pzm-flag-img');
   document.getElementById('fmNome').textContent  = nome;
   document.getElementById('fmSub').textContent   = a2;
   document.getElementById('fichaModal').classList.add('open');
@@ -7440,6 +7444,13 @@ function pzStatusLbl(st){
   return (st==='visitado'||st==='parcial') ? 'Visitado' : st==='planeado' ? 'Planeado' : 'Por visitar';
 }
 
+/* Bandeiras como imagem real (flagcdn.com) — o emoji de bandeira não
+   é suportado no Windows (mostra só as duas letras), por isso usamos
+   sempre uma imagem de bandeira real nesta aba. */
+function pzFlagUrl(a2){ return `https://flagcdn.com/${(a2||'').toLowerCase()}.svg`; }
+function pzFlagImg(a2, cls){
+  return `<img class="${cls}" src="${pzFlagUrl(a2)}" alt="${a2}" loading="lazy" onerror="this.style.visibility='hidden'">`;
+}
 const PZ_CONT_GRAD = {
   europa:        'linear-gradient(145deg,#3a4a6b,#6b5a8e)',
   america_norte: 'linear-gradient(145deg,#2f6b6b,#3a8fa8)',
@@ -7456,8 +7467,8 @@ function pzContinenteId(a2){
 function pzFlagThumbHtml(a2){
   const grad = PZ_CONT_GRAD[pzContinenteId(a2)] || PZ_CONT_GRAD.europa;
   return `<div class="pz-flag-thumb" data-a2="${a2}" style="background:${grad}">
-      <span class="pz-flag-emoji">${bandeira(a2)}</span>
-      <span class="pz-flag-mini">${bandeira(a2)}</span>
+      <span class="pz-flag-emoji">${pzFlagImg(a2,'pz-flag-img-big')}</span>
+      <span class="pz-flag-mini">${pzFlagImg(a2,'pz-flag-img-mini')}</span>
       <span class="pz-code-badge">${a2}</span>
     </div>`;
 }
@@ -7526,7 +7537,7 @@ function pzCardHtml(a2, view){
   if (view === 'grid'){
     return `<div class="pz-card" onclick="pzOpenModal('${a2}')">
       ${pzFlagThumbHtml(a2)}
-      <div class="pz-name-row"><span class="pz-flag-inline">${bandeira(a2)}</span> ${esc(nome)}</div>
+      <div class="pz-name-row"><span class="pz-flag-inline">${pzFlagImg(a2,'pz-flag-img-inline')}</span> ${esc(nome)}</div>
       <div class="pz-meta">${esc(s.continente)}</div>
       <div class="pz-meta">${esc(dataLbl)}</div>
     </div>`;
@@ -7536,7 +7547,7 @@ function pzCardHtml(a2, view){
   return `<div class="pz-row" onclick="pzOpenModal('${a2}')">
     ${pzFlagThumbHtml(a2)}
     <div class="pz-info">
-      <div class="pz-name-row"><span class="pz-flag-inline">${bandeira(a2)}</span> ${esc(nome)} <span class="pz-badge-status ${s.status}">${statusLbl}</span></div>
+      <div class="pz-name-row"><span class="pz-flag-inline">${pzFlagImg(a2,'pz-flag-img-inline')}</span> ${esc(nome)} <span class="pz-badge-status ${s.status}">${statusLbl}</span></div>
       <div class="pz-meta">${esc(s.continente)} · ${esc(dataLbl)}</div>
       <div class="pz-stats-line">
         <span><b>${s.regVisitadas}</b> regiões visitadas</span>
@@ -7588,7 +7599,7 @@ function pzRender(){
 window.pzOpenModal = function(a2){
   _pzOpenA2 = a2;
   selPais.value = a2;
-  document.getElementById('pzmFlag').textContent = bandeira(a2);
+  document.getElementById('pzmFlag').innerHTML = pzFlagImg(a2, 'pzm-flag-img');
   document.getElementById('pzmNome').textContent = nomePT(a2);
   document.getElementById('pzmMeta').textContent = pzContinenteDe(a2);
 
