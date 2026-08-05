@@ -1317,6 +1317,171 @@ body.light .hero-sub { color:#c8cbdc; }
   .pp-v2-spread { grid-template-columns:1fr; }
   .pp-page.left { border-right:none; border-bottom:1px solid rgba(0,0,0,.25); }
 }
+/* ══ PAÍSES (redesign) ══ */
+.pz-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.pz-pills { display:flex; gap:6px; flex-wrap:wrap; }
+.pz-pill {
+  background:var(--bg3); border:1px solid var(--border); border-radius:20px;
+  padding:6px 14px; font-size:11.5px; font-weight:600; color:var(--text2);
+  cursor:pointer; transition:background .15s, border-color .15s, color .15s; white-space:nowrap;
+}
+.pz-pill:hover { border-color:var(--border2); color:var(--text); }
+.pz-pill.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold2); }
+.pz-toolbar-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.pz-mini { padding:6px 10px !important; font-size:11.5px !important; max-width:180px; }
+.pz-sort-btn {
+  background:var(--bg3); border:1px solid var(--border2); border-radius:8px;
+  padding:7px 12px; font-size:11.5px; font-weight:600; color:var(--text);
+  cursor:pointer; white-space:nowrap;
+}
+.pz-sort-btn:hover { border-color:var(--gold); }
+.pz-view-btn {
+  background:var(--bg3); border:1px solid var(--border2); border-radius:8px;
+  width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--text2); flex:none;
+}
+.pz-view-btn:hover, .pz-view-btn.active { border-color:var(--gold); color:var(--gold2); }
+
+/* Vista em lista */
+.pz-list { display:flex; flex-direction:column; gap:8px; }
+.pz-row {
+  display:grid; grid-template-columns:64px 1fr auto auto; align-items:center; gap:14px;
+  background:var(--card-bg); border:1px solid var(--border); border-radius:12px;
+  padding:12px 16px; cursor:pointer; transition:border-color .15s, transform .15s;
+}
+.pz-row:hover { border-color:var(--border2); transform:translateY(-1px); }
+.pz-flag-thumb {
+  width:64px; height:64px; border-radius:10px; flex:none;
+  display:flex; align-items:center; justify-content:center; font-size:30px;
+  background:linear-gradient(135deg, var(--bg3), var(--bg2));
+  border:1px solid var(--border);
+}
+.pz-info { min-width:0; }
+.pz-name-row { display:flex; align-items:center; gap:8px; font-weight:700; font-size:14.5px; color:var(--text); }
+.pz-meta { font-size:11.5px; color:var(--text2); margin-top:3px; }
+.pz-stats-line { font-size:11px; color:var(--text2); margin-top:5px; display:flex; gap:12px; flex-wrap:wrap; }
+.pz-stats-line b { color:var(--text); font-weight:700; }
+.pz-ring-wrap { display:flex; flex-direction:column; align-items:center; gap:2px; flex:none; }
+.pz-ring {
+  width:52px; height:52px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+}
+.pz-ring::before {
+  content:''; position:absolute; inset:5px; border-radius:50%; background:var(--card-bg);
+}
+.pz-ring span { position:relative; z-index:1; font-size:11.5px; font-weight:800; color:var(--text); }
+.pz-ring-lbl { font-size:8.5px; color:var(--text2); text-transform:uppercase; letter-spacing:.05em; }
+.pz-chevron { color:var(--text2); font-size:16px; flex:none; }
+.pz-badge-status {
+  font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  padding:3px 8px; border-radius:6px; white-space:nowrap;
+}
+.pz-badge-status.visitado, .pz-badge-status.parcial { background:var(--gold-dim); color:var(--gold2); }
+.pz-badge-status.planeado { background:var(--teal-dim); color:var(--teal); }
+.pz-badge-status.nao { background:var(--bg3); color:var(--text2); }
+
+/* Vista em grelha */
+.pz-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.pz-card {
+  background:var(--card-bg); border:1px solid var(--border); border-radius:12px;
+  padding:14px; cursor:pointer; transition:border-color .15s, transform .15s;
+  display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px;
+}
+.pz-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+.pz-card .pz-flag-thumb { width:56px; height:56px; font-size:26px; margin-bottom:4px; }
+.pz-card .pz-name-row { font-size:13px; justify-content:center; }
+.pz-card .pz-meta { text-align:center; }
+@media(max-width:900px){ .pz-grid { grid-template-columns:repeat(3,1fr); } }
+@media(max-width:600px){ .pz-grid { grid-template-columns:repeat(2,1fr); } }
+
+/* ══ MODAL DO PAÍS ══ */
+.pz-modal-status { display:flex; gap:8px; margin:12px 0 4px; flex-wrap:wrap; }
+.pz-status-btn {
+  background:var(--bg3); border:1px solid var(--border); border-radius:20px;
+  padding:7px 16px; font-size:12px; font-weight:600; color:var(--text2);
+  cursor:pointer; transition:all .15s;
+}
+.pz-status-btn:hover { border-color:var(--border2); color:var(--text); }
+.pz-status-btn.active[data-st="visitado"], .pz-status-btn.active[data-st="parcial"] { background:var(--gold-dim); border-color:var(--gold); color:var(--gold2); }
+.pz-status-btn.active[data-st="planeado"] { background:var(--teal-dim); border-color:var(--teal); color:var(--teal); }
+.pz-status-btn.active[data-st="nao"] { background:var(--bg3); border-color:var(--border2); color:var(--text); }
+
+.pz-modal-actions { display:flex; gap:8px; margin:10px 0 16px; }
+
+.pm-section { margin-bottom:20px; }
+.pm-section h3 { font-size:13px; font-weight:700; color:var(--text); margin-bottom:10px; }
+.pm-cards { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.pm-card {
+  background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+  padding:8px 10px; font-size:12px; color:var(--text2);
+}
+.pm-card strong { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text2); margin-bottom:2px; }
+.plug-types { display:flex; gap:4px; flex-wrap:wrap; margin-top:2px; }
+.plug-badge {
+  background:var(--gold-dim); color:var(--gold2); border-radius:5px;
+  padding:2px 7px; font-size:11px; font-weight:700;
+}
+.pm-checklist { display:flex; flex-direction:column; gap:6px; }
+.pm-check {
+  display:flex; align-items:center; gap:8px;
+  background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+  padding:7px 10px; font-size:12.5px; color:var(--text2); cursor:pointer;
+}
+.pm-check.on { color:var(--text); }
+.pm-check input { accent-color:var(--gold); }
+.pm-cat { margin-left:auto; font-size:10px; color:var(--text3); white-space:nowrap; }
+.pm-notas {
+  width:100%; min-height:70px; background:var(--bg3); border:1px solid var(--border);
+  border-radius:8px; padding:8px 10px; font-size:12.5px; color:var(--text);
+  font-family:inherit; resize:vertical;
+}
+.pm-notas:focus { outline:none; border-color:var(--gold); }
+.pm-dias-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.pm-dias-row label { font-size:12px; color:var(--text2); }
+.pm-dias-row input[type="number"] {
+  width:64px; background:var(--bg3); border:1px solid var(--border); border-radius:7px;
+  padding:6px 8px; color:var(--text); font-family:inherit; font-size:12.5px;
+}
+#pmItinerario { margin-top:12px; font-size:12.5px; line-height:1.6; color:var(--text2); }
+#pmItinerario h4 { color:var(--gold2); font-size:12.5px; margin-top:10px; }
+
+.unesco-section h3 { font-size:13px; font-weight:700; color:var(--text); margin-bottom:10px; }
+.u-sites { display:flex; flex-direction:column; gap:6px; }
+.u-site {
+  display:flex; align-items:center; gap:8px;
+  background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+  padding:7px 10px; font-size:12.5px; color:var(--text2); cursor:pointer;
+}
+.u-site.done { color:var(--text); border-color:var(--gold); }
+.u-site input { accent-color:var(--gold); }
+.u-icon { flex:none; }
+.u-badge { background:var(--gold-dim); color:var(--gold2); border-radius:10px; padding:1px 8px; font-size:11px; margin-left:6px; }
+
+.reg-hint { font-size:12px; color:var(--text2); padding:10px 0; }
+#regMapa { position:relative; background:var(--bg3); border-radius:10px; overflow:hidden; min-height:200px; }
+#regMapa svg { width:100%; height:auto; display:block; }
+#regMapa .region { cursor:pointer; transition:fill .15s; stroke:var(--border); stroke-width:.5; }
+#regMapa .btn { background:var(--bg2); border:1px solid var(--border); color:var(--text); border-radius:6px; cursor:pointer; }
+.zone-tabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:10px; }
+.zone-tab {
+  background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+  padding:5px 10px; font-size:11.5px; color:var(--text2); cursor:pointer;
+}
+.zone-tab.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold2); }
+#regLista { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.chip {
+  background:var(--bg3); border:1px solid var(--border); border-radius:14px;
+  padding:4px 11px; font-size:11px; color:var(--text2); cursor:pointer;
+}
+.chip.on { background:var(--gold-dim); border-color:var(--gold); color:var(--gold2); }
+#regProgLbl { font-size:11.5px; color:var(--text2); margin-top:8px; }
+
+/* Ficha do país */
+.ficha-body { font-size:13px; line-height:1.7; color:var(--text2); }
+.ficha-body h4 { color:var(--text); font-size:13px; margin-top:14px; margin-bottom:4px; }
+.fm-loading { text-align:center; padding:30px 0; color:var(--text2); font-size:13px; }
+
 </style>
 
 
@@ -1484,38 +1649,27 @@ body.light .hero-sub { color:#c8cbdc; }
     <!-- ══ PAÍSES ══ -->
     <section class="v2-page" id="page-paises">
       <div class="page-header"><h1>Países</h1><p>Regista o teu progresso em cada país.</p></div>
-      <div class="card" style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
-        <div class="pais-head" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
-          <div>
-            <div class="form-label">País</div>
-            <select id="selPais" class="form-input"></select>
-          </div>
-          <div>
-            <div class="form-label">Estado</div>
-            <div class="status-btns" id="pStatus" style="display:flex;gap:6px;flex-wrap:wrap">
-              <button class="btn-v2 btn-secondary" data-st="visitado">Visitado</button>
-              <button class="btn-v2 btn-secondary" data-st="planeado">Planeado</button>
-              <button class="btn-v2 btn-ghost" data-st="nao">Por visitar</button>
-            </div>
-          </div>
+      <select id="selPais" style="display:none"></select>
+      <div class="pz-toolbar">
+        <div class="pz-pills" id="pzPills">
+          <button class="pz-pill active" data-f="" onclick="pzSetFilter('')">Todos</button>
+          <button class="pz-pill" data-f="visitado" onclick="pzSetFilter('visitado')">Visitados</button>
+          <button class="pz-pill" data-f="planeado" onclick="pzSetFilter('planeado')">Planeados</button>
+          <button class="pz-pill" data-f="nao" onclick="pzSetFilter('nao')">Por visitar</button>
         </div>
-        <div style="margin-top:12px">
-          <div class="progress-bar"><div class="progress-fill" id="pProg" style="width:0%"></div></div>
-        </div>
-        <div id="regInfo" style="margin-top:12px"></div>
-        <div id="regMapa" style="margin-top:12px"></div>
-        <div id="regProgLbl" style="font-size:12px;color:var(--text2);margin-top:6px"></div>
-        <div id="regChips" style="margin-top:10px"></div>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn-v2 btn-ghost" id="btnFicha" style="font-size:12px">ℹ️ Ficha do país</button>
-          <button class="btn-v2 btn-teal" id="btnPlanear" style="font-size:12px">🗒 Planear visita</button>
+        <div class="pz-toolbar-right">
+          <select id="pzContinent" class="form-input pz-mini" onchange="pzRender()"><option value="">Todos os continentes</option></select>
+          <button class="pz-sort-btn" id="pzSortBtn" onclick="pzToggleSort()">Ordenar: A-Z</button>
+          <button class="pz-view-btn" id="pzViewBtn" onclick="pzToggleView()" title="Alternar vista em grelha">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="3" cy="3" r="1.5" fill="currentColor"/><circle cx="8" cy="3" r="1.5" fill="currentColor"/><circle cx="13" cy="3" r="1.5" fill="currentColor"/><circle cx="3" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="13" cy="8" r="1.5" fill="currentColor"/><circle cx="3" cy="13" r="1.5" fill="currentColor"/><circle cx="8" cy="13" r="1.5" fill="currentColor"/><circle cx="13" cy="13" r="1.5" fill="currentColor"/></svg>
+          </button>
         </div>
       </div>
-      <!-- Tabs UNESCO -->
-      <div id="unescoWrap"></div>
+      <div class="pz-list" id="pzList"></div>
     </section>
 
-    <!-- ══ REGIÕES ══ -->
+    
+<!-- ══ REGIÕES ══ -->
     <section class="v2-page" id="page-regioes">
       <div id="reg-continentes">
         <div class="page-header"><h1>Regiões</h1><p>Explora os continentes e países.</p></div>
@@ -1636,6 +1790,54 @@ body.light .hero-sub { color:#c8cbdc; }
 </div><!-- /main -->
 
 <!-- ══ MODAIS ══ -->
+
+<!-- Modal: País -->
+<div class="modal-v2" id="paisModal">
+  <div class="modal-v2-box" style="max-width:820px">
+    <div class="modal-v2-header">
+      <div>
+        <div style="font-size:28px;margin-bottom:2px" id="pzmFlag"></div>
+        <div class="modal-v2-title" id="pzmNome"></div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px" id="pzmMeta"></div>
+      </div>
+      <button class="modal-close" onclick="pzCloseModal()">✕</button>
+    </div>
+    <div class="modal-v2-body">
+      <div class="pz-modal-status" id="pStatus"></div>
+      <div class="pz-modal-actions">
+        <button class="btn-v2 btn-ghost" id="btnFicha" style="font-size:12px" onclick="abrirFicha(_pzOpenA2)">ℹ️ Ficha do país</button>
+      </div>
+      <div id="pzMapSection">
+        <div id="regMapa"></div>
+        <div id="regProgLbl"></div>
+        <div id="regLista"></div>
+      </div>
+      <div id="pzQueVer"></div>
+      <div id="pUnesco"></div>
+      <div id="pzPlanSection"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ficha do país -->
+<div class="modal-v2" id="fichaModal">
+  <div class="modal-v2-box" style="max-width:640px">
+    <div class="modal-v2-header">
+      <div>
+        <div style="font-size:28px;margin-bottom:2px" id="fmFlag"></div>
+        <div class="modal-v2-title" id="fmNome"></div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px" id="fmSub"></div>
+      </div>
+      <button class="modal-close" id="fichaModalClose">✕</button>
+    </div>
+    <div class="modal-v2-body">
+      <div class="ficha-body" id="fmBody"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:14px" id="fmNota"></div>
+    </div>
+  </div>
+</div>
+
+<button id="btnPlanear" style="display:none"></button>
 
 <!-- Modal: Diário detalhe -->
 <div class="modal-v2" id="diarioModal">
@@ -1941,7 +2143,7 @@ function showTabV2(name){
     ppRenderUserSelector(); ppRenderAlerts(_ppUid); ppRenderPage();
   }
   if(name==='definicoes')  renderDefinicoes();
-  if(name==='paises')      renderPais();
+  if(name==='paises')      pzRender();
   if(name==='mapa'){ renderExplorar(); setTimeout(()=>{ if(!svgMap) initMap(); paintMap(); },50); }
 }
 /* Compatibilidade com código original que chama showTab */
@@ -3094,8 +3296,8 @@ document.getElementById('mFechar').onclick = ()=> document.getElementById('overl
 document.getElementById('overlay').addEventListener('click', ev=>{ if (ev.target.id==='overlay') ev.target.classList.remove('open'); });
 document.getElementById('mFicha').onclick = ()=>{
   document.getElementById('overlay').classList.remove('open');
-  document.getElementById('selPais').value = modalA2;
-  renderPais(); carregarRegioes(modalA2); showTab('paises');
+  showTab('paises');
+  pzOpenModal(modalA2);
 };
 
 /* ============ DIÁRIO ============ */
@@ -7068,6 +7270,464 @@ window.showTab = function(name){
 /* ══════════════════════════════════════════════════════
    EXPORTAÇÃO EXCEL DO DIÁRIO
    ══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   PAÍSES v2 — lista/grelha + modal (redesign)
+   ══════════════════════════════════════════════════════ */
+let _pzFilter = '';
+let _pzSort = 'az';
+let _pzView = 'list';
+let _pzOpenA2 = null;
+
+function pzContinenteDe(a2){
+  const c = CONTINENTES.find(c => c.paises.includes(a2));
+  return c ? c.nome : '—';
+}
+
+function pzCidadesCount(a2){
+  const cidades = new Set();
+  state.trips.forEach(t => {
+    const paises = t.paises || [t.pais];
+    if (!paises.includes(a2)) return;
+    (t.locais||'').split(/[,;]/).forEach(c => {
+      const s = c.trim().toLowerCase();
+      if (s) cidades.add(s);
+    });
+  });
+  return cidades.size;
+}
+
+function pzUltimaData(a2){
+  const trips = state.trips
+    .filter(t => (t.paises||[t.pais]).includes(a2))
+    .sort((a,b)=>(b.ini||'').localeCompare(a.ini||''));
+  return trips.length ? trips[0].ini : null;
+}
+
+function pzStats(a2){
+  const st = statusDe(a2);
+  const r = ud().regioes[a2] || {total:0, v:{}};
+  const regVisitadas = Object.keys(r.v||{}).length;
+  const regTotal = r.total || 0;
+  const uSites = UNESCO_WHS[a2] || [];
+  const uSeen = ud().unescoSeen[a2] || {};
+  const uVisitadas = Object.keys(uSeen).filter(k=>uSeen[k]).length;
+  const pct = regTotal ? Math.round(regVisitadas/regTotal*100) : 0;
+  return {
+    status: st,
+    continente: pzContinenteDe(a2),
+    regVisitadas, regTotal,
+    cidades: pzCidadesCount(a2),
+    uVisitadas, uTotal: uSites.length,
+    pct,
+    ultimaData: pzUltimaData(a2)
+  };
+}
+
+function pzFillContinentDropdown(){
+  const sel = document.getElementById('pzContinent');
+  if (!sel || sel.options.length > 1) return;
+  CONTINENTES.forEach(c => sel.add(new Option(c.emoji+' '+c.nome, c.id)));
+}
+
+window.pzSetFilter = function(f){
+  _pzFilter = f;
+  document.querySelectorAll('#pzPills .pz-pill').forEach(p => p.classList.toggle('active', p.dataset.f === f));
+  pzRender();
+};
+
+window.pzToggleSort = function(){
+  _pzSort = _pzSort === 'az' ? 'za' : 'az';
+  const btn = document.getElementById('pzSortBtn');
+  if (btn) btn.textContent = 'Ordenar: ' + (_pzSort === 'az' ? 'A-Z' : 'Z-A');
+  pzRender();
+};
+
+window.pzToggleView = function(){
+  _pzView = _pzView === 'list' ? 'grid' : 'list';
+  const btn = document.getElementById('pzViewBtn');
+  if (btn) btn.classList.toggle('active', _pzView === 'grid');
+  pzRender();
+};
+
+function pzStatusLbl(st){
+  return (st==='visitado'||st==='parcial') ? 'Visitado' : st==='planeado' ? 'Planeado' : 'Por visitar';
+}
+
+function pzCardHtml(a2, view){
+  const s = pzStats(a2);
+  const nome = nomePT(a2);
+  const flag = bandeira(a2);
+  const statusLbl = pzStatusLbl(s.status);
+  const dataLbl = s.ultimaData ? ('Visitado a '+fmtData(s.ultimaData)) : statusLbl;
+
+  if (view === 'grid'){
+    return `<div class="pz-card" onclick="pzOpenModal('${a2}')">
+      <div class="pz-flag-thumb">${flag}</div>
+      <div class="pz-name-row">${esc(nome)}</div>
+      <div class="pz-meta">${esc(s.continente)}</div>
+      <div class="pz-meta">${esc(dataLbl)}</div>
+    </div>`;
+  }
+
+  const ringDeg = Math.round(s.pct*3.6);
+  return `<div class="pz-row" onclick="pzOpenModal('${a2}')">
+    <div class="pz-flag-thumb">${flag}</div>
+    <div class="pz-info">
+      <div class="pz-name-row">${esc(nome)} <span class="pz-badge-status ${s.status}">${statusLbl}</span></div>
+      <div class="pz-meta">${esc(s.continente)} · ${esc(dataLbl)}</div>
+      <div class="pz-stats-line">
+        <span><b>${s.regVisitadas}</b> regiões visitadas</span>
+        <span><b>${s.cidades}</b> cidades</span>
+        <span><b>${s.uVisitadas}</b> UNESCO</span>
+      </div>
+    </div>
+    <div class="pz-ring-wrap">
+      <div class="pz-ring" style="background:conic-gradient(var(--gold) ${ringDeg}deg, var(--bg3) 0deg);"><span>${s.regTotal ? s.pct+'%' : '—'}</span></div>
+      <div class="pz-ring-lbl">Explorado</div>
+    </div>
+    <div class="pz-chevron">›</div>
+  </div>`;
+}
+
+function pzRender(){
+  pzFillContinentDropdown();
+  const list = document.getElementById('pzList');
+  if (!list) return;
+  const contFiltro = document.getElementById('pzContinent')?.value || '';
+
+  let lista = TODOS.filter(a2 => {
+    if (contFiltro){
+      const c = CONTINENTES.find(c=>c.id===contFiltro);
+      if (!c || !c.paises.includes(a2)) return false;
+    }
+    if (_pzFilter){
+      const st = statusDe(a2);
+      if (_pzFilter === 'visitado' && !(st==='visitado'||st==='parcial')) return false;
+      if (_pzFilter === 'planeado' && st !== 'planeado') return false;
+      if (_pzFilter === 'nao' && st !== 'nao') return false;
+    }
+    return true;
+  });
+
+  lista = lista.slice().sort((a,b) => {
+    const c = nomePT(a).localeCompare(nomePT(b), 'pt');
+    return _pzSort === 'za' ? -c : c;
+  });
+
+  list.classList.toggle('pz-grid', _pzView === 'grid');
+  list.innerHTML = lista.length
+    ? lista.map(a2 => pzCardHtml(a2, _pzView)).join('')
+    : '<div class="empty-state"><div class="icon">🌍</div><h3>Nenhum país encontrado</h3><p>Experimenta outro filtro ou continente.</p></div>';
+}
+
+/* ── Modal do país ── */
+window.pzOpenModal = function(a2){
+  _pzOpenA2 = a2;
+  selPais.value = a2;
+  document.getElementById('pzmFlag').textContent = bandeira(a2);
+  document.getElementById('pzmNome').textContent = nomePT(a2);
+  document.getElementById('pzmMeta').textContent = pzContinenteDe(a2);
+
+  const st = statusDe(a2);
+  paisContexto = (st === 'planeado') ? 'planeado' : (st === 'visitado' || st === 'parcial') ? 'visitado' : 'por visitar';
+
+  pzRenderStatusButtons(a2, st);
+  carregarRegioes(a2);
+  pzRenderQueVer(a2);
+  renderUnesco(a2);
+  pzRenderPlan(a2, st);
+
+  document.getElementById('paisModal').classList.add('open');
+};
+
+window.pzCloseModal = function(){
+  document.getElementById('paisModal').classList.remove('open');
+  pzRender();
+};
+
+document.getElementById('paisModal').addEventListener('click', ev=>{
+  if (ev.target.id === 'paisModal') window.pzCloseModal();
+});
+
+function pzRenderStatusButtons(a2, st){
+  const cont = document.getElementById('pStatus');
+  if (!cont) return;
+  const items = [['visitado','Visitado'],['planeado','Planeado'],['nao','Por visitar']];
+  cont.innerHTML = items.map(([k,lbl]) => {
+    const active = (k==='visitado' && (st==='visitado'||st==='parcial')) || (k===st);
+    return `<button class="pz-status-btn ${active?'active':''}" data-st="${k}" onclick="pzSetStatus('${a2}','${k}')">${lbl}</button>`;
+  }).join('');
+}
+
+window.pzSetStatus = function(a2, st){
+  setStatus(a2, st);
+  paisContexto = (st === 'planeado') ? 'planeado' : (st === 'visitado') ? 'visitado' : 'por visitar';
+  pzRenderStatusButtons(a2, st);
+  if (REG_CACHE[a2]) desenharRegioes(a2, REG_CACHE[a2]); else carregarRegioes(a2);
+  pzRenderQueVer(a2);
+  renderUnesco(a2);
+  pzRenderPlan(a2, st);
+  toast(nomePT(a2)+' → '+pzStatusLbl(st));
+};
+
+/* ── "O que ver" — pontos de interesse curados por região (reaproveita GUIA/seenDe) ── */
+function pzRenderQueVer(a2){
+  const regs = regioesDe(a2);
+  const s = seenDe(a2);
+  const cont = document.getElementById('pzQueVer');
+  if (!cont) return;
+  if (!regs.length){
+    cont.innerHTML = `<div class="reg-hint">Ainda não há guia para <b>${esc(nomePT(a2))}</b>. Adiciona os teus próprios pontos de interesse abaixo. 🧭</div>`;
+    return;
+  }
+  cont.innerHTML = `<div class="pm-section"><h3>👁 O que ver</h3>` + regs.map((r)=>{
+    const feitos = r.v.filter(v=>s.checked[r.n+'|'+v]).length;
+    return `<div class="pz-regiao">
+      <h4>${esc(r.n)} <small>${feitos}/${r.v.length}</small></h4>
+      <div class="pz-vistas">
+        ${r.v.map(v=>{
+          const k = r.n+'|'+v, done = !!s.checked[k];
+          const custom = s.custom.some(cr=>cr.n===r.n && cr.v.includes(v));
+          return `<label class="pz-vista ${done?'done':''}">
+            <input type="checkbox" ${done?'checked':''} onchange="toggleVista('${a2}','${escAttr(k)}',this.checked)">
+            <span>${esc(v)}</span>
+            ${custom?`<button class="pz-vista-del" onclick="delVista(event,'${a2}','${escAttr(r.n)}','${escAttr(v)}')">✕</button>`:''}
+          </label>`;
+        }).join('')}
+      </div>
+      <div class="pz-add-inline">
+        <input type="text" placeholder="Adicionar a ${esc(r.n)}…" onkeydown="if(event.key==='Enter')addVista('${a2}','${escAttr(r.n)}',this)">
+        <button class="btn-mini" onclick="addVista('${a2}','${escAttr(r.n)}',this.previousElementSibling)">+</button>
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+/* Reescrever toggleVista/addVista/delVista para actualizarem o novo modal (em vez do antigo #pRegioes) */
+window.toggleVista = (a2, k, val)=>{
+  const s = seenDe(a2);
+  if (val) s.checked[k] = true; else delete s.checked[k];
+  if (val){
+    const nomeRegiao = k.split('|')[0];
+    const r = regDe(a2);
+    const gjReg = REG_CACHE[a2];
+    if (gjReg){
+      const geoNomes = guiaToGeoMatchAll(a2, nomeRegiao, gjReg.features);
+      geoNomes.forEach(gn => { r.v[gn] = true; });
+    } else {
+      carregarRegioes(a2).then(()=>{
+        const gj2 = REG_CACHE[a2];
+        if (gj2){
+          const geoNomes = guiaToGeoMatchAll(a2, nomeRegiao, gj2.features);
+          geoNomes.forEach(gn => { r.v[gn] = true; });
+          save();
+          if (selPais.value === a2) desenharRegioes(a2, gj2);
+        }
+      });
+    }
+  }
+  save();
+  pzRenderQueVer(a2);
+  if (REG_CACHE[a2] && selPais.value === a2) desenharRegioes(a2, REG_CACHE[a2]);
+};
+window.addVista = (a2, regiao, input)=>{
+  const v = input.value.trim(); if (!v) return;
+  const s = seenDe(a2);
+  let cr = s.custom.find(c=>c.n===regiao);
+  if (!cr){ cr = {n:regiao, v:[]}; s.custom.push(cr); }
+  if (!cr.v.includes(v)) cr.v.push(v);
+  input.value = '';
+  save();
+  pzRenderQueVer(a2);
+  toast('Adicionado a '+regiao);
+};
+window.delVista = (ev, a2, regiao, v)=>{
+  ev.preventDefault();
+  const s = seenDe(a2);
+  const cr = s.custom.find(c=>c.n===regiao); if (!cr) return;
+  cr.v = cr.v.filter(x=>x!==v);
+  delete s.checked[regiao+'|'+v];
+  if (!cr.v.length && !(GUIA[a2] && GUIA[a2].r.some(r=>r.n===regiao)))
+    s.custom = s.custom.filter(c=>c!==cr);
+  save();
+  pzRenderQueVer(a2);
+};
+
+/* ── Planeamento / o que vimos (dentro do modal) ── */
+function pzMarcados(a2, modo){
+  const marcados = [];
+  if (modo === 'planeado'){
+    const uPlan = (ud().planUnesco||{})[a2] || {};
+    Object.keys(uPlan).forEach(n => { if (uPlan[n]) marcados.push({cat:'🏛 UNESCO', nome:n}); });
+    const seenPlanObj = (ud().planSeen||{})[a2] || {};
+    Object.keys(seenPlanObj.checked||{}).forEach(k=>{
+      const [reg, ponto] = k.split('|');
+      if (ponto) marcados.push({cat:'👁 '+reg, nome:ponto});
+    });
+  } else {
+    const uSeen = (ud().unescoSeen||{})[a2] || {};
+    Object.keys(uSeen).forEach(n => { if (uSeen[n]) marcados.push({cat:'🏛 UNESCO', nome:n}); });
+    const seenObj = (ud().seen||{})[a2] || {};
+    Object.keys(seenObj.checked||{}).forEach(k=>{
+      const [reg, ponto] = k.split('|');
+      if (ponto) marcados.push({cat:'👁 '+reg, nome:ponto});
+    });
+  }
+  return marcados;
+}
+
+function pzRenderPlan(a2, st){
+  const cont = document.getElementById('pzPlanSection');
+  if (!cont) return;
+  if (st !== 'planeado' && st !== 'visitado' && st !== 'parcial'){
+    cont.innerHTML = '';
+    return;
+  }
+  const modo = st === 'planeado' ? 'planeado' : 'visitado';
+  const nome = nomePT(a2);
+  const plug = PLUGS[a2] || ['?','?','?'];
+  const plugTipos = plug[0].split(',').map(t=>t.trim()).filter(Boolean);
+  const plugHtml = plugTipos.map(t=>`<span class="plug-badge">${esc(t)}</span>`).join(' ');
+  const marcados = pzMarcados(a2, modo);
+  const notasKey = (modo==='planeado' ? 'plan_' : 'visited_notas_') + a2;
+  const notas = localStorage.getItem(notasKey) || '';
+
+  cont.innerHTML = `
+    <div class="pm-section">
+      <h3>⚡ Electricidade & Adaptador</h3>
+      <div class="pm-cards">
+        <div class="pm-card"><strong>Tensão</strong>${esc(plug[1]||'—')}</div>
+        <div class="pm-card"><strong>Frequência</strong>${esc(plug[2]||'—')}</div>
+        <div class="pm-card" style="grid-column:span 2">
+          <strong>Tipo(s) de ficha</strong>
+          <div class="plug-types">${plugHtml || '–'}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pm-section">
+      <h3>📍 ${modo==='planeado' ? 'Locais que quero visitar' : 'O que vimos'}</h3>
+      ${marcados.length ? `
+        <div class="pm-checklist">
+          ${marcados.map(m=>`
+            <label class="pm-check on">
+              <span>${esc(m.nome)}</span>
+              <span class="pm-cat">${esc(m.cat)}</span>
+            </label>`).join('')}
+        </div>` : `<p style="color:var(--text2);font-size:.85rem">Ainda não marcaste locais. Usa as secções "O que ver" e "Património UNESCO" acima.</p>`}
+    </div>
+
+    <div class="pm-section">
+      <h3>📝 Notas${modo==='planeado' ? ' e outros locais' : ''}</h3>
+      <textarea class="pm-notas" id="pmNotas" placeholder="${modo==='planeado' ? 'Hotéis, restaurantes, outros locais…' : 'Impressões, recomendações, o que faltou ver…'}">${esc(notas)}</textarea>
+    </div>
+
+    ${modo==='planeado' ? `
+    <div class="pm-section">
+      <h3>🗓 Gerar percurso em dias (IA)</h3>
+      <div class="pm-dias-row">
+        <label>Número de dias:</label>
+        <input type="number" id="pmDias" value="5" min="1" max="30">
+        <button class="btn-v2 btn-primary" onclick="pzGerarPercurso('${a2}')">✨ Gerar com IA</button>
+        <button class="btn-v2 btn-ghost" onclick="pzExportarPlanPDF('${a2}')">📄 Exportar PDF</button>
+      </div>
+      <div id="pmItinerario"></div>
+    </div>` : ''}
+  `;
+
+  const notasEl = document.getElementById('pmNotas');
+  if (notasEl) notasEl.oninput = () => localStorage.setItem(notasKey, notasEl.value);
+}
+
+async function pzGerarPercurso(a2){
+  const itEl = document.getElementById('pmItinerario');
+  const dias = parseInt(document.getElementById('pmDias').value) || 5;
+  const nome = nomePT(a2);
+  const marcados = pzMarcados(a2, 'planeado');
+  const locais = marcados.map(m => `[${m.cat}] ${m.nome}`);
+  const notas = document.getElementById('pmNotas')?.value.trim();
+  if (notas) locais.push('Notas adicionais: '+notas);
+
+  itEl.style.display = 'block';
+  itEl.textContent = 'A gerar percurso de ' + dias + ' dias para ' + nome + '…';
+
+  try {
+    const prompt = `Cria um roteiro de viagem de ${dias} dias para ${nome} em português europeu.
+
+Locais que o viajante quer visitar:
+${locais.length ? locais.map(l=>'- '+l).join('\n') : '(sem locais específicos — sugere os mais emblemáticos)'}
+
+Formato: para cada dia, um título curto e uma lista de 3-5 actividades ordenadas logicamente (por proximidade geográfica). Inclui uma sugestão de refeição por dia. Sê conciso e prático. Usa este formato:
+
+DIA 1: [Título]
+• Actividade/local 1
+• Actividade/local 2
+• 🍽 Refeição: sugestão
+...
+
+(continua para todos os ${dias} dias)`;
+
+    const resp = await fetch('https://curly-sound-5d5e.mendreas.workers.dev', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        messages: [{role:'user', content: prompt}]
+      })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    const texto = data.content[0].text.trim();
+    itEl.innerHTML = '<h4>🗓 Roteiro ' + dias + ' dias — ' + esc(nome) + '</h4>' +
+      texto.split('\n').map(l => {
+        if (l.startsWith('DIA ')) return '<h4>' + esc(l) + '</h4>';
+        if (l.startsWith('•') || l.startsWith('-')) return '<p style="margin:2px 0 2px 10px">' + esc(l) + '</p>';
+        return l ? '<p style="margin:4px 0">' + esc(l) + '</p>' : '';
+      }).join('');
+    localStorage.setItem('plan_roteiro_'+a2, texto);
+  } catch(e){
+    itEl.textContent = 'Erro: ' + e.message;
+  }
+}
+
+function pzExportarPlanPDF(a2){
+  const nome = nomePT(a2);
+  const notas = document.getElementById('pmNotas')?.value || '';
+  const roteiro = localStorage.getItem('plan_roteiro_'+a2) || '';
+  const marcados = pzMarcados(a2, 'planeado');
+  const plug = PLUGS[a2] || ['?','?','?'];
+
+  const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>Planeamento — ${esc(nome)}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:28px 32px;max-width:700px;margin:0 auto}
+    h1{font-size:1.6rem;font-weight:700;color:#2C3E6B;margin-bottom:10px}
+    h2{font-size:1.1rem;margin-top:18px;color:#2C3E6B}
+    .badge{display:inline-block;background:#f0f0f0;border-radius:4px;padding:2px 8px;font-size:.78rem;margin-right:4px;color:#444}
+    .notas{background:#f9f7f3;border-left:3px solid #c5973a;padding:10px 14px;border-radius:0 6px 6px 0;font-size:.9rem;line-height:1.6;white-space:pre-wrap}
+    p{font-size:.9rem;line-height:1.6}
+    hr{border:none;border-top:1px solid #e0dbd0;margin:16px 0}
+    @media print{body{padding:0}@page{margin:1.5cm}}
+  </style></head><body>
+  <h1>${bandeira(a2)} Planeamento — ${esc(nome)}</h1>
+  <div>${plug[0].split(',').map(t=>`<span class="badge">${esc(t.trim())}</span>`).join('')} · ${esc(plug[1]||'')} · ${esc(plug[2]||'')}</div>
+  <hr>
+  <h2>📍 Locais a visitar</h2>
+  ${marcados.length ? marcados.map(m=>`<p>• [${esc(m.cat)}] ${esc(m.nome)}</p>`).join('') : '<p>—</p>'}
+  ${notas ? `<h2>📝 Notas</h2><div class="notas">${esc(notas)}</div>` : ''}
+  ${roteiro ? `<h2>🗓 Roteiro gerado por IA</h2><p style="white-space:pre-wrap">${esc(roteiro)}</p>` : ''}
+  <hr>
+  <div style="font-size:.72rem;color:#aaa;margin-top:8px">Atlas de Viagens · mendreas.github.io/atlas-viagens</div>
+  </body></html>`;
+
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>w.print(), 600);
+}
+
+
 function exportarDiarioExcel(){
   const hoje = new Date().toISOString().slice(0,10);
   const trips = state.trips
