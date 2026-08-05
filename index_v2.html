@@ -1389,6 +1389,8 @@ body.light .hero-sub { color:#c8cbdc; }
 }
 .pz-info { min-width:0; }
 .pz-name-row { display:flex; align-items:center; gap:8px; font-weight:700; font-size:14.5px; color:var(--text); }
+.pz-flag-inline { font-size:16px; line-height:1; flex:none; }
+.pz-card .pz-flag-inline { font-size:14px; }
 .pz-meta { font-size:11.5px; color:var(--text2); margin-top:3px; }
 .pz-stats-line { font-size:11px; color:var(--text2); margin-top:5px; display:flex; gap:12px; flex-wrap:wrap; }
 .pz-stats-line b { color:var(--text); font-weight:700; }
@@ -7524,7 +7526,7 @@ function pzCardHtml(a2, view){
   if (view === 'grid'){
     return `<div class="pz-card" onclick="pzOpenModal('${a2}')">
       ${pzFlagThumbHtml(a2)}
-      <div class="pz-name-row">${esc(nome)}</div>
+      <div class="pz-name-row"><span class="pz-flag-inline">${bandeira(a2)}</span> ${esc(nome)}</div>
       <div class="pz-meta">${esc(s.continente)}</div>
       <div class="pz-meta">${esc(dataLbl)}</div>
     </div>`;
@@ -7534,7 +7536,7 @@ function pzCardHtml(a2, view){
   return `<div class="pz-row" onclick="pzOpenModal('${a2}')">
     ${pzFlagThumbHtml(a2)}
     <div class="pz-info">
-      <div class="pz-name-row">${esc(nome)} <span class="pz-badge-status ${s.status}">${statusLbl}</span></div>
+      <div class="pz-name-row"><span class="pz-flag-inline">${bandeira(a2)}</span> ${esc(nome)} <span class="pz-badge-status ${s.status}">${statusLbl}</span></div>
       <div class="pz-meta">${esc(s.continente)} · ${esc(dataLbl)}</div>
       <div class="pz-stats-line">
         <span><b>${s.regVisitadas}</b> regiões visitadas</span>
