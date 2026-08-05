@@ -7461,7 +7461,7 @@ function pzFlagThumbHtml(a2){
 }
 
 /* ── Foto genérica por país (Wikipedia, com cache local) ── */
-const PZ_PHOTO_LS_KEY = 'atlas_pz_photos_v2'; /* v2: usa páginas "Tourism in X" em vez da página do país (evita bandeiras) */
+const PZ_PHOTO_LS_KEY = 'atlas_pz_photos_v3'; /* v3: usa a miniatura tal como veio da API (pedir 600px causava 503) */
 let _pzPhotoCache = {};
 try { _pzPhotoCache = JSON.parse(localStorage.getItem(PZ_PHOTO_LS_KEY) || '{}'); } catch(e){ _pzPhotoCache = {}; }
 function pzSavePhotoCache(){
@@ -7485,10 +7485,11 @@ async function pzFetchPhoto(a2){
       const data = await resp.json();
       const thumb = data.thumbnail && data.thumbnail.source;
       /* Só aceitar .jpg/.jpeg — mapas, ícones e bandeiras na Wikipedia são
-         quase sempre .png/.svg, enquanto fotos reais são quase sempre .jpg */
+         quase sempre .png/.svg, enquanto fotos reais são quase sempre .jpg.
+         Usar a miniatura tal como veio da API (ex.: 330px) — pedir um
+         tamanho maior por URL faz o servidor da Wikimedia devolver 503. */
       if (thumb && /\.jpe?g(\?|$)/i.test(thumb) && !PZ_BAD_IMG.test(thumb)){
-        /* Pedir uma versão maior que a miniatura por omissão (ex.: 220px → 600px) */
-        url = thumb.replace(/\/\d+px-/, '/600px-');
+        url = thumb;
       }
     }
   } catch(e){ url = null; }
