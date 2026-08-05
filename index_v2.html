@@ -1359,6 +1359,7 @@ body.light .hero-sub { color:#c8cbdc; }
   display:flex; align-items:center; justify-content:center; font-size:64px;
   border:1px solid var(--border2);
   box-shadow:inset 0 0 30px rgba(0,0,0,.35);
+  background-size:cover; background-position:center; transition:background-image .3s ease;
 }
 .pz-flag-thumb::after {
   content:''; position:absolute; inset:0;
@@ -1366,11 +1367,25 @@ body.light .hero-sub { color:#c8cbdc; }
   pointer-events:none;
 }
 .pz-flag-emoji { position:relative; z-index:1; filter:drop-shadow(0 2px 6px rgba(0,0,0,.4)); }
+.pz-flag-mini { display:none; }
 .pz-code-badge {
   position:absolute; right:6px; bottom:6px; z-index:1;
   background:rgba(0,0,0,.45); color:#fff; font-size:10px; font-weight:800;
   letter-spacing:.04em; padding:2px 6px; border-radius:5px;
   backdrop-filter:blur(2px);
+}
+/* Quando a foto real (Wikipedia) carrega, esconde o emoji grande + código
+   e mostra só uma bandeira pequena no canto, sobre a foto. */
+.pz-flag-thumb.has-photo::after {
+  background:linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.35) 85%);
+}
+.pz-flag-thumb.has-photo .pz-flag-emoji,
+.pz-flag-thumb.has-photo .pz-code-badge { display:none; }
+.pz-flag-thumb.has-photo .pz-flag-mini {
+  display:flex; position:absolute; left:7px; top:7px; z-index:1;
+  width:22px; height:22px; border-radius:5px; align-items:center; justify-content:center;
+  font-size:13px; background:rgba(20,22,28,.55); backdrop-filter:blur(2px);
+  box-shadow:0 1px 4px rgba(0,0,0,.4);
 }
 .pz-info { min-width:0; }
 .pz-name-row { display:flex; align-items:center; gap:8px; font-weight:700; font-size:14.5px; color:var(--text); }
@@ -7438,10 +7453,70 @@ function pzContinenteId(a2){
 }
 function pzFlagThumbHtml(a2){
   const grad = PZ_CONT_GRAD[pzContinenteId(a2)] || PZ_CONT_GRAD.europa;
-  return `<div class="pz-flag-thumb" style="background:${grad}">
+  return `<div class="pz-flag-thumb" data-a2="${a2}" style="background:${grad}">
       <span class="pz-flag-emoji">${bandeira(a2)}</span>
+      <span class="pz-flag-mini">${bandeira(a2)}</span>
       <span class="pz-code-badge">${a2}</span>
     </div>`;
+}
+
+/* ── Foto genérica por país (Wikipedia, com cache local) ── */
+const PZ_PHOTO_LS_KEY = 'atlas_pz_photos_v1';
+let _pzPhotoCache = {};
+try { _pzPhotoCache = JSON.parse(localStorage.getItem(PZ_PHOTO_LS_KEY) || '{}'); } catch(e){ _pzPhotoCache = {}; }
+function pzSavePhotoCache(){
+  try { localStorage.setItem(PZ_PHOTO_LS_KEY, JSON.stringify(_pzPhotoCache)); } catch(e){}
+}
+function pzNomeEN(a2){
+  try { return new Intl.DisplayNames(['en'], {type:'region'}).of(a2) || a2; } catch(e){ return a2; }
+}
+async function pzFetchPhoto(a2){
+  if (Object.prototype.hasOwnProperty.call(_pzPhotoCache, a2)) return _pzPhotoCache[a2];
+  let url = null;
+  try {
+    const titulo = encodeURIComponent(pzNomeEN(a2));
+    const resp = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${titulo}`);
+    if (resp.ok){
+      const data = await resp.json();
+      if (data.thumbnail && data.thumbnail.source){
+        /* Pedir uma versão maior que a miniatura por omissão (ex.: 220px → 600px) */
+        url = data.thumbnail.source.replace(/\/\d+px-/, '/600px-');
+      } else if (data.originalimage && data.originalimage.source){
+        url = data.originalimage.source;
+      }
+    }
+  } catch(e){ url = null; }
+  _pzPhotoCache[a2] = url;
+  pzSavePhotoCache();
+  return url;
+}
+function pzApplyPhoto(el, url){
+  if (!url || !el || !el.isConnected) return;
+  const img = new Image();
+  img.onload = () => { el.style.backgroundImage = `url('${url}')`; el.classList.add('has-photo'); };
+  img.src = url;
+}
+let _pzPhotoObserver = null;
+function pzObservePhotos(){
+  const els = document.querySelectorAll('.pz-flag-thumb[data-a2]');
+  if (!('IntersectionObserver' in window)){
+    els.forEach(el => { const a2 = el.dataset.a2; pzFetchPhoto(a2).then(url => pzApplyPhoto(el, url)); });
+    return;
+  }
+  if (!_pzPhotoObserver){
+    _pzPhotoObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        _pzPhotoObserver.unobserve(el);
+        const a2 = el.dataset.a2;
+        const cached = _pzPhotoCache[a2];
+        if (cached !== undefined) pzApplyPhoto(el, cached);
+        else pzFetchPhoto(a2).then(url => pzApplyPhoto(el, url));
+      });
+    }, { rootMargin: '250px' });
+  }
+  els.forEach(el => _pzPhotoObserver.observe(el));
 }
 function pzCardHtml(a2, view){
   const s = pzStats(a2);
@@ -7507,6 +7582,7 @@ function pzRender(){
   list.innerHTML = lista.length
     ? lista.map(a2 => pzCardHtml(a2, _pzView)).join('')
     : '<div class="empty-state"><div class="icon">🌍</div><h3>Nenhum país encontrado</h3><p>Experimenta outro filtro ou continente.</p></div>';
+  pzObservePhotos();
 }
 
 /* ── Modal do país ── */
