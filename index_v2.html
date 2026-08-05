@@ -4419,11 +4419,12 @@ async function rgRenderMap(id){
   const g = svg.append('g');
   g.append('image').attr('href', MAP_BG_IMG).attr('x',0).attr('y',0).attr('width',W).attr('height',H);
 
+  const RG_FILL = { visitado:'rgba(255,196,20,.5)', parcial:'rgba(255,196,20,.35)', planeado:'rgba(0,225,140,.5)', nao:'rgba(20,22,28,.4)' };
   g.selectAll('path.rg-country-path').data(todasFeatures).join('path')
     .attr('class','rg-country-path').attr('d', path)
-    .attr('fill', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? CORES[rgStatusDe(a2)] : 'rgba(20,22,28,.55)'; })
-    .attr('stroke', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? CORES_STROKE[rgStatusDe(a2)] : 'rgba(255,255,255,.12)'; })
-    .attr('stroke-width', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? 1 : .3; })
+    .attr('fill', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? RG_FILL[rgStatusDe(a2)] : 'rgba(20,22,28,.55)'; })
+    .attr('stroke', 'rgba(0,0,0,.6)')
+    .attr('stroke-width', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? .6 : .4; })
     .on('click', (ev,d) => { const a2 = N2A[String(+d.id)]||''; if (c.paises.includes(a2)) pzOpenModal(a2); })
     .append('title').text(d => { const a2 = N2A[String(+d.id)]||''; return a2 ? nomePT(a2) : (d.properties.name||''); });
 
