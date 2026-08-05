@@ -1056,7 +1056,116 @@ body.light .hero-sub { color:#c8cbdc; }
 
 .stat-chip { text-align:center; }
 .stat-chip img { opacity:.85; }
+/* ── COMPANHIAS AEREAS (redesign) ── */
+.al-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.al-pills { display:flex; gap:6px; flex-wrap:wrap; }
+.al-pill {
+  background:var(--bg3); border:1px solid var(--border); border-radius:20px;
+  padding:6px 14px; font-size:11.5px; font-weight:600; color:var(--text2);
+  cursor:pointer; transition:background .15s, border-color .15s, color .15s; white-space:nowrap;
+}
+.al-pill:hover { border-color:var(--border2); color:var(--text); }
+.al-pill.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold2); }
+.al-toolbar-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.al-search {
+  flex:1; min-width:180px; max-width:320px;
+  background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+  padding:8px 12px; font-size:12.5px; color:var(--text); font-family:inherit;
+}
+.al-search:focus { outline:none; border-color:var(--gold); }
+.al-mini { padding:6px 8px !important; font-size:11px !important; max-width:140px; }
+.al-sort-btn {
+  background:var(--bg3); border:1px solid var(--border2); border-radius:8px;
+  padding:7px 12px; font-size:11.5px; font-weight:600; color:var(--text);
+  cursor:pointer; white-space:nowrap;
+}
+.al-sort-btn:hover { border-color:var(--gold); }
+.al-view-btn {
+  background:var(--bg3); border:1px solid var(--border2); border-radius:8px;
+  width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--text2); flex:none;
+}
+.al-view-btn:hover, .al-view-btn.active { border-color:var(--gold); color:var(--gold2); }
+
+.airlines-v2-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+  gap:14px;
+}
+.airlines-v2-grid.al-list-view { display:flex; flex-direction:column; gap:8px; }
+
+.airline-card {
+  position:relative;
+  background:var(--card-bg); border:1px solid var(--border);
+  border-radius:var(--card-radius); overflow:hidden;
+  transition:border-color .15s, transform .15s;
+}
+.airline-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+.airline-card.voado { border-color:var(--gold); }
+
+.ac-fav {
+  position:absolute; top:6px; right:6px; z-index:2;
+  background:rgba(0,0,0,.4); border:none; border-radius:50%;
+  width:24px; height:24px; display:flex; align-items:center; justify-content:center;
+  color:rgba(255,255,255,.7); font-size:14px; cursor:pointer; line-height:1; padding:0;
+}
+.ac-fav.on, .airline-card.favorito .ac-fav { color:var(--gold2); }
+.ac-badge {
+  position:absolute; top:6px; left:6px; z-index:2;
+  background:var(--gold); color:#1a1200; font-size:10px; font-weight:700;
+  border-radius:10px; padding:2px 7px; line-height:1.4;
+}
+
+.ac-logo-wrap {
+  background:#fff; height:78px;
+  display:flex; align-items:center; justify-content:center;
+  padding:12px 16px; position:relative;
+}
+.ac-logo { max-width:100%; max-height:44px; object-fit:contain; }
+
+.ac-bottom { padding:10px 12px; display:flex; flex-direction:column; gap:8px; }
+.ac-info { min-width:0; }
+.ac-nome { font-size:12.5px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ac-meta { font-size:10.5px; color:var(--text2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ac-alianca {
+  display:inline-block; margin-top:6px; font-size:9.5px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.04em;
+  padding:2px 7px; border-radius:5px;
+  background:var(--bg3); color:var(--text2); border:1px solid var(--border);
+}
+.ac-alianca.star { color:#3fa9d6; border-color:rgba(63,169,214,.4); background:rgba(63,169,214,.1); }
+.ac-alianca.sky  { color:#e0546e; border-color:rgba(224,84,110,.4); background:rgba(224,84,110,.1); }
+.ac-alianca.one  { color:#8b8fd8; border-color:rgba(139,143,216,.4); background:rgba(139,143,216,.1); }
+
+.ac-toggle-btn {
+  width:100%; padding:6px 8px; font-size:11px; font-weight:600;
+  border-radius:7px; border:1px solid var(--border2);
+  background:var(--bg3); color:var(--text); cursor:pointer;
+  transition:background .15s, border-color .15s, color .15s;
+}
+.ac-toggle-btn:hover { border-color:var(--gold); }
+.ac-toggle-btn.on { background:var(--gold-dim); border-color:var(--gold); color:var(--gold2); }
+
+.ac-voos { border-top:1px solid var(--border); padding:8px 10px; display:flex; flex-direction:column; gap:6px; }
+.ac-voo { display:flex; align-items:center; gap:6px; }
+.ac-voo input { flex:1; min-width:0; background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:4px 6px; font-size:10.5px; color:var(--text); font-family:inherit; }
+.ac-voo-del { background:none; border:none; color:var(--text2); cursor:pointer; font-size:12px; padding:2px 4px; flex:none; }
+.ac-voo-del:hover { color:var(--red); }
+.ac-add-voo { width:100%; padding:5px; font-size:10.5px; font-weight:600; border-radius:6px; border:1px dashed var(--border2); background:transparent; color:var(--text2); cursor:pointer; }
+.ac-add-voo:hover { border-color:var(--gold); color:var(--gold2); }
+
+/* Vista em lista */
+.al-list-view .airline-card { display:flex; flex-wrap:wrap; align-items:center; }
+.al-list-view .ac-logo-wrap { flex:0 0 64px; height:56px; padding:6px; }
+.al-list-view .ac-bottom { flex:1 1 auto; flex-direction:row; align-items:center; justify-content:space-between; padding:8px 12px; gap:10px; }
+.al-list-view .ac-info { flex:1; min-width:0; display:flex; align-items:center; gap:10px; }
+.al-list-view .ac-nome { flex:none; max-width:160px; }
+.al-list-view .ac-meta { flex:none; }
+.al-list-view .ac-alianca { margin-top:0; }
+.al-list-view .ac-toggle-btn { width:auto; padding:6px 14px; flex:none; }
+.al-list-view .ac-voos { flex:1 1 100%; }
 </style>
+
 </head>
 <body>
 
@@ -1274,28 +1383,28 @@ body.light .hero-sub { color:#c8cbdc; }
       <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
         <div><h1>Companhias Aéreas</h1><p>Regista as companhias com que voaste.</p></div>
       </div>
-      <div class="filters-bar" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr));margin-bottom:16px">
-        <div>
-          <select id="alUser" class="form-input" style="padding:5px 8px;font-size:12px" onchange="renderAirlines()"><option value="">Todos</option></select>
+      <div class="stats-strip" id="airline-stats" style="margin-bottom:16px"></div>
+      <div class="al-toolbar">
+        <div class="al-pills" id="alPills"></div>
+        <div class="al-toolbar-right">
+          <button class="al-sort-btn" id="alSortBtn" onclick="toggleAlSort()">Ordenar: A-Z</button>
+          <button class="al-view-btn" id="alViewBtn" onclick="toggleAlView()" title="Alternar vista em lista">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="3" cy="3" r="1.5" fill="currentColor"/><circle cx="8" cy="3" r="1.5" fill="currentColor"/><circle cx="13" cy="3" r="1.5" fill="currentColor"/><circle cx="3" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="13" cy="8" r="1.5" fill="currentColor"/><circle cx="3" cy="13" r="1.5" fill="currentColor"/><circle cx="8" cy="13" r="1.5" fill="currentColor"/><circle cx="13" cy="13" r="1.5" fill="currentColor"/></svg>
+          </button>
         </div>
-        <div>
-          <select id="alRegion" class="form-input" style="padding:5px 8px;font-size:12px" onchange="renderAirlines()"><option value="">Todas as regiões</option></select>
-        </div>
-        <div>
-          <select id="alAlianca" class="form-input" style="padding:5px 8px;font-size:12px" onchange="renderAirlines()"><option value="">Todas as alianças</option></select>
-        </div>
-        <div>
-          <select id="alFilter" class="form-input" style="padding:5px 8px;font-size:12px" onchange="renderAirlines()">
+      </div>
+      <div class="al-toolbar" style="margin-top:-4px">
+        <input id="alSearch" class="al-search" placeholder="🔍 Pesquisar companhia ou código IATA…" oninput="renderAirlines()">
+        <div class="al-toolbar-right">
+          <select id="alUser" class="form-input al-mini" onchange="renderAirlines()"><option value="">Todos</option></select>
+          <select id="alRegion" class="form-input al-mini" onchange="renderAirlines()"><option value="">Todas as regiões</option></select>
+          <select id="alFilter" class="form-input al-mini" onchange="renderAirlines()">
             <option value="todas">Todas</option>
             <option value="voadas">Só voadas</option>
             <option value="nao">Não voadas</option>
           </select>
         </div>
-        <div>
-          <input id="alSearch" class="form-input" style="padding:5px 8px;font-size:12px" placeholder="🔍 Pesquisar…" oninput="renderAirlines()">
-        </div>
       </div>
-      <div class="stats-strip" id="airline-stats" style="margin-bottom:16px"></div>
       <div class="airlines-v2-grid" id="airlinesGrid"></div>
     </section>
 
@@ -5458,10 +5567,48 @@ function airlineDe(uid) {
   return u.airlines;
 }
 
+function airlineFavs(uid) {
+  const u = udOf(uid);
+  if (!u.airlineFavs) u.airlineFavs = {};
+  return u.airlineFavs;
+}
+
 function getAlUser(){
   const sel = document.getElementById('alUser');
   return sel ? sel.value || state.editingUser : state.editingUser;
 }
+
+window._alAlianca = window._alAlianca || '';
+window._alSort = window._alSort || 'az';
+window._alView = window._alView || 'grid';
+
+window.setAlAlianca = function(al){
+  window._alAlianca = al;
+  document.querySelectorAll('#alPills .al-pill').forEach(p => p.classList.toggle('active', p.dataset.al === al));
+  renderAirlines();
+};
+
+window.toggleAlSort = function(){
+  window._alSort = window._alSort === 'az' ? 'za' : 'az';
+  const btn = document.getElementById('alSortBtn');
+  if (btn) btn.textContent = 'Ordenar: ' + (window._alSort === 'az' ? 'A-Z' : 'Z-A');
+  renderAirlines();
+};
+
+window.toggleAlView = function(){
+  window._alView = window._alView === 'grid' ? 'list' : 'grid';
+  const grid = document.getElementById('airlinesGrid');
+  if (grid) grid.classList.toggle('al-list-view', window._alView === 'list');
+  const btn = document.getElementById('alViewBtn');
+  if (btn) btn.classList.toggle('active', window._alView === 'list');
+};
+
+window.toggleFavAirline = function(iata, uid){
+  const favs = airlineFavs(uid);
+  if (favs[iata]) delete favs[iata]; else favs[iata] = true;
+  save();
+  renderAirlines();
+};
 
 function renderAirlines(){
   /* Preencher selector de user */
@@ -5474,10 +5621,21 @@ function renderAirlines(){
 
   const uid = getAlUser();
   const db = airlineDe(uid);
+  const favs = airlineFavs(uid);
   const region = document.getElementById('alRegion')?.value || '';
-  const alianca = document.getElementById('alAlianca')?.value || '';
+  const alianca = window._alAlianca || '';
   const filtro = document.getElementById('alFilter')?.value || 'todas';
-  const texto = (document.getElementById('alTexto')?.value || '').toLowerCase();
+  const texto = (document.getElementById('alSearch')?.value || '').toLowerCase();
+
+  /* Pills de alianca (construidas uma vez, a partir dos dados) */
+  const pillsEl = document.getElementById('alPills');
+  if (pillsEl && !pillsEl.dataset.built){
+    const aliancas = [...new Set(AIRLINES_DB.map(a => a.alianca).filter(al => al && al !== '—'))].sort();
+    pillsEl.innerHTML = ['<button class="al-pill active" data-al="" onclick="setAlAlianca(\'\')">Todos</button>']
+      .concat(aliancas.map(al => `<button class="al-pill" data-al="${esc(al)}" onclick="setAlAlianca('${esc(al)}')">${esc(al)}</button>`))
+      .join('');
+    pillsEl.dataset.built = '1';
+  }
 
   let lista = AIRLINES_DB.filter(a => {
     if (region && AIRLINE_REGION[a.pais] !== region) return false;
@@ -5489,27 +5647,34 @@ function renderAirlines(){
     return true;
   });
 
+  lista = lista.slice().sort((x, y) => {
+    const c = x.nome.localeCompare(y.nome, 'pt');
+    return window._alSort === 'za' ? -c : c;
+  });
+
   /* Stats */
   const totalVoadas = Object.keys(db).length;
   const totalVoos = Object.values(db).reduce((t,v)=>t+(v.voos||[]).length, 0);
-  const alStatsEl = document.getElementById('alStats');
+  const alStatsEl = document.getElementById('airline-stats');
   if (alStatsEl) alStatsEl.innerHTML = `
-    <div class="airline-stat"><b>${totalVoadas}</b>Companhias voadas</div>
-    <div class="airline-stat"><b>${totalVoos}</b>Voos registados</div>
-    <div class="airline-stat"><b>${AIRLINES_DB.length}</b>Total disponíveis</div>
-    <div class="airline-stat"><b>${Math.round(totalVoadas/AIRLINES_DB.length*100)}%</b>Das principais</div>`;
+    <div class="stat-chip"><div class="val">${totalVoadas}</div><div class="lbl">Companhias voadas</div></div>
+    <div class="stat-chip"><div class="val">${totalVoos}</div><div class="lbl">Voos registados</div></div>
+    <div class="stat-chip"><div class="val">${AIRLINES_DB.length}</div><div class="lbl">Total disponiveis</div></div>
+    <div class="stat-chip"><div class="val">${AIRLINES_DB.length ? Math.round(totalVoadas/AIRLINES_DB.length*100) : 0}%</div><div class="lbl">Das principais</div></div>`;
 
   const grid = document.getElementById('airlinesGrid');
   if (!grid) return;
-  grid.innerHTML = lista.map(a => renderAirlineCard(a, db, uid)).join('');
+  grid.classList.toggle('al-list-view', window._alView === 'list');
+  grid.innerHTML = lista.map(a => renderAirlineCard(a, db, uid, favs)).join('');
 }
 
-function renderAirlineCard(a, db, uid){
+function renderAirlineCard(a, db, uid, favs){
   const entrada = db[a.iata];
   const voou = !!entrada;
   const voos = entrada?.voos || [];
+  const isFav = !!(favs && favs[a.iata]);
   const aliClass = a.alianca==='Star Alliance'?'star':a.alianca==='SkyTeam'?'sky':a.alianca==='Oneworld'?'one':'';
-  /* Logo via Clearbit (usa código IATA -> domain da companhia) */
+  /* Logo via Clearbit (usa codigo IATA -> domain da companhia) */
   const logoDataUrl = AIRLINE_LOGO_DATA[a.iata];
   const logoHtml = logoDataUrl
     ? `<img class="ac-logo" src="${logoDataUrl}" alt="${a.iata}" style="border-radius:5px">`
@@ -5518,7 +5683,8 @@ function renderAirlineCard(a, db, uid){
   const tc = a.iata==='NK'?'#000':'#fff';
   const placeholderHtml = `<div class="ac-logo-placeholder" style="background:${bg};color:${tc};display:${logoDataUrl?'none':'flex'};width:100%;height:100%;font-size:.85rem;font-weight:700;">${ABREV[a.iata]||a.iata}</div>`;
 
-  return `<div class="airline-card ${voou?'voado':''}" id="ac-${a.iata}">
+  return `<div class="airline-card ${voou?'voado':''} ${isFav?'favorito':''}" id="ac-${a.iata}">
+    <button class="ac-fav ${isFav?'on':''}" onclick="toggleFavAirline('${a.iata}','${uid}')" title="Favorita">${isFav?'★':'☆'}</button>
     ${voou ? `<span class="ac-badge">${voos.length||'✓'}</span>` : ''}
     <div class="ac-logo-wrap">
       ${logoHtml}${placeholderHtml}
@@ -5529,11 +5695,10 @@ function renderAirlineCard(a, db, uid){
         <div class="ac-meta">${a.iata} · ${bandeira(a.pais)} · ${esc(a.hub)}</div>
         <span class="ac-alianca ${aliClass}">${a.alianca}</span>
       </div>
-      <button class="btn" style="flex:none;padding:3px 8px;font-size:.7rem;white-space:nowrap"
-        onclick="toggleAirline('${a.iata}','${uid}')">${voou?'✓':'+ Voei'}</button>
+      <button class="ac-toggle-btn ${voou?'on':''}" onclick="toggleAirline('${a.iata}','${uid}')">${voou?'✓ Já voei':'+ Já voei'}</button>
     </div>
     ${voou ? `
-      <div class="ac-voos" id="voos-${a.iata}" style="border-top:1px solid var(--line);padding:8px 10px;">
+      <div class="ac-voos" id="voos-${a.iata}">
         ${voos.map((v,i) => `
           <div class="ac-voo">
             <span style="font-size:.9rem">✈️</span>
