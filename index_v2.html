@@ -3345,9 +3345,11 @@ function refreshStats(){
   if (stUnesco) stUnesco.textContent = unescoCount;
   /* Atualizar modal se aberto */
   if (document.getElementById('statModal').classList.contains('open') &&
-      document.getElementById('statModalTitulo').dataset.tipo === 'regioes') renderContinentes();
-  /* Atualizar contadores dos continentes se a aba estiver visível */
-  if (document.getElementById('page-regioes').classList.contains('active')) renderContinentes();
+      document.getElementById('statModalTitulo').dataset.tipo === 'regioes') rgRefreshContinentGrid();
+  /* Atualizar contadores dos continentes se a aba estiver visível
+     (usa a versão V2 dos cartões — a versão antiga renderContinentes() já não
+     tem estilo próprio e "desmontava" visualmente as caixas dos continentes) */
+  if (document.getElementById('page-regioes').classList.contains('active')) rgRefreshContinentGrid();
 }
 
 /* ============ TABS ============ */
@@ -4369,7 +4371,7 @@ function rgStatusDe(a2){
    por oceano. O Pacífico reutiliza a lista de países da Oceania (a pedido do
    utilizador) — os países continuam também na Oceania, isto é só uma vista extra. */
 const OCEANOS = {
-  atlantico: { nome:'Atlântico', paises:['BV','GS'] },
+  atlantico: { nome:'Atlântico', paises:['BV','GS','CV'] },
   indico:    { nome:'Índico',    paises:['IO','TF','HM'] },
   pacifico:  { nome:'Pacífico',  paises:(CONTINENTES.find(c=>c.id==='oceania')||{paises:[]}).paises.slice() }
 };
@@ -4378,9 +4380,23 @@ const OCEANOS = {
 const PSEUDO_REGIOES = [
   { id:'artico',    nome:'Ártico',        emoji:'🧭', ocean:null },
   { id:'antartico', nome:'Antártico',     emoji:'🧊', ocean:null },
-  { id:'havai',     nome:'Havai (EUA)',   emoji:'🌺', ocean:'pacifico' }
+  { id:'havai',     nome:'Havai (EUA)',   emoji:'🌺', ocean:'pacifico' },
+  { id:'acores',    nome:'Açores (PT)',   emoji:'🌋', ocean:'atlantico' },
+  { id:'madeira',   nome:'Madeira (PT)',  emoji:'🏝️', ocean:'atlantico' },
+  { id:'canarias',  nome:'Canárias (ES)', emoji:'🌴', ocean:'atlantico' }
 ];
 let _rgOceanoAtual = null;
+/* Volta a desenhar as caixas dos continentes (versão V2, com imagem) e reaplica
+   o destaque do continente aberto — chamado sempre que os dados mudam (ex.:
+   marcar um "já vi" dentro do modal de país) para não perder o estilo das caixas. */
+function rgRefreshContinentGrid(){
+  renderContinentesV2();
+  if (_rgContinenteActual){
+    document.querySelectorAll('#contGrid .continent-card, #continents-grid-v2 .continent-card').forEach(el=>{
+      el.classList.toggle('active', el.getAttribute('data-cont-id')===_rgContinenteActual);
+    });
+  }
+}
 function pseudoStatusDe(id){ return (ud().pseudo && ud().pseudo[id]) || 'nao'; }
 function pseudoSetStatus(id, st){
   if (st === 'nao') delete ud().pseudo[id]; else ud().pseudo[id] = st;
@@ -7906,7 +7922,13 @@ function pzRenderQueVer(a2){
   const cont = document.getElementById('pzQueVer');
   if (!cont) return;
   if (!regs.length){
-    cont.innerHTML = `<div class="reg-hint">Ainda não há guia para <b>${esc(nomePT(a2))}</b>. Adiciona os teus próprios pontos de interesse abaixo. 🧭</div>`;
+    cont.innerHTML = `<div class="pm-section">
+      <div class="reg-hint">Ainda não há guia para <b>${esc(nomePT(a2))}</b>. Adiciona os teus próprios pontos de interesse abaixo. 🧭</div>
+      <div class="pz-add-inline">
+        <input type="text" placeholder="Adicionar ponto de interesse…" onkeydown="if(event.key==='Enter')addVista('${a2}','Pontos de interesse',this)">
+        <button class="btn-mini" onclick="addVista('${a2}','Pontos de interesse',this.previousElementSibling)">+</button>
+      </div>
+    </div>`;
     return;
   }
   cont.innerHTML = `<div class="pm-section"><h3>👁 O que ver</h3>` + regs.map((r)=>{
