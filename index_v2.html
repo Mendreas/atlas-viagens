@@ -937,24 +937,24 @@ body.light .hero-sub { color:#c8cbdc; }
 /* coluna direita: fotos do utilizador (fila de quadrados) */
 .dc-right {
   grid-row: 1; grid-column: 3;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: flex-end;
   border-left: 1px solid var(--border);
-  padding: 10px;
+  padding: 0 12px 0 0;
   overflow: hidden;
   box-sizing: border-box;
 }
 .dc-user-photos {
-  width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
-  flex-wrap: nowrap; overflow: hidden; box-sizing: border-box;
+  display: flex; align-items: center; gap: 6px;
+  flex-wrap: nowrap;
 }
 .dc-user-photos.loading, .dc-user-photos.empty {
-  width: 64px; height: 64px; border-radius: 10px;
+  width: 88px; height: 88px; border-radius: 10px;
   display:flex; align-items:center; justify-content:center;
   background: var(--bg);
 }
 .dc-user-photo {
-  flex: 1 1 0; min-width: 0; max-width: 88px; height: 80px;
-  border-radius: 9px; position: relative; overflow: hidden;
+  flex: 0 0 88px; width: 88px; height: 88px;
+  border-radius: 10px; position: relative; overflow: hidden;
   background: var(--bg3); cursor: zoom-in;
 }
 .dc-user-photo img {
