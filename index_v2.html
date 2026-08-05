@@ -7461,7 +7461,7 @@ function pzFlagThumbHtml(a2){
 }
 
 /* ── Foto genérica por país (Wikipedia, com cache local) ── */
-const PZ_PHOTO_LS_KEY = 'atlas_pz_photos_v1';
+const PZ_PHOTO_LS_KEY = 'atlas_pz_photos_v2'; /* v2: usa páginas "Tourism in X" em vez da página do país (evita bandeiras) */
 let _pzPhotoCache = {};
 try { _pzPhotoCache = JSON.parse(localStorage.getItem(PZ_PHOTO_LS_KEY) || '{}'); } catch(e){ _pzPhotoCache = {}; }
 function pzSavePhotoCache(){
@@ -7470,19 +7470,25 @@ function pzSavePhotoCache(){
 function pzNomeEN(a2){
   try { return new Intl.DisplayNames(['en'], {type:'region'}).of(a2) || a2; } catch(e){ return a2; }
 }
+/* Nomes de ficheiro que NÃO queremos como "foto genérica" (bandeiras, brasões, mapas, etc.) */
+const PZ_BAD_IMG = /flag|coat.?of.?arms|locator|orthographic|emblem|seal.?of|blank.?map|_map[_.]|location.?map/i;
 async function pzFetchPhoto(a2){
   if (Object.prototype.hasOwnProperty.call(_pzPhotoCache, a2)) return _pzPhotoCache[a2];
   let url = null;
   try {
-    const titulo = encodeURIComponent(pzNomeEN(a2));
+    /* As páginas "Tourism in X" da Wikipedia têm quase sempre uma foto real
+       de um local turístico como imagem principal — ao contrário da página
+       do país em si, que mostra a bandeira ou um mapa de localização. */
+    const titulo = encodeURIComponent('Tourism in ' + pzNomeEN(a2));
     const resp = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${titulo}`);
     if (resp.ok){
       const data = await resp.json();
-      if (data.thumbnail && data.thumbnail.source){
+      const thumb = data.thumbnail && data.thumbnail.source;
+      /* Só aceitar .jpg/.jpeg — mapas, ícones e bandeiras na Wikipedia são
+         quase sempre .png/.svg, enquanto fotos reais são quase sempre .jpg */
+      if (thumb && /\.jpe?g(\?|$)/i.test(thumb) && !PZ_BAD_IMG.test(thumb)){
         /* Pedir uma versão maior que a miniatura por omissão (ex.: 220px → 600px) */
-        url = data.thumbnail.source.replace(/\/\d+px-/, '/600px-');
-      } else if (data.originalimage && data.originalimage.source){
-        url = data.originalimage.source;
+        url = thumb.replace(/\/\d+px-/, '/600px-');
       }
     }
   } catch(e){ url = null; }
