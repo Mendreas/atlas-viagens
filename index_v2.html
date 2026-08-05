@@ -912,8 +912,9 @@ body.light .hero-sub { color:#c8cbdc; }
 /* ── Continente cards com ícone de fundo ── */
 .continent-card { min-height: 240px; padding: 0; overflow: hidden; position: relative; }
 .continent-card .cc-img-bg {
-  width: 100%; height: 160px;
-  object-fit: cover; display: block;
+  width: 100%; aspect-ratio: 1 / 1;
+  object-fit: contain; display: block;
+  background: linear-gradient(135deg,var(--bg3),var(--bg2));
   transition: transform .4s;
 }
 .continent-card:hover .cc-img-bg { transform: scale(1.05); }
@@ -6957,7 +6958,7 @@ function renderContinentesV2(){
     return `<div class="continent-card" onclick="abrirContinente('${c.id}')">
       ${contIcon
         ? `<img class="cc-img-bg" src="${contIcon}" alt="${c.nome}">`
-        : `<div style="height:160px;background:linear-gradient(135deg,var(--bg3),var(--bg2));display:flex;align-items:center;justify-content:center;font-size:3rem">${c.emoji}</div>`}
+        : `<div class="cc-img-bg" style="background:linear-gradient(135deg,var(--bg3),var(--bg2));display:flex;align-items:center;justify-content:center;font-size:3rem">${c.emoji}</div>`}
       <div class="cc-info">
         <div class="cc-name">${c.nome}</div>
         <div class="cc-count">${vis}/${total} · ${pct}%</div>
