@@ -839,7 +839,16 @@ textarea.form-input { resize:vertical; min-height:90px; }
   cursor:zoom-out;
 }
 .img-modal-v2.open { display:flex; }
-.img-modal-v2 img { max-width:90vw; max-height:90vh; border-radius:8px; }
+.img-modal-v2 img { max-width:90vw; max-height:90vh; border-radius:8px; cursor:default; }
+.img-modal-close {
+  position:fixed; top:18px; right:22px; z-index:601;
+  width:38px; height:38px; border-radius:50%;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+  color:#fff; font-size:18px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .15s;
+}
+.img-modal-close:hover { background:rgba(255,255,255,.25); }
 
 /* ── Light mode ── */
 body.light {
@@ -895,13 +904,14 @@ body.light .hero-sub { color:#c8cbdc; }
 
 /* ── Diary card novo visual (mockup) ── */
 .diary-card {
-  grid-template-columns: 220px 1fr 220px;
-  grid-template-rows: auto auto;
-  min-height: 132px;
+  grid-template-columns: 220px 1fr 264px;
+  grid-template-rows: 1fr auto;
+  height: 220px;
   position: relative;
 }
 .dc-cover-img {
-  grid-row: 1 / 3;
+  grid-row: 1 / 3; grid-column: 1;
+  width: 220px; height: 220px;
   position: relative; overflow: hidden;
   background: var(--bg3);
 }
@@ -914,64 +924,65 @@ body.light .hero-sub { color:#c8cbdc; }
 .dc-cover-placeholder {
   width:100%; height:100%;
   display:flex; align-items:center; justify-content:center;
-  font-size:3rem; background:linear-gradient(135deg,var(--bg3),var(--bg2));
+  font-size:4.5rem; background:linear-gradient(135deg,var(--bg3),var(--bg2));
 }
 /* coluna central */
 .dc-body {
+  grid-row: 1; grid-column: 2;
   padding: 14px 18px;
   display: flex; flex-direction: column;
-  gap: 5px; min-width: 0;
+  gap: 5px; min-width: 0; overflow: hidden;
   border-right: 1px solid var(--border);
 }
-/* coluna direita: fotos do utilizador */
+/* coluna direita: fotos do utilizador (fila de quadrados) */
 .dc-right {
-  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 14px;
-  padding: 12px;
+  grid-row: 1; grid-column: 3;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px;
 }
 .dc-user-photos {
-  flex: 0 0 auto; width: 116px; height: 116px; margin: auto;
-  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px;
-  overflow: hidden; border-radius: 10px;
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 .dc-user-photos.loading, .dc-user-photos.empty {
-  display: flex; align-items: center; justify-content: center;
+  width: 80px; height: 80px; border-radius: 10px;
+  display:flex; align-items:center; justify-content:center;
   background: var(--bg);
 }
 .dc-user-photo {
-  width: 100%; height: 100%;
-  border-radius: 6px; position: relative; overflow: hidden;
-  background: var(--bg3);
+  flex: 0 0 auto; width: 80px; height: 80px;
+  border-radius: 10px; position: relative; overflow: hidden;
+  background: var(--bg3); cursor: zoom-in;
 }
 .dc-user-photo img {
   width:100%; height:100%; object-fit:cover;
   transition: transform .3s;
 }
-.diary-card:hover .dc-user-photo img { transform: scale(1.05); }
+.dc-user-photo:hover img { transform: scale(1.08); }
 .dc-photo-more {
   position:absolute; inset:0;
   background:rgba(0,0,0,.55);
   display:flex; align-items:center; justify-content:center;
-  color:#fff; font-size:13px; font-weight:700;
+  color:#fff; font-size:16px; font-weight:700;
 }
-.dc-user-photo.dc-photo-more {
-  position: static; background: var(--bg3); cursor: pointer;
-  font-size: 15px; font-weight: 700; color: var(--text2);
+/* rodapé: Editar/Apagar ── separador ── companhia aérea */
+.dc-actions {
+  grid-row: 2; grid-column: 2 / 4;
+  padding: 8px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border-top: 1px solid var(--border);
 }
-.dc-user-photo.dc-photo-more:hover { background: var(--card-hover); color: var(--text); }
-.dc-airline-strip {
-  flex-shrink: 0; width: 60px;
-  padding: 8px 6px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-  border: 1px solid var(--border); border-radius: 10px;
-  background: var(--bg3);
-  text-align: center;
+.dc-actions-left { display: flex; gap: 6px; align-items: center; }
+.dc-actions-divider { width: 1px; align-self: stretch; background: var(--border); margin: 4px 0; }
+.dc-airline-chip {
+  display: flex; align-items: center; gap: 7px;
+  color: var(--text2); font-size: 11px;
 }
-.dc-airline-strip img {
-  height: 18px; max-width: 50px; object-fit: contain;
+.dc-airline-chip img {
+  height: 15px; max-width: 44px; object-fit: contain;
   background: #fff; padding: 1px 3px; border-radius: 3px;
 }
-.dc-airline-strip-name { font-size:9px; color:var(--teal); font-weight:500; line-height:1.2; }
-.dc-airline-strip-rota { font-size:9px; color:var(--text3); }
+.dc-airline-chip .nm { font-weight: 500; color: var(--teal); white-space: nowrap; }
+.dc-airline-chip .rt { color: var(--text3); }
 
 /* Esconder a coluna date no novo layout */
 .dc-date { display: none; }
@@ -1419,6 +1430,13 @@ body.light .hero-sub { color:#c8cbdc; }
           </label>
         </div>
       </div>
+      <!-- Categoria -->
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select id="tCategoria" class="form-input">
+          <option value="">— nenhuma —</option>
+        </select>
+      </div>
       <!-- Companhia / Rota -->
       <div class="form-grid">
         <div class="form-group">
@@ -1503,7 +1521,8 @@ body.light .hero-sub { color:#c8cbdc; }
 
 <!-- Img modal -->
 <div class="img-modal-v2" id="imgModalV2" onclick="this.classList.remove('open')">
-  <img id="imgModalV2Img" src="" alt="">
+  <button class="img-modal-close" onclick="event.stopPropagation();document.getElementById('imgModalV2').classList.remove('open')">✕</button>
+  <img id="imgModalV2Img" src="" alt="" onclick="event.stopPropagation()">
 </div>
 
 <!-- Toast -->
@@ -1718,7 +1737,7 @@ function abrirContinente(id){
 const _coverCache = {};
 /* Rejeitar ficheiros que sejam claramente bandeiras/brasões/logótipos/colagens/mapas em vez de fotos do local */
 function _nomeFicheiroSuspeito(t){
-  return /flag.?of|bandeira|coat.?of.?arms|bras[aã]o|escudo|seal.?of|emblem|logo|montage|collage|colagem|mosaico|fotomontage|fotomontagem|montagem|composite|locat|location.?map|adm.*map|map\.svg|orthographic|district|province|region.*svg|symbol|disambig|commons-logo/i.test(t);
+  return /flag.?of|bandeira|coat.?of.?arms|bras[aã]o|escudo|seal.?of|emblem|logo|montage|collage|colagem|mosaico|fotomontage|fotomontagem|montagem|composite|locat|location.?map|adm.*map|map\.svg|orthographic|district|province|region.*svg|symbol|disambig|commons-logo|aeroporto|airport|estádio|estadio|stadium|hospital|satellite|sentinel/i.test(t);
 }
 /* Procura entre as fotos REAIS usadas no artigo da Wikipédia (evita a "imagem oficial" da página, que nestes artigos é muitas vezes a bandeira) */
 async function _capaPorImagensDaPagina(titulo){
@@ -1799,13 +1818,13 @@ async function buscarCapaLocal(local, pais){
   if(local) tentativas.push(local);
   if(local && pais && local.toLowerCase()!==pais.toLowerCase()) tentativas.push(`${local}, ${pais}`);
   if(pais) tentativas.push(pais);
-  /* 1. fotos reais do artigo; 2. imagem oficial da página; 3. pesquisa de texto */
+  /* 1. imagem oficial da página (normalmente o retrato mais icónico do local); 2. fotos reais do artigo; 3. pesquisa de texto */
   for(const q of tentativas){
-    const url=await _capaPorImagensDaPagina(q);
+    const url=await _capaPorTitulo(q);
     if(url) return url;
   }
   for(const q of tentativas){
-    const url=await _capaPorTitulo(q);
+    const url=await _capaPorImagensDaPagina(q);
     if(url) return url;
   }
   for(const q of tentativas){
@@ -1816,6 +1835,28 @@ async function buscarCapaLocal(local, pais){
 }
 
 /* renderTripsV2: novo visual */
+/* Categorias de viagem (etiqueta extra, opcional, além do tipo Grande viagem/Escapadinha) */
+const TRIP_CATEGORIAS = {
+  ferias:    {emoji:'🏖️', label:'Férias',        bg:'rgba(69,176,164,.15)',  fg:'#45b0a4'},
+  romantico: {emoji:'💕', label:'Romântico',      bg:'rgba(255,130,170,.15)', fg:'#ff82aa'},
+  cidade:    {emoji:'🏙️', label:'Cidade',         bg:'rgba(100,180,255,.15)', fg:'#64b4ff'},
+  aventura:  {emoji:'🧗', label:'Aventura',       bg:'rgba(255,150,60,.15)',  fg:'#ff963c'},
+  praia:     {emoji:'🏝️', label:'Praia',          bg:'rgba(60,190,220,.15)',  fg:'#3cbedc'},
+  natureza:  {emoji:'🌲', label:'Natureza',       bg:'rgba(110,190,90,.15)',  fg:'#6ebe5a'},
+  cultura:   {emoji:'🎭', label:'Cultura',        bg:'rgba(200,160,255,.15)', fg:'#c8a0ff'},
+  gastronomia:{emoji:'🍽️',label:'Gastronomia',    bg:'rgba(255,190,60,.15)',  fg:'#ffbe3c'},
+  familia:   {emoji:'👨‍👩‍👧', label:'Família',        bg:'rgba(255,130,170,.15)', fg:'#ff82aa'},
+  negocios:  {emoji:'💼', label:'Negócios',       bg:'rgba(150,150,165,.18)', fg:'#9696a5'},
+};
+(function(){
+  const sel=document.getElementById('tCategoria');
+  if(sel){
+    Object.entries(TRIP_CATEGORIAS).forEach(([k,c])=>{
+      sel.add(new Option(c.emoji+' '+c.label, k));
+    });
+  }
+})();
+
 function renderTripsV2(){
   populateFiltroDropdownsV2();
   const hoje = new Date().toISOString().slice(0,10);
@@ -1852,18 +1893,20 @@ function renderTripsV2(){
     const monthStr=parts[1]?months[parseInt(parts[1])-1]:'';
     const dayStr=parts[2]||'';
 
-    /* Airline */
+    /* Airline (chip compacto no rodapé) */
     const aObj=t.airline?AIRLINES_DB.find(a=>a.nome===t.airline||a.iata===t.airline):null;
     const logo=aObj?AIRLINE_LOGO_DATA[aObj.iata]:null;
-    const airlineStrip=t.airline?`<div class="dc-airline-strip">
-      ${logo?`<img src="${logo}" alt="${esc(t.airline)}">`:'<span style="font-size:14px">✈️</span>'}
-      <span class="dc-airline-strip-name">${esc(t.airline)}</span>
-      ${t.rota?`<span class="dc-airline-strip-rota">${esc(t.rota)}</span>`:''}
-    </div>`:'';
+    const airlineChip=t.airline?`<div class="dc-airline-chip">
+      ${logo?`<img src="${logo}" alt="${esc(t.airline)}">`:'<span style="font-size:13px">✈️</span>'}
+      <span class="nm">${esc(t.airline)}</span>
+      ${t.rota?`<span class="rt">· ${esc(t.rota)}</span>`:''}
+    </div>`:'<div></div>';
 
     /* Tags */
+    const cat=t.categoria?TRIP_CATEGORIAS[t.categoria]:null;
     const tags=[
       t.tipo==='grande'?'<span class="dc-tag grande">🌍 Grande viagem</span>':'<span class="dc-tag escapadinha">✈️ Escapadinha</span>',
+      cat?`<span class="dc-tag" style="background:${cat.bg};color:${cat.fg}">${cat.emoji} ${cat.label}</span>`:'',
       t.ilhas?'<span class="dc-tag ilhas">🏝 Ilhas</span>':'',
     ].filter(Boolean).join('');
 
@@ -1899,15 +1942,18 @@ function renderTripsV2(){
         <div class="dc-tags" style="margin-top:auto">${tags}</div>
         ${linksHtml?`<div style="margin-top:4px">${linksHtml}</div>`:''}
       </div>
-      <!-- Airline + Fotos do utilizador -->
+      <!-- Fotos do utilizador -->
       <div class="dc-right">
-        ${airlineStrip}
         <div class="dc-user-photos loading" id="uphotos-${t.id}"></div>
       </div>
       <!-- Acções -->
-      <div class="dc-actions" onclick="event.stopPropagation()" style="grid-column:2/3">
-        <button class="btn-v2 btn-ghost" style="font-size:12px;padding:5px 10px" onclick="editarTrip(${t.id})">Editar</button>
-        <button class="btn-v2 btn-danger" style="font-size:12px;padding:5px 10px" onclick="apagarTrip(${t.id})">Apagar</button>
+      <div class="dc-actions" onclick="event.stopPropagation()">
+        <div class="dc-actions-left">
+          <button class="btn-v2 btn-ghost" style="font-size:12px;padding:5px 10px" onclick="editarTrip(${t.id})">Editar</button>
+          <button class="btn-v2 btn-danger" style="font-size:12px;padding:5px 10px" onclick="apagarTrip(${t.id})">Apagar</button>
+        </div>
+        ${t.airline?'<div class="dc-actions-divider"></div>':''}
+        ${airlineChip}
       </div>`;
     list.appendChild(div);
   });
@@ -1925,7 +1971,7 @@ function renderTripsV2(){
     });
   });
 
-  /* Carregar fotos nas cards (mosaico até 3 + "+N") */
+  /* Carregar fotos nas cards (até 3, quadradas, +N sobreposto na última) */
   trips.forEach(t=>{
     const wrap=document.getElementById(`uphotos-${t.id}`);
     if(!wrap) return;
@@ -1943,15 +1989,14 @@ function renderTripsV2(){
       wrap.className='dc-user-photos';
       const show=fotos.slice(0,3);
       const more=fotos.length-3;
-      wrap.innerHTML=show.map((url)=>`
+      wrap.innerHTML=show.map((url,i)=>`
         <div class="dc-user-photo">
           <img src="${url}" loading="lazy" onclick="event.stopPropagation();verImagem('${url}')">
-        </div>`).join('') + (more>0?`
-        <div class="dc-user-photo dc-photo-more" onclick="event.stopPropagation();abrirDiarioModal(${t.id})">+${more}</div>`:'');
+          ${i===show.length-1&&more>0?`<div class="dc-photo-more" onclick="event.stopPropagation();verImagem('${url}')">+${more}</div>`:''}
+        </div>`).join('');
     });
   });
 }
-
 
 /* populateFiltroDropdownsV2 */
 function populateFiltroDropdownsV2(){
@@ -2109,6 +2154,9 @@ function verImagem(src){
   const img = document.getElementById('imgModalV2Img');
   if(m&&img){ img.src=src; m.classList.add('open'); }
 }
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ const m=document.getElementById('imgModalV2'); if(m) m.classList.remove('open'); }
+});
 
 /* abrirDiarioModal: preencher o modal v2 */
 const _abrirDiarioModalOriginal = window.abrirDiarioModal;
@@ -2747,6 +2795,9 @@ function limparForm(){
   const tAirline = document.getElementById('tAirline'); if(tAirline) tAirline.value='';
   const tRota = document.getElementById('tRota'); if(tRota) tRota.value='';
   const tPernoita = document.getElementById('tPernoita'); if(tPernoita) tPernoita.value='';
+  const tCategoria = document.getElementById('tCategoria'); if(tCategoria) tCategoria.value='';
+  const tIlhas = document.getElementById('tIlhas'); if(tIlhas) tIlhas.checked=false;
+  const tGrande = document.querySelector('input[name="tTipoViagem"][value="escapadinha"]'); if(tGrande) tGrande.checked=true;
   _formPaises = []; renderPaisesChips(); _cbReset();
   editId = null;
   const btnC = document.getElementById('btnCancelEdit'); if(btnC) btnC.style.display='none';
@@ -5833,60 +5884,9 @@ document.getElementById('btnNovaViagem').addEventListener('click', () => {
   abrirFormModal();
 });
 
-/* Ao guardar, fechar o modal */
-const _btnSaveTripOriginal = document.getElementById('btnSaveTrip').onclick;
-document.getElementById('btnSaveTrip').onclick = null;
-document.getElementById('btnSaveTrip').addEventListener('click', function(){
-  const ini  = document.getElementById('tIni').value;
-  const fim  = document.getElementById('tFim').value || ini;
-  const titulo = document.getElementById('tTitulo').value.trim();
-  if (!ini){ toast('Indica pelo menos a data de início'); return; }
-  if (!_formPaises.length){ toast('Adiciona pelo menos um país'); return; }
-
-  const paisPrimario = _formPaises[0];
-  const trip = {
-    id: editId || Date.now(),
-    pais: paisPrimario,
-    paises: [..._formPaises],
-    ini, fim,
-    titulo: titulo || ('Viagem a ' + _formPaises.map(a=>nomePT(a)).join(', ')),
-    locais:   document.getElementById('tLocais')?.value.trim()   || '',
-    pernoita: document.getElementById('tPernoita')?.value.trim() || '',
-    notas:    document.getElementById('tNotas')?.value.trim()    || '',
-    imgNomes: formImgs.map(f=>f.name),
-    links:    formLinks.filter(l=>l.url.trim()),
-    airline:  document.getElementById('tAirline')?.value.trim()  || '',
-    rota:     document.getElementById('tRota')?.value.trim()     || '',
-    tipo:     document.querySelector('input[name="tTipoViagem"]:checked')?.value || 'escapadinha',
-    ilhas:    document.getElementById('tIlhas')?.checked || false,
-    userIds:  getTUserSelected(),
-  };
-
-  /* Guardar fotos */
-  const _idParaFotos = editId || trip.id;
-  if (formImgs.length){
-    invalidarCacheFotos(_idParaFotos);
-    guardarFotosIDB(_idParaFotos, formImgs).then(()=>{ invalidarCacheFotos(_idParaFotos); });
-  }
-
-  if (editId){ state.trips = state.trips.map(t=> t.id===editId ? trip : t); editId = null; }
-  else state.trips.push(trip);
-
-  /* Marcar países como visitados/planeados */
-  const hoje = new Date().toISOString().slice(0,10);
-  trip.userIds.forEach(uid=>{
-    const sv=state.editingUser; state.editingUser=uid;
-    trip.paises.forEach(pa => {
-      if(fim<=hoje) setStatus(pa,'visitado');
-      else if(statusDe(pa)!=='visitado') setStatus(pa,'planeado');
-    });
-    state.editingUser=sv;
-  });
-
-  limparForm(); save(); renderTrips(); refreshStats();
-  fecharFormModal();
-  toast('Viagem guardada ✓');
-});
+/* NOTA: o guardar da viagem está implementado mais abaixo, no arranque V2 (btnSaveTrip),
+   que é o único handler activo. Havia aqui um segundo handler duplicado (bug: cada
+   "Guardar" criava a viagem duas vezes) — removido. */
 
 /* Cancelar edição */
 document.getElementById('btnCancelEdit').onclick = () => {
@@ -5922,6 +5922,7 @@ window.editarTrip = (id) => {
   const tipoRadio = document.querySelector(`input[name="tTipoViagem"][value="${tipoVal}"]`);
   if(tipoRadio) tipoRadio.checked = true;
   if(document.getElementById('tIlhas')) document.getElementById('tIlhas').checked = !!t.ilhas;
+  if(document.getElementById('tCategoria')) document.getElementById('tCategoria').value = t.categoria || '';
 
   /* Preencher utilizadores */
   const tripUserIds = t.userIds || (t.userId ? [t.userId] : [state.editingUser]);
@@ -7040,6 +7041,7 @@ setTimeout(()=>{
         airline:document.getElementById('tAirline')?.value.trim()||'',
         rota:document.getElementById('tRota')?.value.trim()||'',
         tipo:document.querySelector('input[name="tTipoViagem"]:checked')?.value||'escapadinha',
+        categoria:document.getElementById('tCategoria')?.value||'',
         ilhas:document.getElementById('tIlhas')?.checked||false,
         userIds:getTUserSelected(),
       };
