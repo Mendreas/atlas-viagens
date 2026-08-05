@@ -370,6 +370,53 @@ body {
 .country-chip.st-planeado { border-left:3px solid var(--teal); }
 .country-chip .cf { font-size:18px; flex-shrink:0; }
 
+/* ── Detalhe do continente (aba Regiões) ── */
+.rg-stats { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+.rg-stat {
+  background:var(--card-bg); border:1px solid var(--border); border-radius:12px;
+  padding:14px 20px; min-width:120px; flex:1 1 140px;
+}
+.rg-stat .val { font-size:24px; font-weight:700; color:var(--text); font-family:'Fraunces', serif; }
+.rg-stat .lbl { font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text2); margin-top:2px; font-weight:600; }
+.rg-stat.is-visitado .val { color:var(--gold2); }
+.rg-stat.is-planeado .val { color:var(--teal); }
+
+.rg-layout { display:grid; grid-template-columns:340px 1fr; gap:16px; align-items:start; }
+@media(max-width:900px){ .rg-layout { grid-template-columns:1fr; } }
+
+.rg-list {
+  display:flex; flex-direction:column; gap:6px;
+  max-height:640px; overflow-y:auto; padding-right:4px;
+}
+.rg-country-row {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  border-radius:10px; padding:10px 12px; cursor:pointer;
+  border:1px solid var(--border); background:var(--bg3);
+  transition:border-color .15s, transform .15s;
+}
+.rg-country-row:hover { border-color:var(--border2); transform:translateX(2px); }
+.rg-country-row.st-visitado, .rg-country-row.st-parcial { background:var(--gold-dim); border-color:rgba(212,168,67,.35); }
+.rg-country-row.st-planeado { background:var(--teal-dim); border-color:rgba(63,182,140,.35); }
+.rg-country-row .rgc-nome { font-size:13px; font-weight:600; color:var(--text); }
+.rg-country-row .rgc-flag-img { width:22px; height:auto; border-radius:3px; flex:none; box-shadow:0 0 0 1px var(--border2); }
+
+.rg-map-wrap { position:relative; }
+#rgMapa {
+  position:relative; background:var(--map-void); border-radius:14px; overflow:hidden;
+  min-height:420px; border:1px solid var(--border);
+}
+#rgMapa svg { width:100%; height:auto; display:block; }
+#rgMapa .rg-country-path { cursor:pointer; transition:filter .15s; }
+#rgMapa .rg-country-path:hover { filter:brightness(1.25); }
+#rgMapa .rg-zoom-ctrl {
+  position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:4px; z-index:2;
+}
+#rgMapa .rg-zoom-ctrl button {
+  background:var(--bg2); border:1px solid var(--border); color:var(--text);
+  border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:14px;
+}
+#rgMapa .rg-zoom-ctrl button:hover { border-color:var(--gold); }
+
 /* ── DIÁRIO — CARDS ── */
 .diary-timeline { display:flex; flex-direction:column; gap:3px; }
 .diary-year-group { margin-bottom:20px; }
@@ -1754,11 +1801,15 @@ body.light .hero-sub { color:#c8cbdc; }
       <div id="reg-paises" style="display:none">
         <button class="btn-v2 btn-ghost" id="backCont" style="margin-bottom:16px">← Voltar</button>
         <div class="page-header"><h2 id="contTitulo" style="font-size:18px;font-weight:700"></h2></div>
-        <div id="regMapaWrap" style="display:none;margin-bottom:16px">
-          <p style="font-size:12px;color:var(--text2);margin-bottom:8px">📍 Cidades visitadas nesta região. Clica num marcador para ver a viagem.</p>
-          <div id="regMapaCidades" style="height:340px;border-radius:10px;border:1px solid var(--border);overflow:hidden"></div>
+        <div class="rg-stats" id="rgStats"></div>
+        <div class="rg-layout">
+          <div class="rg-list" id="rgList"></div>
+          <div class="rg-map-wrap">
+            <div id="rgMapa"></div>
+          </div>
         </div>
-        <div class="countries-grid" id="countryGrid"></div>
+        <div id="regMapaWrap" style="display:none"><div id="regMapaCidades"></div></div>
+        <div class="countries-grid" id="countryGrid" style="display:none"></div>
       </div>
     </section>
 
@@ -4273,32 +4324,110 @@ function renderContinentes(){
   }).join('');
   /* carregar fotos é feito via lista2.forEach abaixo */
 }
+let _rgContinenteActual = null;
 function abrirContinente(id){
   showTabV2('regioes');
   const c = CONTINENTES.find(x=>x.id===id);
+  _rgContinenteActual = id;
   document.getElementById('reg-continentes').style.display='none';
   document.getElementById('reg-paises').style.display='block';
   document.getElementById('contTitulo').innerHTML = c.emoji + ' <span>' + c.nome + '</span>';
-  const grid = document.getElementById('countryGrid');
-  const sorted = [...c.paises].sort((a,b)=>nomePT(a).localeCompare(nomePT(b),'pt'));
-  grid.innerHTML = sorted.map(a2 => {
-    const st = statusDe(a2);
-    return `<button class="country-btn st-${st}" onclick="irParaPais('${a2}')">
-      <span class="cbflag">${bandeira(a2)}</span>${nomePT(a2)}
-    </button>`;
-  }).join('');
-  /* Renderizar mapa de cidades visitadas nesta região */
-  renderRegMapaParaCont(id);
+  rgRenderStats(id);
+  rgRenderList(id);
+  rgRenderMap(id);
 }
 document.getElementById('backCont').onclick = ()=>{
   document.getElementById('reg-continentes').style.display='block';
   document.getElementById('reg-paises').style.display='none';
+  _rgContinenteActual = null;
 };
-window.irParaPais = a2 => {
-  document.getElementById('selPais').value = a2;
-  renderPais(); carregarRegioes(a2);
-  showTab('paises');
-};
+window.irParaPais = a2 => { pzOpenModal(a2); };
+
+function rgStatusDe(a2){
+  const st = statusDe(a2);
+  return (st==='visitado'||st==='parcial') ? 'visitado' : (st==='planeado' ? 'planeado' : 'nao');
+}
+
+function rgRenderStats(id){
+  const c = CONTINENTES.find(x=>x.id===id);
+  const vis = c.paises.filter(a2=>rgStatusDe(a2)==='visitado').length;
+  const plan = c.paises.filter(a2=>rgStatusDe(a2)==='planeado').length;
+  const porVisitar = c.paises.length - vis - plan;
+  document.getElementById('rgStats').innerHTML = `
+    <div class="rg-stat is-visitado"><div class="val">${vis}</div><div class="lbl">Visitados</div></div>
+    <div class="rg-stat is-planeado"><div class="val">${plan}</div><div class="lbl">Planeados</div></div>
+    <div class="rg-stat"><div class="val">${porVisitar}</div><div class="lbl">Por visitar</div></div>
+  `;
+}
+
+function rgRenderList(id){
+  const c = CONTINENTES.find(x=>x.id===id);
+  const sorted = [...c.paises].sort((a,b)=>nomePT(a).localeCompare(nomePT(b),'pt'));
+  document.getElementById('rgList').innerHTML = sorted.map(a2 => {
+    const st = rgStatusDe(a2);
+    return `<div class="rg-country-row st-${st}" onclick="pzOpenModal('${a2}')">
+      <span class="rgc-nome">${esc(nomePT(a2))}</span>
+      ${pzFlagImg(a2,'rgc-flag-img')}
+    </div>`;
+  }).join('');
+}
+
+/* ── Mapa do continente (coropletas, reaproveita o world-atlas já usado na aba Mapa) ── */
+let _rgWorldTopoCache = null;
+let _rgSvg = null, _rgZoom = null, _rgG = null;
+async function rgRenderMap(id){
+  const cont = document.getElementById('rgMapa');
+  cont.innerHTML = '<p class="reg-hint" style="padding:16px">A carregar mapa…</p>';
+  let topo = _rgWorldTopoCache;
+  if (!topo){
+    try {
+      topo = await (await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json')).json();
+      _rgWorldTopoCache = topo;
+    } catch(e){
+      cont.innerHTML = '<p class="reg-hint" style="padding:16px">Não foi possível carregar o mapa (sem ligação).</p>';
+      return;
+    }
+  }
+  if (_rgContinenteActual !== id) return; /* utilizador já mudou de continente entretanto */
+  const c = CONTINENTES.find(x=>x.id===id);
+  const todasFeatures = topojson.feature(topo, topo.objects.countries).features;
+  const featuresRegiao = todasFeatures.filter(f => c.paises.includes(N2A[String(+f.id)] || ''));
+
+  cont.innerHTML = '';
+  const W = 900, H = 560;
+  const proj = d3.geoEquirectangular().fitSize([W, H], {type:'Sphere'});
+  const path = d3.geoPath(proj);
+  const svg = d3.select(cont).append('svg').attr('viewBox', `0 0 ${W} ${H}`);
+  const g = svg.append('g');
+  g.append('image').attr('href', MAP_BG_IMG).attr('x',0).attr('y',0).attr('width',W).attr('height',H);
+
+  g.selectAll('path.rg-country-path').data(todasFeatures).join('path')
+    .attr('class','rg-country-path').attr('d', path)
+    .attr('fill', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? CORES[rgStatusDe(a2)] : 'rgba(20,22,28,.55)'; })
+    .attr('stroke', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? CORES_STROKE[rgStatusDe(a2)] : 'rgba(255,255,255,.12)'; })
+    .attr('stroke-width', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? 1 : .3; })
+    .on('click', (ev,d) => { const a2 = N2A[String(+d.id)]||''; if (c.paises.includes(a2)) pzOpenModal(a2); })
+    .append('title').text(d => { const a2 = N2A[String(+d.id)]||''; return a2 ? nomePT(a2) : (d.properties.name||''); });
+
+  const zoom = d3.zoom().scaleExtent([1,10]).on('zoom', ev => g.attr('transform', ev.transform));
+  svg.call(zoom);
+  _rgSvg = svg; _rgZoom = zoom; _rgG = g;
+
+  /* Ajustar zoom/pan para caber a bounding box dos países desta região */
+  if (featuresRegiao.length){
+    const [[x0,y0],[x1,y1]] = path.bounds({type:'FeatureCollection', features: featuresRegiao});
+    const bw = Math.max(x1-x0, 1), bh = Math.max(y1-y0, 1);
+    const scale = Math.max(1, Math.min(8, 0.85 / Math.max(bw/W, bh/H)));
+    const tx = W/2 - scale*(x0+x1)/2;
+    const ty = H/2 - scale*(y0+y1)/2;
+    svg.call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+  }
+
+  const zg = d3.select(cont).append('div').attr('class','rg-zoom-ctrl');
+  zg.append('button').text('+').on('click', ()=> svg.transition().call(zoom.scaleBy, 1.4));
+  zg.append('button').text('−').on('click', ()=> svg.transition().call(zoom.scaleBy, 0.7));
+  zg.append('button').html('⌂').on('click', ()=> rgRenderMap(id));
+}
 
 /* ============ SUB-MAPAS POR ZONA ============ */
 let zonaAtiva = {};  // a2 → índice da zona activa
