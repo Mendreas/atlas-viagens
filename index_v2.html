@@ -896,11 +896,17 @@ body.light .hero-sub { color:#c8cbdc; }
   pointer-events: none;
 }
 
-/* ── Continente cards com emoji grande ── */
-.continent-card .cc-emoji {
-  font-size: 2.2rem; margin-bottom: 6px; display:block;
+/* ── Continente cards com ícone de fundo ── */
+.continent-card { min-height: 240px; padding: 0; overflow: hidden; position: relative; }
+.continent-card .cc-img-bg {
+  width: 100%; height: 160px;
+  object-fit: cover; display: block;
+  transition: transform .4s;
 }
-.continent-card { min-height: 120px; }
+.continent-card:hover .cc-img-bg { transform: scale(1.05); }
+.continent-card .cc-info {
+  padding: 10px 14px 12px;
+}
 
 /* ── Diary card novo visual (mockup) ── */
 #trip-list-v2 .diary-card {
@@ -6936,10 +6942,14 @@ function renderContinentesV2(){
     const pct=Math.round(vis/total*100);
     const contIcon = CONT_ICONS[c.id];
     return `<div class="continent-card" onclick="abrirContinente('${c.id}')">
-      ${contIcon ? `<img src="${contIcon}" style="height:60px;object-fit:contain;margin-bottom:8px;display:block">` : `<span class="cc-emoji">${c.emoji}</span>`}
-      <div class="cc-name">${c.nome}</div>
-      <div class="cc-count">${vis}/${total} · ${pct}%</div>
-      <div class="cc-bar"><div class="cc-bar-fill" style="width:${pct}%"></div></div>
+      ${contIcon
+        ? `<img class="cc-img-bg" src="${contIcon}" alt="${c.nome}">`
+        : `<div style="height:160px;background:linear-gradient(135deg,var(--bg3),var(--bg2));display:flex;align-items:center;justify-content:center;font-size:3rem">${c.emoji}</div>`}
+      <div class="cc-info">
+        <div class="cc-name">${c.nome}</div>
+        <div class="cc-count">${vis}/${total} · ${pct}%</div>
+        <div class="cc-bar"><div class="cc-bar-fill" style="width:${pct}%"></div></div>
+      </div>
     </div>`;
   }).join('');
   grids.forEach(g=>{if(g)g.innerHTML=html;});
