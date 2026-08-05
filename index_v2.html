@@ -6443,7 +6443,7 @@ const PP_BG_FULL_B64 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBAUEBAYFBQUGBgYHCQ4J
 (function ppInjectBg(){
   const s = document.createElement('style');
   s.textContent = `.pp-page{background-image:url(data:image/jpeg;base64,${PP_BG_B64});background-size:200% 100%;background-repeat:no-repeat;background-position:left top;}.pp-page.right{background-position:right top;}
-#page-passaporte{background-image:linear-gradient(rgba(13,17,23,.55),rgba(13,17,23,.8)),url(data:image/jpeg;base64,${PP_BG_FULL_B64});background-size:cover,cover;background-position:center,center;background-repeat:no-repeat,no-repeat;}`;
+#page-passaporte,#page-diario,#page-paises,#page-regioes,#page-companhias,#page-definicoes{background-image:linear-gradient(rgba(13,17,23,.55),rgba(13,17,23,.8)),url(data:image/jpeg;base64,${PP_BG_FULL_B64});background-size:cover,cover;background-position:center,center;background-repeat:no-repeat,no-repeat;}`;
   document.head.appendChild(s);
 })();
 
