@@ -5186,6 +5186,7 @@ window.toggleUnesco = (a2, nome, val) => {
   save();
   renderUnesco(a2);
   refreshStats(); /* atualizar contadores */
+  if (typeof pzRenderPlan === 'function') pzRenderPlan(a2, statusDe(a2));
 };
 
 
@@ -7529,6 +7530,7 @@ window.toggleVista = (a2, k, val)=>{
   save();
   pzRenderQueVer(a2);
   if (REG_CACHE[a2] && selPais.value === a2) desenharRegioes(a2, REG_CACHE[a2]);
+  if (typeof pzRenderPlan === 'function') pzRenderPlan(a2, statusDe(a2));
 };
 window.addVista = (a2, regiao, input)=>{
   const v = input.value.trim(); if (!v) return;
@@ -7551,6 +7553,7 @@ window.delVista = (ev, a2, regiao, v)=>{
     s.custom = s.custom.filter(c=>c!==cr);
   save();
   pzRenderQueVer(a2);
+  if (typeof pzRenderPlan === 'function') pzRenderPlan(a2, statusDe(a2));
 };
 
 /* ── Planeamento / o que vimos (dentro do modal) ── */
@@ -7679,11 +7682,15 @@ DIA 1: [Título]
     const data = await resp.json();
     if (data.error) throw new Error(data.error.message);
     const texto = data.content[0].text.trim();
+    const mdInline = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    const linhas = texto.split('\n').map(l => l.trim()).filter(l => l && l !== '---' && !/^#/.test(l));
     itEl.innerHTML = '<h4>🗓 Roteiro ' + dias + ' dias — ' + esc(nome) + '</h4>' +
-      texto.split('\n').map(l => {
-        if (l.startsWith('DIA ')) return '<h4>' + esc(l) + '</h4>';
-        if (l.startsWith('•') || l.startsWith('-')) return '<p style="margin:2px 0 2px 10px">' + esc(l) + '</p>';
-        return l ? '<p style="margin:4px 0">' + esc(l) + '</p>' : '';
+      linhas.map(l => {
+        const semAsteriscos = l.replace(/\*\*/g, '');
+        if (/^DIA\s*\d+/i.test(semAsteriscos)) return '<h4>' + esc(semAsteriscos) + '</h4>';
+        if (/^[•\-]/.test(l)) return '<p style="margin:2px 0 2px 10px">' + mdInline(l.replace(/^[•\-]\s*/, '• ')) + '</p>';
+        if (/^>/.test(l)) return '<p style="margin:6px 0;color:var(--gold)">' + mdInline(l.replace(/^>\s*/, '💡 ')) + '</p>';
+        return '<p style="margin:4px 0">' + mdInline(l) + '</p>';
       }).join('');
     localStorage.setItem('plan_roteiro_'+a2, texto);
   } catch(e){
@@ -7697,6 +7704,15 @@ function pzExportarPlanPDF(a2){
   const roteiro = localStorage.getItem('plan_roteiro_'+a2) || '';
   const marcados = pzMarcados(a2, 'planeado');
   const plug = PLUGS[a2] || ['?','?','?'];
+
+  const mdInlinePdf = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const roteiroHtml = roteiro ? roteiro.split('\n').map(l => l.trim()).filter(l => l && l !== '---' && !/^#/.test(l)).map(l => {
+    const semAsteriscos = l.replace(/\*\*/g, '');
+    if (/^DIA\s*\d+/i.test(semAsteriscos)) return '<h3 style="margin-top:14px;font-size:1rem;color:#c5973a">' + esc(semAsteriscos) + '</h3>';
+    if (/^[•\-]/.test(l)) return '<p style="margin:2px 0 2px 10px">' + mdInlinePdf(l.replace(/^[•\-]\s*/, '• ')) + '</p>';
+    if (/^>/.test(l)) return '<p style="margin:6px 0;color:#c5973a">' + mdInlinePdf(l.replace(/^>\s*/, '💡 ')) + '</p>';
+    return '<p style="margin:4px 0">' + mdInlinePdf(l) + '</p>';
+  }).join('') : '';
 
   const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>Planeamento — ${esc(nome)}</title>
   <style>
@@ -7716,7 +7732,7 @@ function pzExportarPlanPDF(a2){
   <h2>📍 Locais a visitar</h2>
   ${marcados.length ? marcados.map(m=>`<p>• [${esc(m.cat)}] ${esc(m.nome)}</p>`).join('') : '<p>—</p>'}
   ${notas ? `<h2>📝 Notas</h2><div class="notas">${esc(notas)}</div>` : ''}
-  ${roteiro ? `<h2>🗓 Roteiro gerado por IA</h2><p style="white-space:pre-wrap">${esc(roteiro)}</p>` : ''}
+  ${roteiro ? `<h2>🗓 Roteiro gerado por IA</h2>${roteiroHtml}` : ''}
   <hr>
   <div style="font-size:.72rem;color:#aaa;margin-top:8px">Atlas de Viagens · mendreas.github.io/atlas-viagens</div>
   </body></html>`;
