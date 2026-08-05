@@ -4197,7 +4197,7 @@ const CONTINENTES = [
   { id:'europa', nome:'Europa', emoji:'🇪🇺',
     paises:['AD','AL','AT','AX','BA','BE','BG','BY','CH','CY','CZ','DE','DK','EE','ES','FI','FO','FR',
             'GB','GG','GI','GR','HR','HU','IE','IL','IM','IS','IT','JE','XK','LI','LT','LU','LV',
-            'MC','MD','ME','MK','ML','MT','NL','NO','PL','PT','RO','RS','RU','SI','SK','SM','SE',
+            'MC','MD','ME','MK','MT','NL','NO','PL','PT','RO','RS','RU','SI','SK','SM','SE',
             'TR','UA','VA'] },
   { id:'america_norte', nome:'América do Norte e Caraíbas', emoji:'🌎',
     paises:['AG','AI','AN','AW','BB','BL','BM','BS','BZ','CA','CR','CU','CW','DM','DO','GD','GP','GT',
@@ -4373,6 +4373,24 @@ function rgRenderList(id){
 }
 
 /* ── Mapa do continente (coropletas, reaproveita o world-atlas já usado na aba Mapa) ── */
+/* Delimitação usando só o maior polígono de cada país — em datasets de baixa
+   resolução como este, um país "MultiPolygon" costuma incluir territórios
+   ultramarinos distantes (ex.: França inclui a Guiana Francesa) na mesma
+   feature, o que estragaria por completo o enquadramento do continente. */
+function rgMainlandBounds(path, f){
+  const geo = f && f.geometry;
+  if (!geo) return null;
+  if (geo.type === 'MultiPolygon'){
+    let best = null, bestArea = -1;
+    geo.coordinates.forEach(coords => {
+      const feat = {type:'Feature', geometry:{type:'Polygon', coordinates: coords}};
+      const a = Math.abs(d3.geoArea(feat));
+      if (a > bestArea){ bestArea = a; best = feat; }
+    });
+    if (best) return path.bounds(best);
+  }
+  return path.bounds(f);
+}
 let _rgWorldTopoCache = null;
 let _rgSvg = null, _rgZoom = null, _rgG = null;
 async function rgRenderMap(id){
@@ -4420,8 +4438,8 @@ async function rgRenderMap(id){
   if (featuresRegiao.length){
     let x0=Infinity, y0=Infinity, x1=-Infinity, y1=-Infinity;
     featuresRegiao.forEach(f => {
-      const b = path.bounds(f);
-      if (!isFinite(b[0][0]) || !isFinite(b[1][0])) return;
+      const b = rgMainlandBounds(path, f);
+      if (!b || !isFinite(b[0][0]) || !isFinite(b[1][0])) return;
       if ((b[1][0]-b[0][0]) > W*0.5) return; /* provável embrulho na antemeridiana */
       if (b[0][0]<x0) x0=b[0][0];
       if (b[0][1]<y0) y0=b[0][1];
