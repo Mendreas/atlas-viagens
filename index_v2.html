@@ -258,14 +258,30 @@ body {
   letter-spacing:.07em; color:var(--text2);
   margin-top:2px; font-weight:600;
 }
+/* Stats sobrepostas ao hero: fundo vidro, largura igual entre si */
+#hero-section .stats-strip {
+  position:relative; z-index:2;
+  margin-bottom:0; flex-wrap:nowrap;
+}
+#hero-section .stat-chip {
+  flex:1 1 0; min-width:0;
+  background:rgba(255,255,255,.10);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.18);
+  text-align:center;
+}
+#hero-section .stat-chip:hover { border-color:rgba(255,255,255,.32); }
+#hero-section .stat-chip .val { color:#fff; }
+#hero-section .stat-chip .lbl { color:rgba(255,255,255,.75); }
 
 /* ── HERO DA PÁGINA INICIAL ── */
 #hero-section {
   border-radius:16px; overflow:hidden;
-  position:relative; min-height:220px;
+  position:relative; min-height:400px;
   background: #060d18;
   margin-bottom:24px;
-  display:flex; align-items:flex-end;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  gap:18px;
   padding:28px;
 }
 #hero-bg-img {
@@ -1121,9 +1137,9 @@ body.light .hero-sub { color:#c8cbdc; }
           <div class="hero-title">O mundo está<br><em>à tua espera.</em></div>
           <div class="hero-sub">Regista, planeia e descobre cada canto do planeta.</div>
         </div>
+        <!-- Stats -->
+        <div class="stats-strip" id="stats-strip-v2"></div>
       </div>
-      <!-- Stats -->
-      <div class="stats-strip" id="stats-strip-v2"></div>
       <!-- Continentes -->
       <div class="section-header">
         <div class="section-title">Continentes explorados</div>
