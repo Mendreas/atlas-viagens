@@ -904,7 +904,7 @@ body.light .hero-sub { color:#c8cbdc; }
 
 /* ── Diary card novo visual (mockup) ── */
 .diary-card {
-  grid-template-columns: 220px 1fr 264px;
+  grid-template-columns: 220px 1fr 300px;
   grid-template-rows: 1fr auto;
   height: 220px;
   position: relative;
@@ -941,16 +941,16 @@ body.light .hero-sub { color:#c8cbdc; }
   padding: 10px;
 }
 .dc-user-photos {
-  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 8px;
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 6px;
 }
 .dc-user-photos.loading, .dc-user-photos.empty {
-  width: 80px; height: 80px; border-radius: 10px;
+  width: 64px; height: 64px; border-radius: 10px;
   display:flex; align-items:center; justify-content:center;
   background: var(--bg);
 }
 .dc-user-photo {
-  flex: 0 0 auto; width: 80px; height: 80px;
-  border-radius: 10px; position: relative; overflow: hidden;
+  flex: 0 0 auto; width: 64px; height: 64px;
+  border-radius: 9px; position: relative; overflow: hidden;
   background: var(--bg3); cursor: zoom-in;
 }
 .dc-user-photo img {
@@ -1987,8 +1987,8 @@ function renderTripsV2(){
         return;
       }
       wrap.className='dc-user-photos';
-      const show=fotos.slice(0,3);
-      const more=fotos.length-3;
+      const show=fotos.slice(0,4);
+      const more=fotos.length-4;
       wrap.innerHTML=show.map((url,i)=>`
         <div class="dc-user-photo">
           <img src="${url}" loading="lazy" onclick="event.stopPropagation();verImagem('${url}')">
