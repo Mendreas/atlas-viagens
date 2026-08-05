@@ -904,7 +904,7 @@ body.light .hero-sub { color:#c8cbdc; }
 
 /* ── Diary card novo visual (mockup) ── */
 .diary-card {
-  grid-template-columns: 220px 1fr 400px;
+  grid-template-columns: 220px 1fr 560px;
   grid-template-rows: 1fr auto;
   height: 220px;
   position: relative;
@@ -934,28 +934,31 @@ body.light .hero-sub { color:#c8cbdc; }
   display: flex; flex-direction: column;
   gap: 5px; min-width: 0; max-width: 480px; overflow: hidden;
 }
-/* coluna direita: fotos do utilizador (fila de quadrados) */
+/* coluna direita: fotos do utilizador — encostadas à borda direita */
 .dc-right {
   grid-row: 1; grid-column: 3;
-  display: flex; align-items: center; justify-content: flex-end;
-  border-left: 1px solid var(--border);
-  padding: 0 12px 0 0;
+  display: flex; align-items: center;
+  justify-content: flex-end;
+  padding: 0;
   overflow: hidden;
-  box-sizing: border-box;
+  border-left: 1px solid var(--border);
 }
 .dc-user-photos {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center;
+  gap: 0;
   flex-wrap: nowrap;
+  height: 100%;
 }
 .dc-user-photos.loading, .dc-user-photos.empty {
-  width: 88px; height: 88px; border-radius: 10px;
-  display:flex; align-items:center; justify-content:center;
+  width: 132px; height: 132px;
+  display: flex; align-items: center; justify-content: center;
   background: var(--bg);
 }
 .dc-user-photo {
-  flex: 0 0 88px; width: 88px; height: 88px;
-  border-radius: 10px; position: relative; overflow: hidden;
+  flex: 0 0 132px; width: 132px; height: 100%;
+  position: relative; overflow: hidden;
   background: var(--bg3); cursor: zoom-in;
+  border-left: 2px solid var(--bg);
 }
 .dc-user-photo img {
   width:100%; height:100%; object-fit:cover;
