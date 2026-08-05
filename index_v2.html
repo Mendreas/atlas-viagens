@@ -25,7 +25,7 @@
   --bg2:        #161b22;
   --bg3:        #1c2128;
   --map-land:   #4a5268;
-  --map-void:   #0a0d12;
+  --map-void:   #c9cdd4;
   --border:     rgba(255,255,255,.08);
   --border2:    rgba(255,255,255,.14);
 
@@ -4032,25 +4032,26 @@ function desenharRegioes(a2, gj){
     /* Ponto central */
     labelG.append('circle')
       .attr('cx', cx).attr('cy', cy).attr('r', 2.5)
-      .attr('fill', r.v[nome] ? 'rgba(0,0,0,.5)' : 'rgba(80,60,30,.55)')
+      .attr('fill', r.v[nome] ? 'rgba(30,20,0,.6)' : 'rgba(255,255,255,.8)')
       .attr('pointer-events','none');
 
     if (showText){
-      /* Sombra branca */
+      /* Halo de contraste (escuro em regiões claras, claro em regiões douradas) */
       labelG.append('text')
         .attr('x', cx).attr('y', cy - 5)
         .attr('text-anchor','middle')
-        .attr('font-size', '9px').attr('font-family','sans-serif')
-        .attr('fill','rgba(255,255,255,.85)').attr('stroke','rgba(255,255,255,.85)')
+        .attr('font-size', '10px').attr('font-weight','600').attr('font-family','sans-serif')
+        .attr('fill', r.v[nome] ? 'rgba(255,255,255,.95)' : 'rgba(8,10,14,.9)')
+        .attr('stroke', r.v[nome] ? 'rgba(60,40,0,.85)' : 'rgba(8,10,14,.9)')
         .attr('stroke-width','3').attr('paint-order','stroke')
         .attr('pointer-events','none')
         .text(nome);
-      /* Texto principal */
+      /* Texto principal — sempre branco puro para máximo contraste */
       labelG.append('text')
         .attr('x', cx).attr('y', cy - 5)
         .attr('text-anchor','middle')
-        .attr('font-size', '9px').attr('font-family','sans-serif')
-        .attr('fill', r.v[nome] ? 'rgba(50,30,0,.9)' : 'rgba(60,50,40,.85)')
+        .attr('font-size', '10px').attr('font-weight','600').attr('font-family','sans-serif')
+        .attr('fill', r.v[nome] ? '#2a1c00' : '#ffffff')
         .attr('pointer-events','none')
         .text(nome);
     }
@@ -4374,14 +4375,14 @@ window.desenharRegioes = function(a2, gj){
         try { const c = path.centroid(f); if(!c||isNaN(c[0])) return; [cx,cy]=c; } catch(e){ return; }
         const area = d3.geoArea(f);
         labelG.append('circle').attr('cx',cx).attr('cy',cy).attr('r',2.5)
-          .attr('fill', r.v[nome]?'rgba(0,0,0,.5)':'rgba(80,60,30,.55)').attr('pointer-events','none');
+          .attr('fill', r.v[nome]?'rgba(30,20,0,.6)':'rgba(255,255,255,.8)').attr('pointer-events','none');
         if (area > 0.00015){
-          ['rgba(255,255,255,.85)',''].forEach((stroke,si) => {
+          [true,false].forEach(isHalo => {
             labelG.append('text').attr('x',cx).attr('y',cy-5).attr('text-anchor','middle')
-              .attr('font-size','9px').attr('font-family','sans-serif').attr('pointer-events','none')
-              .attr('fill', si===0?'rgba(255,255,255,.85)':(r.v[nome]?'rgba(50,30,0,.9)':'rgba(60,50,40,.85)'))
-              .attr('stroke', si===0?'rgba(255,255,255,.85)':'none')
-              .attr('stroke-width', si===0?'3':'0').attr('paint-order','stroke')
+              .attr('font-size','10px').attr('font-weight','600').attr('font-family','sans-serif').attr('pointer-events','none')
+              .attr('fill', isHalo ? (r.v[nome]?'rgba(255,255,255,.95)':'rgba(8,10,14,.9)') : (r.v[nome]?'#2a1c00':'#ffffff'))
+              .attr('stroke', isHalo ? (r.v[nome]?'rgba(60,40,0,.85)':'rgba(8,10,14,.9)') : 'none')
+              .attr('stroke-width', isHalo?'3':'0').attr('paint-order','stroke')
               .text(nome);
           });
         }
