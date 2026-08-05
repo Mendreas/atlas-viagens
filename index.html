@@ -7951,7 +7951,13 @@ function pzRenderQueVer(a2){
         <button class="btn-mini" onclick="addVista('${a2}','${escAttr(r.n)}',this.previousElementSibling)">+</button>
       </div>
     </div>`;
-  }).join('') + `</div>`;
+  }).join('') + `<div class="pz-regiao pz-regiao-extra">
+      <h4>Outros pontos de interesse</h4>
+      <div class="pz-add-inline">
+        <input type="text" placeholder="Adicionar novo ponto de interesse…" onkeydown="if(event.key==='Enter')addVista('${a2}','Pontos de interesse',this)">
+        <button class="btn-mini" onclick="addVista('${a2}','Pontos de interesse',this.previousElementSibling)">+</button>
+      </div>
+    </div>` + `</div>`;
 }
 
 /* Reescrever toggleVista/addVista/delVista para actualizarem o novo modal (em vez do antigo #pRegioes) */
