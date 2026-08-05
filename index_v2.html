@@ -7503,27 +7503,17 @@ function pzApplyPhoto(el, url){
   img.onload = () => { el.style.backgroundImage = `url('${url}')`; el.classList.add('has-photo'); };
   img.src = url;
 }
-let _pzPhotoObserver = null;
+/* Carregamento directo (sem IntersectionObserver — em testes mostrou-se
+   pouco fiável dentro de iframes/automação; um pedido de metadados por
+   país é leve e fica em cache, por isso carregar tudo de imediato é seguro). */
 function pzObservePhotos(){
-  const els = document.querySelectorAll('.pz-flag-thumb[data-a2]');
-  if (!('IntersectionObserver' in window)){
-    els.forEach(el => { const a2 = el.dataset.a2; pzFetchPhoto(a2).then(url => pzApplyPhoto(el, url)); });
-    return;
-  }
-  if (!_pzPhotoObserver){
-    _pzPhotoObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const el = entry.target;
-        _pzPhotoObserver.unobserve(el);
-        const a2 = el.dataset.a2;
-        const cached = _pzPhotoCache[a2];
-        if (cached !== undefined) pzApplyPhoto(el, cached);
-        else pzFetchPhoto(a2).then(url => pzApplyPhoto(el, url));
-      });
-    }, { rootMargin: '250px' });
-  }
-  els.forEach(el => _pzPhotoObserver.observe(el));
+  document.querySelectorAll('.pz-flag-thumb[data-a2]').forEach(el => {
+    if (el.classList.contains('has-photo')) return;
+    const a2 = el.dataset.a2;
+    const cached = _pzPhotoCache[a2];
+    if (cached !== undefined) pzApplyPhoto(el, cached);
+    else pzFetchPhoto(a2).then(url => pzApplyPhoto(el, url));
+  });
 }
 function pzCardHtml(a2, view){
   const s = pzStats(a2);
