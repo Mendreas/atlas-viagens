@@ -372,15 +372,25 @@ body {
 .country-chip .cf { font-size:18px; flex-shrink:0; }
 
 /* ── Detalhe do continente (aba Regiões) ── */
-.rg-stats { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+.rg-stats { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
 .rg-stat {
   background:var(--card-bg); border:1px solid var(--border); border-radius:12px;
-  padding:14px 20px; min-width:120px; flex:1 1 140px;
+  padding:10px 12px; flex:0 0 104px; min-width:0;
 }
 .rg-stat .val { font-size:24px; font-weight:700; color:var(--text); font-family:'Fraunces', serif; }
 .rg-stat .lbl { font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text2); margin-top:2px; font-weight:600; }
 .rg-stat.is-visitado .val { color:var(--gold2); }
 .rg-stat.is-planeado .val { color:var(--teal); }
+
+.rg-oceans { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.rg-ocean-btn {
+  background:var(--card-bg); border:1px solid var(--border); border-radius:10px;
+  padding:8px 16px; font-size:12.5px; font-weight:600; color:var(--text2); cursor:pointer;
+  transition:border-color .15s, color .15s, background .15s;
+}
+.rg-ocean-btn:hover { border-color:var(--border2); color:var(--text); }
+.rg-ocean-btn.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold2); }
+.rg-ocean-btn .rg-ocean-count { opacity:.6; font-weight:400; margin-left:4px; }
 
 .rg-layout { display:grid; grid-template-columns:340px 1fr; gap:16px; align-items:start; }
 @media(max-width:900px){ .rg-layout { grid-template-columns:1fr; } }
@@ -400,6 +410,9 @@ body {
 .rg-country-row.st-planeado { background:var(--teal-dim); border-color:rgba(63,182,140,.35); }
 .rg-country-row .rgc-nome { font-size:13px; font-weight:600; color:var(--text); }
 .rg-country-row .rgc-flag-img { width:22px; height:auto; border-radius:3px; flex:none; box-shadow:0 0 0 1px var(--border2); }
+.rg-pseudo-row .rgc-pseudo-badge { font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--text2); font-weight:600; }
+.rg-pseudo-row.st-visitado .rgc-pseudo-badge { color:var(--gold2); }
+.rg-pseudo-row.st-planeado .rgc-pseudo-badge { color:var(--teal); }
 
 .rg-map-wrap { position:relative; }
 #rgMapa {
@@ -1803,6 +1816,7 @@ body.light .hero-sub { color:#c8cbdc; }
         <button class="btn-v2 btn-ghost" id="backCont" style="margin-bottom:16px">← Voltar</button>
         <div class="page-header"><h2 id="contTitulo" style="font-size:18px;font-weight:700"></h2></div>
         <div class="rg-stats" id="rgStats"></div>
+        <div class="rg-oceans" id="rgOceanos" style="display:none"></div>
         <div class="rg-layout">
           <div class="rg-list" id="rgList"></div>
           <div class="rg-map-wrap">
@@ -3250,6 +3264,7 @@ function udOf(uid){
   if (!u.planSeen)     u.planSeen     = {};     /* "O que ver" que PLANEIA */
   if (!u.planUnesco)   u.planUnesco   = {};
   if (!u.airlines)     u.airlines     = {};     /* UNESCO que PLANEIA */
+  if (!u.pseudo)       u.pseudo       = {};     /* estado de regiões sem país (Ártico, Antártico, Havai...) */
   return u;
 }
 function ud(){ return udOf(state.editingUser); }
@@ -4329,12 +4344,14 @@ let _rgContinenteActual = null;
 function abrirContinente(id){
   showTabV2('regioes');
   const c = CONTINENTES.find(x=>x.id===id);
+  if (_rgContinenteActual !== id) _rgOceanoAtual = null; /* reinicia para Atlântico ao trocar de continente */
   _rgContinenteActual = id;
   document.getElementById('reg-paises').style.display='block';
   document.querySelectorAll('#contGrid .continent-card, #continents-grid-v2 .continent-card').forEach(el=>{
     el.classList.toggle('active', el.getAttribute('data-cont-id')===id);
   });
   document.getElementById('contTitulo').innerHTML = c.emoji + ' <span>' + c.nome + '</span>';
+  rgRenderOceanos(id);
   rgRenderStats(id);
   rgRenderList(id);
   rgRenderMap(id);
@@ -4348,11 +4365,76 @@ function rgStatusDe(a2){
   return (st==='visitado'||st==='parcial') ? 'visitado' : (st==='planeado' ? 'planeado' : 'nao');
 }
 
-function rgRenderStats(id){
+/* Antártida & Oceanos: os territórios remotos (sem continente próprio) agrupados
+   por oceano. O Pacífico reutiliza a lista de países da Oceania (a pedido do
+   utilizador) — os países continuam também na Oceania, isto é só uma vista extra. */
+const OCEANOS = {
+  atlantico: { nome:'Atlântico', paises:['BV','GS'] },
+  indico:    { nome:'Índico',    paises:['IO','TF','HM'] },
+  pacifico:  { nome:'Pacífico',  paises:(CONTINENTES.find(c=>c.id==='oceania')||{paises:[]}).paises.slice() }
+};
+/* Regiões sem código de país (não têm bandeira nem ficha) — estado simples,
+   guardado à parte para não contaminar as contagens globais de países. */
+const PSEUDO_REGIOES = [
+  { id:'artico',    nome:'Ártico',        emoji:'🧭', ocean:null },
+  { id:'antartico', nome:'Antártico',     emoji:'🧊', ocean:null },
+  { id:'havai',     nome:'Havai (EUA)',   emoji:'🌺', ocean:'pacifico' }
+];
+let _rgOceanoAtual = null;
+function pseudoStatusDe(id){ return (ud().pseudo && ud().pseudo[id]) || 'nao'; }
+function pseudoSetStatus(id, st){
+  if (st === 'nao') delete ud().pseudo[id]; else ud().pseudo[id] = st;
+  save();
+}
+window.pseudoCycleStatus = function(id){
+  const ordem = ['nao','visitado','planeado'];
+  const atual = pseudoStatusDe(id);
+  pseudoSetStatus(id, ordem[(ordem.indexOf(atual)+1) % ordem.length]);
+  rgRenderStats(_rgContinenteActual);
+  rgRenderList(_rgContinenteActual);
+};
+function rgPaisesAtuais(id){
+  if (id === 'antartica'){
+    const o = OCEANOS[_rgOceanoAtual || 'atlantico'];
+    return o ? o.paises : [];
+  }
   const c = CONTINENTES.find(x=>x.id===id);
-  const vis = c.paises.filter(a2=>rgStatusDe(a2)==='visitado').length;
-  const plan = c.paises.filter(a2=>rgStatusDe(a2)==='planeado').length;
-  const porVisitar = c.paises.length - vis - plan;
+  return c ? c.paises : [];
+}
+function rgPseudoAtuais(id){
+  if (id !== 'antartica') return [];
+  const key = _rgOceanoAtual || 'atlantico';
+  return PSEUDO_REGIOES.filter(p => p.ocean===null || p.ocean===key);
+}
+function rgRenderOceanos(id){
+  const wrap = document.getElementById('rgOceanos');
+  if (id !== 'antartica'){ wrap.style.display='none'; wrap.innerHTML=''; return; }
+  if (!_rgOceanoAtual) _rgOceanoAtual = 'atlantico';
+  wrap.style.display='flex';
+  wrap.innerHTML = Object.keys(OCEANOS).map(k=>{
+    const o = OCEANOS[k];
+    return `<button class="rg-ocean-btn ${k===_rgOceanoAtual?'active':''}" onclick="rgSelecionarOceano('${k}')">${esc(o.nome)} <span class="rg-ocean-count">${o.paises.length}</span></button>`;
+  }).join('');
+}
+window.rgSelecionarOceano = function(k){
+  _rgOceanoAtual = k;
+  rgRenderOceanos('antartica');
+  rgRenderStats('antartica');
+  rgRenderList('antartica');
+  rgRenderMap('antartica');
+};
+
+function rgRenderStats(id){
+  const paises = rgPaisesAtuais(id);
+  let vis = paises.filter(a2=>rgStatusDe(a2)==='visitado').length;
+  let plan = paises.filter(a2=>rgStatusDe(a2)==='planeado').length;
+  let total = paises.length;
+  rgPseudoAtuais(id).forEach(p=>{
+    const st = pseudoStatusDe(p.id);
+    if (st==='visitado') vis++; else if (st==='planeado') plan++;
+    total++;
+  });
+  const porVisitar = total - vis - plan;
   document.getElementById('rgStats').innerHTML = `
     <div class="rg-stat is-visitado"><div class="val">${vis}</div><div class="lbl">Visitados</div></div>
     <div class="rg-stat is-planeado"><div class="val">${plan}</div><div class="lbl">Planeados</div></div>
@@ -4361,15 +4443,24 @@ function rgRenderStats(id){
 }
 
 function rgRenderList(id){
-  const c = CONTINENTES.find(x=>x.id===id);
-  const sorted = [...c.paises].sort((a,b)=>nomePT(a).localeCompare(nomePT(b),'pt'));
-  document.getElementById('rgList').innerHTML = sorted.map(a2 => {
+  const paises = rgPaisesAtuais(id);
+  const sorted = [...paises].sort((a,b)=>nomePT(a).localeCompare(nomePT(b),'pt'));
+  let html = sorted.map(a2 => {
     const st = rgStatusDe(a2);
     return `<div class="rg-country-row st-${st}" onclick="pzOpenModal('${a2}')">
       <span class="rgc-nome">${esc(nomePT(a2))}</span>
       ${pzFlagImg(a2,'rgc-flag-img')}
     </div>`;
   }).join('');
+  const rotulo = { nao:'Por visitar', visitado:'Visitado', planeado:'Planeado' };
+  html += rgPseudoAtuais(id).map(p=>{
+    const st = pseudoStatusDe(p.id);
+    return `<div class="rg-country-row rg-pseudo-row st-${st}" onclick="pseudoCycleStatus('${p.id}')" title="Clica para alternar o estado">
+      <span class="rgc-nome">${p.emoji} ${esc(p.nome)}</span>
+      <span class="rgc-pseudo-badge">${rotulo[st]}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('rgList').innerHTML = html;
 }
 
 /* ── Mapa do continente (coropletas, reaproveita o world-atlas já usado na aba Mapa) ── */
@@ -4407,9 +4498,9 @@ async function rgRenderMap(id){
     }
   }
   if (_rgContinenteActual !== id) return; /* utilizador já mudou de continente entretanto */
-  const c = CONTINENTES.find(x=>x.id===id);
+  const paisesAtuais = rgPaisesAtuais(id);
   const todasFeatures = topojson.feature(topo, topo.objects.countries).features;
-  const featuresRegiao = todasFeatures.filter(f => c.paises.includes(N2A[String(+f.id)] || ''));
+  const featuresRegiao = todasFeatures.filter(f => paisesAtuais.includes(N2A[String(+f.id)] || ''));
 
   cont.innerHTML = '';
   const W = 900, H = 560;
@@ -4422,10 +4513,10 @@ async function rgRenderMap(id){
   const RG_FILL = { visitado:'rgba(255,196,20,.25)', parcial:'rgba(255,196,20,.18)', planeado:'rgba(0,225,140,.25)', nao:'rgba(20,22,28,.4)' };
   g.selectAll('path.rg-country-path').data(todasFeatures).join('path')
     .attr('class','rg-country-path').attr('d', path)
-    .attr('fill', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? RG_FILL[rgStatusDe(a2)] : 'rgba(20,22,28,.55)'; })
+    .attr('fill', d => { const a2 = N2A[String(+d.id)]||''; return paisesAtuais.includes(a2) ? RG_FILL[rgStatusDe(a2)] : 'rgba(20,22,28,.55)'; })
     .attr('stroke', 'rgba(0,0,0,.6)')
-    .attr('stroke-width', d => { const a2 = N2A[String(+d.id)]||''; return c.paises.includes(a2) ? .6 : .4; })
-    .on('click', (ev,d) => { const a2 = N2A[String(+d.id)]||''; if (c.paises.includes(a2)) pzOpenModal(a2); })
+    .attr('stroke-width', d => { const a2 = N2A[String(+d.id)]||''; return paisesAtuais.includes(a2) ? .6 : .4; })
+    .on('click', (ev,d) => { const a2 = N2A[String(+d.id)]||''; if (paisesAtuais.includes(a2)) pzOpenModal(a2); })
     .append('title').text(d => { const a2 = N2A[String(+d.id)]||''; return a2 ? nomePT(a2) : (d.properties.name||''); });
 
   const zoom = d3.zoom().scaleExtent([1,10]).on('zoom', ev => g.attr('transform', ev.transform));
