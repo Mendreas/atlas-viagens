@@ -3307,6 +3307,31 @@ function save(){
 }
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2200); }
 function nomePT(a2){ try { return dn.of(a2) || a2; } catch(e){ return a2; } }
+
+/* Busca do topo: tenta encontrar um país pelo texto escrito; se encontrar, abre-o.
+   Senão, muda para o Diário e filtra as viagens por esse texto. */
+function topbarBuscar(texto){
+  const q = (texto||'').trim();
+  if(!q) return;
+  _cbInit();
+  const norm = q.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  let match = _cbPaises.find(p=>p.normNome.startsWith(norm)) ||
+              _cbPaises.find(p=>p.normNome.includes(norm)) ||
+              _cbPaises.find(p=>p.a2.toLowerCase()===norm);
+  if(match){
+    window.pzOpenModal(match.a2);
+    document.getElementById('topbar-search-inp').value='';
+    const fi=document.getElementById('fTexto');
+    if(fi)fi.value='';
+    return;
+  }
+  /* Não é um país conhecido: filtrar o Diário por este texto */
+  showTabV2('diario');
+  const fi=document.getElementById('fTexto');
+  if(fi) fi.value = q;
+  renderTripsV2();
+  toast('🔍 Nenhum país encontrado — a filtrar o Diário por "'+q+'"');
+}
 function bandeira(a2){ if(!/^[A-Z]{2}$/.test(a2)) return '🏳'; return String.fromCodePoint(...[...a2].map(c=>0x1F1E6 + c.charCodeAt(0) - 65)); }
 function statusDe(a2){
   /* Estado manual tem prioridade absoluta */
@@ -8784,6 +8809,10 @@ setTimeout(()=>{
     document.getElementById('ppPrev')?.addEventListener('click',()=>{if(_ppPage>0){_ppPage--;ppRenderPage();}});
     document.getElementById('ppNext')?.addEventListener('click',()=>{if(_ppPage<ppTotalPages(_ppUid)){_ppPage++;ppRenderPage();}});
     document.getElementById('btn-html-v2')?.addEventListener('click',exportarDiarioHTML);
+    document.getElementById('topbar-search-inp')?.addEventListener('keydown',e=>{
+      if(e.key!=='Enter') return;
+      topbarBuscar(e.target.value);
+    });
     document.getElementById('topbar-search-inp')?.addEventListener('input',e=>{
       const fi=document.getElementById('fTexto');
       if(fi)fi.value=e.target.value;
