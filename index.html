@@ -8805,7 +8805,6 @@ setTimeout(()=>{
       const files=[...ev.target.files];
       files.forEach(f=>{formImgs.push(f);renderFotosPreview();});
     });
-    document.getElementById('btnAddLink')?.addEventListener('click',adicionarLink);
     document.getElementById('ppPrev')?.addEventListener('click',()=>{if(_ppPage>0){_ppPage--;ppRenderPage();}});
     document.getElementById('ppNext')?.addEventListener('click',()=>{if(_ppPage<ppTotalPages(_ppUid)){_ppPage++;ppRenderPage();}});
     document.getElementById('btn-html-v2')?.addEventListener('click',exportarDiarioHTML);
