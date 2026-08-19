@@ -7564,10 +7564,34 @@ ${pagesHtml}
 </div>
 </body></html>`;
 
-  const w = window.open('','_blank');
-  w.document.write(html);
-  w.document.close();
-  setTimeout(()=>w.print(), 700);
+  ppShowExportModal(html);
+};
+
+/* Modal de pré-visualização/impressão do passaporte, dentro da própria app
+   (evita window.open — no modo standalone do iPad/iOS não há como "voltar"
+   de uma janela nova, por isso mostramos tudo num iframe com botão de fechar) */
+window.ppShowExportModal = function(html){
+  let overlay = document.getElementById('pp-export-modal');
+  if(overlay) overlay.remove();
+  overlay = document.createElement('div');
+  overlay.id = 'pp-export-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#2e2210;display:flex;flex-direction:column;';
+  overlay.innerHTML = `
+    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#1c1408;color:#f3ead4;box-shadow:0 2px 8px rgba(0,0,0,.3)">
+      <button id="pp-export-close" style="font-size:22px;line-height:1;background:none;border:none;color:#f3ead4;padding:6px 10px;cursor:pointer">✕ Fechar</button>
+      <div style="font-size:13px;font-weight:600;letter-spacing:.05em">Pré-visualização do passaporte</div>
+      <button id="pp-export-print" style="font-size:14px;background:#d9a441;border:none;color:#2e2210;padding:8px 14px;border-radius:6px;font-weight:700;cursor:pointer">🖨 Imprimir / PDF</button>
+    </div>
+    <iframe id="pp-export-iframe" style="flex:1;border:none;width:100%;background:#fff"></iframe>
+  `;
+  document.body.appendChild(overlay);
+  const iframe = document.getElementById('pp-export-iframe');
+  iframe.srcdoc = html;
+  document.getElementById('pp-export-close').onclick = () => overlay.remove();
+  document.getElementById('pp-export-print').onclick = () => {
+    try { iframe.contentWindow.focus(); iframe.contentWindow.print(); }
+    catch(e){ toast('Não foi possível abrir a impressão'); }
+  };
 };
 
 /* Override showTab para inicializar o passaporte */
